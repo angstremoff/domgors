@@ -25,6 +25,7 @@ export interface Database {
           features: string[]
           coordinates: Json | null
           user_id: string | null
+          location: string
         }
         Insert: {
           id?: string
@@ -41,6 +42,7 @@ export interface Database {
           features?: string[]
           coordinates?: Json | null
           user_id?: string | null
+          location: string
         }
         Update: {
           id?: string

@@ -3,6 +3,7 @@ import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import FavoriteButton from './FavoriteButton'
 import PlaceholderImage from './PlaceholderImage'
+import PropertyMap from './PropertyMap'
 
 interface Property {
   id: string
@@ -15,6 +16,10 @@ interface Property {
   rooms: number
   description: string
   images: string[]
+  coordinates: {
+    lat: number
+    lng: number
+  } | null
 }
 
 interface PropertyModalProps {
@@ -130,6 +135,19 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       </p>
                     </div>
                   </div>
+
+                  {/* Map */}
+                  {property.coordinates && (
+                    <div className="mt-6 rounded-xl overflow-hidden">
+                      <div className="h-[300px]">
+                        <PropertyMap
+                          properties={[property]}
+                          center={property.coordinates}
+                          zoom={14}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </Dialog.Panel>
             </Transition.Child>
