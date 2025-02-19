@@ -11,7 +11,7 @@ export type Property = {
   price: number
   area: number
   rooms: number
-  location: string
+  city_id: number
   images: string[]
   features?: string[]
   created_at: string

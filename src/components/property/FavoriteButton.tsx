@@ -11,7 +11,8 @@ export default function FavoriteButton({ propertyId }: FavoriteButtonProps) {
   const { isFavorite, toggleFavorite } = useFavorites()
   const [isToggling, setIsToggling] = useState(false)
 
-  const handleToggle = async () => {
+  const handleToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation()
     setIsToggling(true)
     try {
       await toggleFavorite(propertyId)

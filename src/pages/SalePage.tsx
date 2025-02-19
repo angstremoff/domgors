@@ -3,6 +3,7 @@ import PropertyFilters from '../components/property/PropertyFilters'
 import PropertyList from '../components/property/PropertyList'
 import { useState, useEffect } from 'react'
 import { useProperties } from '../contexts/PropertyContext'
+import { useSearchParams } from 'react-router-dom'
 
 interface Property {
   id: string
@@ -20,12 +21,24 @@ interface Property {
 export default function SalePage() {
   const { properties, filteredProperties, setFilteredProperties } = useProperties()
   const [loading, setLoading] = useState(true)
+  const [searchParams] = useSearchParams()
   
   // Инициализируем фильтрованные свойства при загрузке
   useEffect(() => {
-    const saleProperties = properties.filter(p => p.type === 'sale')
+    const propertyType = searchParams.get('propertyType')
+    let saleProperties = properties.filter(p => p.type === 'sale')
+    
+    if (propertyType) {
+      saleProperties = saleProperties.filter(p => p.property_type === propertyType)
+    }
+    
     setFilteredProperties(saleProperties)
-  }, [properties, setFilteredProperties])
+
+    // Cleanup function to reset filters when component unmounts
+    return () => {
+      setFilteredProperties(properties)
+    }
+  }, [properties, setFilteredProperties, searchParams])
 
   useEffect(() => {
     setLoading(false)

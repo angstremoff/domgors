@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../lib/supabaseClient'
 
 interface User {
   id: string
@@ -72,13 +72,21 @@ function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
+    // Сначала очищаем локальное состояние
+    setUser(null)
+    localStorage.removeItem('user')
+
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      setUser(null)
+      // Проверяем сессию
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      // Если есть сессия, пытаемся выйти
+      if (session?.access_token) {
+        await supabase.auth.signOut()
+      }
     } catch (error) {
+      // Ошибку можно проигнорировать, так как локальное состояние уже очищено
       console.error('Logout error:', error)
-      throw error
     }
   }
 

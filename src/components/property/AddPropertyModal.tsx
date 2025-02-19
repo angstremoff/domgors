@@ -1,7 +1,8 @@
 import { Dialog } from '@headlessui/react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useProperties } from '../../contexts/PropertyContext'
+import { supabase } from '../../lib/supabaseClient'
 
 interface AddPropertyModalProps {
   isOpen: boolean
@@ -9,6 +10,32 @@ interface AddPropertyModalProps {
 }
 
 export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalProps) {
+  const [cities, setCities] = useState<{ id: number; name: string }[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        setLoading(true)
+        const { data, error } = await supabase
+          .from('cities')
+          .select('id, name')
+          .order('name')
+
+        if (error) throw error
+        if (data) setCities(data)
+      } catch (error) {
+        console.error('Error fetching cities:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (isOpen) {
+      fetchCities()
+    }
+  }, [isOpen])
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -17,7 +44,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     price: '',
     area: '',
     rooms: '',
-    location: '',
+    city_id: '',
     images: [] as string[],
     features: [] as string[],
   })
@@ -49,7 +76,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         price: '',
         area: '',
         rooms: '',
-        location: '',
+        city_id: '',
         images: []
       })
     } catch (error) {
@@ -202,19 +229,23 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                 />
               </div>
 
-              {/* Адрес */}
+              {/* Город */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Адрес
+                  Город
                 </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
+                <select
+                  name="city_id"
+                  value={formData.city_id}
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                   required
-                />
+                >
+                  <option value="">Выберите город</option>
+                  {cities.map(city => (
+                    <option key={city.id} value={city.id}>{city.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Фотографии */}

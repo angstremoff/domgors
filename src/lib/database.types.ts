@@ -20,7 +20,7 @@ export interface Database {
           price: number
           area: number
           rooms: number
-          location: string
+          city_id: number
           images: string[]
           features: string[]
           coordinates: Json | null
@@ -36,7 +36,7 @@ export interface Database {
           price: number
           area: number
           rooms: number
-          location: string
+          city_id: number
           images: string[]
           features?: string[]
           coordinates?: Json | null

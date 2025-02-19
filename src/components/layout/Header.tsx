@@ -26,7 +26,7 @@ export default function Header() {
   const navigation = getNavigation(pathname)
   return (
     <>
-      <Disclosure as="nav" className="bg-white shadow-sm">
+      <Disclosure as="nav" className="bg-slate-200 shadow-md sticky top-0 z-50">
         {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -37,16 +37,16 @@ export default function Header() {
                     DomGo
                   </Link>
                 </div>
-                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <div className="hidden sm:ml-8 sm:flex sm:items-center sm:space-x-4">
                   {navigation.map((item) => (
                     <Link
                       key={item.name}
                       to={item.href}
                       className={classNames(
+                        'inline-flex items-center px-4 py-2 rounded-lg text-base font-medium transition-all duration-200',
                         item.current
-                          ? 'border-indigo-500 text-gray-900'
-                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
+                          ? 'bg-indigo-600 text-white shadow-md hover:bg-indigo-700'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-indigo-600 border border-gray-200'
                       )}
                     >
                       {item.name}
