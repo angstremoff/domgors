@@ -1,0 +1,10 @@
+meta:
+  environment: node
+  version: 18
+
+build:
+  command: npm install && npm run build
+
+run:
+  command: npm run preview
+  port: 4173
