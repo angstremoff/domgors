@@ -36,7 +36,7 @@ export default function PropertyMap({
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: `https://api.maptiler.com/maps/streets/style.json?key=${import.meta.env.VITE_MAPTILER_KEY}`,
+      style: `https://api.maptiler.com/maps/streets/style.json?key=${encodeURIComponent(import.meta.env.VITE_MAPTILER_KEY)}`,
       center: center,
       zoom: zoom
     })
