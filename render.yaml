@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: domgors
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_MAPTILER_KEY
+        sync: false
+    staticPublishPath: ./dist
