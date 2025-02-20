@@ -369,25 +369,6 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                 </p>
               </div>
 
-              {/* Остальные поля */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Город
-                </label>
-                <select
-                  name="city_id"
-                  value={formData.city_id}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
-                  required
-                >
-                  <option value="">Выберите город</option>
-                  {cities.map(city => (
-                    <option key={city.id} value={city.id}>{city.name}</option>
-                  ))}
-                </select>
-              </div>
-
               {/* Фотографии */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
