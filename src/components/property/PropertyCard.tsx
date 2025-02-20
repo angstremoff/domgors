@@ -36,7 +36,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   return (
     <>
       <div 
-        className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:translate-y-[-4px] cursor-pointer h-full shadow-md border border-gray-100 hover:shadow-lg"
+        className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:translate-y-[-4px] cursor-pointer h-full shadow-lg border border-gray-200 hover:shadow-xl"
         onClick={() => setIsModalOpen(true)}
       >
         {/* Image container */}

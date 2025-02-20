@@ -16,7 +16,7 @@ export default function HomePage() {
   }, [properties, setFilteredProperties])
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-200">
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Map section */}
@@ -77,6 +77,6 @@ export default function HomePage() {
         </div>
       </div>
       <Footer />
-    </>
+    </div>
   )
 }

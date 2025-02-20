@@ -57,7 +57,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform rounded-2xl bg-white p-6 text-left shadow-xl transition-all w-full max-w-4xl max-h-[70vh] overflow-y-auto">
+              <Dialog.Panel className="relative transform rounded-2xl bg-white p-6 text-left shadow-xl transition-all w-full max-w-4xl max-h-[91vh] overflow-y-auto">
                 <div className="absolute right-4 top-4 z-10 flex space-x-2">
                   <FavoriteButton propertyId={property.id} />
                   <button

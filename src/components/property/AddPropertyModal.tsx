@@ -189,9 +189,9 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       
-      <div className="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
-        <Dialog.Panel className="my-4 max-w-2xl w-full bg-white rounded-xl shadow-lg max-h-[90vh] overflow-y-auto">
-          <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
+      <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto mt-16">
+        <Dialog.Panel className="w-full max-w-2xl bg-white rounded-xl shadow-lg max-h-[91vh] overflow-y-auto">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <Dialog.Title className="text-lg font-semibold text-gray-900">
               Добавить объявление
             </Dialog.Title>

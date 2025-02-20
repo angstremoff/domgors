@@ -32,6 +32,23 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     checkAuth()
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const userData = {
+          id: session.user.id,
+          email: session.user.email!
+        }
+        setUser(userData)
+        localStorage.setItem('user', JSON.stringify(userData))
+      } else {
+        setUser(null)
+        localStorage.removeItem('user')
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const checkAuth = async () => {
