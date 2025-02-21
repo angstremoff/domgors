@@ -63,7 +63,9 @@ export default function Header() {
                     Добавить объявление
                   </button>
                 )}
-                <FavoriteIcon />
+                <div className="mr-3">
+                  <FavoriteIcon />
+                </div>
 
                 {user ? (
                   <Menu as="div" className="relative ml-3">
