@@ -53,6 +53,11 @@ CREATE POLICY "Users can view their own data"
     FOR SELECT
     USING (auth.uid() = id);
 
+CREATE POLICY "Enable insert for users during registration"
+    ON public.users
+    FOR INSERT
+    WITH CHECK (auth.uid() IS NOT NULL);
+
 CREATE POLICY "Anyone can view properties"
     ON public.properties
     FOR SELECT

@@ -70,21 +70,40 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string) => {
     try {
+      // Регистрация пользователя в системе аутентификации
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin
+          emailRedirectTo: window.location.origin,
+          data: {
+            email: email
+          }
         }
       })
 
       if (error) throw error
 
       if (data.user) {
-        setUser({
+        const userData = {
           id: data.user.id,
           email: data.user.email!
-        })
+        }
+        
+        // Создаем запись в таблице users
+        const { error: userError } = await supabase
+          .from('users')
+          .insert(userData)
+          .select()
+          .single()
+
+        if (userError) {
+          console.error('Error creating user record:', userError)
+          throw userError
+        }
+
+        setUser(userData)
+        localStorage.setItem('user', JSON.stringify(userData))
       }
     } catch (error: any) {
       console.error('Registration error:', error)

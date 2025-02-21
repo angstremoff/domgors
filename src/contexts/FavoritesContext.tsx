@@ -88,29 +88,59 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
 
     // Авторизованный пользователь - используем Supabase
-    const { data: existing } = await supabase
-      .from('favorites')
-      .select('id')
-      .eq('user_id', session.session.user.id)
-      .eq('property_id', propertyId)
-      .maybeSingle()
+    try {
+      if (favorites.includes(propertyId)) {
+        // Удаляем из избранного
+        const { error: deleteError } = await supabase
+          .from('favorites')
+          .delete()
+          .match({
+            user_id: session.session.user.id,
+            property_id: propertyId
+          })
 
-    if (existing) {
-      await supabase
-        .from('favorites')
-        .delete()
-        .eq('id', existing.id)
-      
-      setFavorites(prev => prev.filter(id => id !== propertyId))
-    } else {
-      await supabase
-        .from('favorites')
-        .insert({
-          user_id: session.session.user.id,
-          property_id: propertyId
-        })
-      
-      setFavorites(prev => [...prev, propertyId])
+        if (deleteError) throw deleteError
+        
+        setFavorites(prev => prev.filter(id => id !== propertyId))
+      } else {
+        // Проверяем существование записи перед добавлением
+        const { data: existing, error: checkError } = await supabase
+          .from('favorites')
+          .select()
+          .match({
+            user_id: session.session.user.id,
+            property_id: propertyId
+          })
+          .maybeSingle()
+
+        if (checkError) throw checkError
+
+        if (!existing) {
+          const { error: insertError } = await supabase
+            .from('favorites')
+            .insert({
+              user_id: session.session.user.id,
+              property_id: propertyId
+            })
+
+          if (insertError) {
+            // If we get a conflict error, the record might have been created concurrently
+            if (insertError.code === '23505' || insertError.status === 409) {
+              console.log('Favorite already exists, skipping insert')
+            } else {
+              throw insertError
+            }
+          }
+        }
+        
+        // Only update state if the property isn't already in favorites
+        if (!favorites.includes(propertyId)) {
+          setFavorites(prev => [...prev, propertyId])
+        }
+      }
+    } catch (error) {
+      console.error('Error managing favorites:', error)
+      throw error
     }
   }
 
