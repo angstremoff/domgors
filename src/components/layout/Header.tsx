@@ -143,8 +143,8 @@ export default function Header() {
               {navigation.map((item) => (
                 <Disclosure.Button
                   key={item.name}
-                  as="a"
-                  href={item.href}
+                  as={Link}
+                  to={item.href}
                   className={classNames(
                     item.current
                       ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
