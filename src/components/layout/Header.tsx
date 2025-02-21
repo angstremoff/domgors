@@ -26,14 +26,14 @@ export default function Header() {
   const navigation = getNavigation(pathname)
   return (
     <>
-      <Disclosure as="nav" className="bg-slate-200 shadow-md sticky top-0 z-50">
+      <Disclosure as="nav" className="bg-[#1E3A8A] shadow-md sticky top-0 z-50">
         {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 justify-between">
               <div className="flex">
                 <div className="flex flex-shrink-0 items-center">
-                  <Link to="/" className="text-2xl font-bold text-indigo-600 hover:text-indigo-500 transition-colors">
+                  <Link to="/" className="text-2xl font-bold text-white hover:text-accent-200 transition-colors">
                     DomGo
                   </Link>
                 </div>
@@ -45,31 +45,31 @@ export default function Header() {
                       className={classNames(
                         'inline-flex items-center px-4 py-2 rounded-lg text-base font-medium transition-all duration-200',
                         item.current
-                          ? 'bg-indigo-600 text-white shadow-md hover:bg-indigo-700'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 hover:text-indigo-600 border border-gray-200'
+                          ? 'bg-secondary-600 text-white shadow-md hover:bg-secondary-700'
+                          : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border border-white/20'
                       )}
                     >
                       {item.name}
                     </Link>
                   ))}
-                  {user && (
-                    <button
-                      onClick={() => setIsAddPropertyModalOpen(true)}
-                      className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium"
-                    >
-                      Добавить объявление
-                    </button>
-                  )}
                 </div>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:items-center">
+                {user && (
+                  <button
+                    onClick={() => setIsAddPropertyModalOpen(true)}
+                    className="text-white/80 hover:text-white inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-white/10 hover:bg-white/20 backdrop-blur-sm mr-3"
+                  >
+                    Добавить объявление
+                  </button>
+                )}
                 <FavoriteIcon />
 
                 {user ? (
                   <Menu as="div" className="relative ml-3">
                     <div>
-                      <Menu.Button className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                        <span className="inline-flex items-center rounded-md bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100">
+                      <Menu.Button className="flex rounded-full bg-white/10 backdrop-blur-sm text-sm focus:outline-none focus:ring-2 focus:ring-secondary-400 focus:ring-offset-2">
+                        <span className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-white hover:text-white/90">
                           {user.email}
                         </span>
                       </Menu.Button>
@@ -116,7 +116,7 @@ export default function Header() {
                 ) : (
                   <button
                     onClick={() => setIsLoginModalOpen(true)}
-                    className="inline-flex items-center rounded-md bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+                    className="inline-flex items-center rounded-md bg-secondary-600 px-3 py-2 text-sm font-medium text-white hover:bg-secondary-700 transition-colors"
                   >
                     Войти
                   </button>

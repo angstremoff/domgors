@@ -3,18 +3,7 @@ import PlaceholderImage from './PlaceholderImage'
 import FavoriteButton from './FavoriteButton'
 import PropertyModal from './PropertyModal'
 
-interface Property {
-  id: string
-  title: string
-  location: string
-  price: number
-  type: 'sale' | 'rent'
-  property_type: string
-  area: number
-  rooms: number
-  description: string
-  images: string[]
-}
+import type { Property } from '../../contexts/PropertyContext'
 
 interface PropertyCardProps {
   property: Property
@@ -36,7 +25,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   return (
     <>
       <div 
-        className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:translate-y-[-4px] cursor-pointer h-full shadow-lg border border-gray-200 hover:shadow-xl"
+        className="group relative bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden transition-all duration-300 hover:translate-y-[-4px] cursor-pointer h-full shadow-lg hover:shadow-xl border border-violet-100/50"
         onClick={() => setIsModalOpen(true)}
       >
         {/* Image container */}
@@ -62,7 +51,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             'px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md',
             type === 'sale' 
               ? 'bg-white/90 text-gray-900'
-              : 'bg-emerald-500/90 text-white'
+              : 'bg-gray-900/90 text-white'
           ].join(' ')}>
             {type === 'sale' ? 'Продажа' : 'Аренда'}
           </div>
@@ -83,17 +72,17 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       </div>
 
       {/* Content */}
-      <div className="p-5 flex flex-col h-[140px]">
+      <div className="p-6 flex flex-col h-[150px]">
         {/* Title and Location */}
-        <div className="mb-3">
-          <h3 className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem]">
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 min-h-[2.5rem] leading-snug">
             {title}
           </h3>
-          <p className="text-sm text-gray-500 mt-1 line-clamp-1">{location}</p>
+          <p className="text-sm text-gray-500 mt-2 line-clamp-1">{location}</p>
         </div>
 
         {/* Features */}
-        <div className="flex items-center justify-between text-sm text-gray-500 pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-200">
           {property.property_type !== 'land' && (
             <div className="flex items-center gap-2">
               <span className="flex items-center">

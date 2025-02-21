@@ -229,15 +229,15 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
   return (
     <div className="space-y-4">
       {currentFilters.map((section) => (
-        <Disclosure as="div" key={section.id} className="border-b border-gray-100 last:border-b-0">
+        <Disclosure as="div" key={section.id} className="border-b border-gray-200 last:border-b-0">
           {({ open }) => (
             <>
               <h3 className="flow-root">
-                <Disclosure.Button className="flex w-full items-center justify-between py-3 text-sm hover:text-gray-500">
-                  <span className="font-medium text-gray-900">{section.name}</span>
+                <Disclosure.Button className="flex w-full items-center justify-between py-3 text-sm text-gray-900 hover:text-gray-500">
+                  <span className="font-medium">{section.name}</span>
                   <span className="ml-6 flex items-center">
                     <ChevronDownIcon
-                      className={classNames(open ? '-rotate-180' : 'rotate-0', 'h-5 w-5 transform')}
+                      className={classNames(open ? '-rotate-180' : 'rotate-0', 'h-5 w-5 transform text-gray-400')}
                       aria-hidden="true"
                     />
                   </span>
@@ -254,11 +254,11 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
                         type="checkbox"
                         checked={localFilters[section.id]?.includes(option.value) || false}
                         onChange={(e) => handleFilterChange(section.id, option.value, e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
                       />
                       <label
                         htmlFor={`filter-${section.id}-${optionIdx}`}
-                        className="ml-3 text-sm text-gray-600 hover:text-gray-900"
+                        className="ml-3 text-sm text-gray-600"
                       >
                         {option.label}
                       </label>
@@ -273,7 +273,7 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
       <div className="pt-4">
         <button
           onClick={applyFilters}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+          className="w-full bg-[#1E3A8A] text-white py-3 px-4 rounded-xl hover:bg-[#1E3A8A]/90 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
         >
           Применить фильтры
         </button>

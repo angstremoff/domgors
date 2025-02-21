@@ -4,19 +4,9 @@ import PropertyList from '../components/property/PropertyList'
 import { useState, useEffect } from 'react'
 import { useProperties } from '../contexts/PropertyContext'
 import { useSearchParams } from 'react-router-dom'
+import Footer from '../components/layout/Footer'
 
-interface Property {
-  id: string
-  title: string
-  price: number
-  location: string
-  type: 'rent' | 'sale'
-  propertyType: string
-  area: number
-  rooms: number
-  description: string
-  images: string[]
-}
+import type { Property } from '../contexts/PropertyContext'
 
 export default function SalePage() {
   const { properties, filteredProperties, setFilteredProperties } = useProperties()
@@ -45,37 +35,28 @@ export default function SalePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <div className="min-h-screen bg-gray-100">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left column - Map and Filters */}
-          <div className="lg:w-[320px] xl:w-[380px] order-2 lg:order-1 flex-shrink-0">
-            <div className="sticky top-4">
-              <div className="bg-white rounded-2xl p-4 shadow-sm mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Фильтры
-                </h2>
-                <PropertyFilters type="sale" properties={properties.filter(p => p.type === 'sale')} />
+          <div className="lg:w-2/5">
+            <div className="sticky top-6 space-y-8">
+              <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-all duration-300">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-8">Фильтры</h2>
+                <PropertyFilters type="sale" properties={properties} />
               </div>
-              
-              <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-                <div className="h-[300px] sm:h-[400px] lg:h-[600px] relative z-0">
-                  <PropertyMap properties={properties} />
+              <div className="bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-200">
+                <div className="h-[400px] relative z-0">
+                  <PropertyMap properties={filteredProperties} />
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Right column - Properties */}
-          <div className="flex-1 order-1 lg:order-2">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-6">
-              Продажа недвижимости
-            </h1>
-
-            <PropertyList properties={filteredProperties.filter(p => p.type === 'sale')} loading={loading} />
+          <div className="lg:w-3/5">
+            <PropertyList properties={filteredProperties} loading={loading} />
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

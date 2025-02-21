@@ -29,8 +29,8 @@ export default function PropertyMap({
     const markerImage = new Image(20, 20)
     markerImage.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="10" r="8" fill="#4F46E5"/>
-        <circle cx="10" cy="10" r="4" fill="white"/>
+        <circle cx="10" cy="10" r="8" fill="#10B981"/>
+        <circle cx="10" cy="10" r="4" fill="#F0FDF4"/>
       </svg>
     `)
 
@@ -108,10 +108,10 @@ export default function PropertyMap({
           .setPopup(
             new maplibregl.Popup({ offset: 25 })
               .setHTML(
-                `<div class="p-2 bg-white rounded shadow">
-                  ${property.title ? `<h3 class="font-medium text-gray-900">${property.title}</h3>` : ''}
-                  ${property.location ? `<p class="text-sm text-gray-500">${property.location}</p>` : ''}
-                  ${property.price ? `<p class="text-sm font-medium mt-1 text-indigo-600">${property.price.toLocaleString()} €${property.type === 'rent' ? '/мес' : ''}</p>` : ''}
+                `<div class="p-2 bg-emerald-50 rounded shadow-lg backdrop-blur-sm">
+                  ${property.title ? `<h3 class="font-medium text-emerald-900">${property.title}</h3>` : ''}
+                  ${property.location ? `<p class="text-sm text-emerald-600">${property.location}</p>` : ''}
+                  ${property.price ? `<p class="text-sm font-medium mt-1 text-emerald-700">${property.price.toLocaleString()} €${property.type === 'rent' ? '/мес' : ''}</p>` : ''}
                 </div>`
               )
           )

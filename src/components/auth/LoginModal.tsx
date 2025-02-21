@@ -55,8 +55,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 
-                           focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 
-                           sm:text-sm"
+                           focus:border-secondary-600 focus:outline-none focus:ring-1 focus:ring-secondary-600 
+                           sm:text-sm bg-white/50"
                   required
                 />
               </div>
@@ -71,8 +71,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 
-                           focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 
-                           sm:text-sm"
+                           focus:border-secondary-600 focus:outline-none focus:ring-1 focus:ring-secondary-600 
+                           sm:text-sm bg-white/50"
                   required
                 />
               </div>

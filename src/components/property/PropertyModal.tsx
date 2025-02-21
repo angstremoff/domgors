@@ -62,30 +62,30 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   <FavoriteButton propertyId={property.id} />
                   <button
                     type="button"
-                    className="p-2 rounded-full bg-white/90 backdrop-blur-md hover:bg-white transition-colors duration-200"
+                    className="p-2 rounded-full bg-white/90 backdrop-blur-md hover:bg-gray-100 transition-colors duration-200"
                     onClick={onClose}
                   >
-                    <XMarkIcon className="w-4 h-4 text-gray-600" />
+                    <XMarkIcon className="w-4 h-4 text-gray-500" />
                   </button>
-                </div>
-
-                {/* Image Gallery */}
-                <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-6">
-                  {property.images && property.images.length > 0 ? (
-                    <img
-                      src={property.images[0]}
-                      alt={property.title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0">
-                      <PlaceholderImage />
-                    </div>
-                  )}
                 </div>
 
                 {/* Content */}
                 <div>
+                  {/* Images Gallery */}
+                  <div className="mb-8">
+                    <div className="aspect-[16/9] overflow-hidden rounded-xl">
+                      {property.images && property.images.length > 0 ? (
+                        <img
+                          src={property.images[0]}
+                          alt={property.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <PlaceholderImage />
+                      )}
+                    </div>
+                  </div>
+
                   <Dialog.Title as="h3" className="text-2xl font-semibold text-gray-900 mb-2">
                     {property.title}
                   </Dialog.Title>
@@ -98,8 +98,10 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     <div className={[
                       'px-3 py-1 rounded-full text-sm font-medium',
                       property.type === 'sale' 
-                        ? 'bg-gray-100 text-gray-900'
-                        : 'bg-emerald-100 text-emerald-800'
+                        ? 'bg-white/90 text-gray-900'
+                        : 'bg-gray-900/90 text-white'
+                        ? 'bg-violet-50 text-violet-900'
+                        : 'bg-violet-100 text-violet-800'
                     ].join(' ')}>
                       {property.type === 'sale' ? 'Продажа' : 'Аренда'}
                     </div>
@@ -130,21 +132,18 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
                     <div>
                       <h4 className="font-medium text-gray-900 mb-4">Описание</h4>
-                      <p className="text-gray-600 whitespace-pre-line">
+                      <p className="text-gray-700 whitespace-pre-line">
                         {property.description}
                       </p>
                     </div>
                   </div>
 
-                  {/* Map */}
+                  {/* Map Section */}
                   {property.coordinates && (
-                    <div className="mt-6 rounded-xl overflow-hidden">
-                      <div className="h-[300px]">
-                        <PropertyMap
-                          properties={[property]}
-                          center={property.coordinates}
-                          zoom={14}
-                        />
+                    <div className="mt-8">
+                      <h4 className="font-medium text-gray-900 mb-4">Расположение на карте</h4>
+                      <div className="h-[300px] rounded-xl overflow-hidden">
+                        <PropertyMap properties={[property]} />
                       </div>
                     </div>
                   )}
