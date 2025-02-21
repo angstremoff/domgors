@@ -10,6 +10,7 @@ interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  register: (email: string, password: string) => Promise<void>
   isLoading: boolean
 }
 
@@ -67,6 +68,30 @@ function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const register = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
+      })
+
+      if (error) throw error
+
+      if (data.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email!
+        })
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      throw error
+    }
+  }
+
   const login = async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -89,26 +114,22 @@ function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    // Сначала очищаем локальное состояние
     setUser(null)
     localStorage.removeItem('user')
 
     try {
-      // Проверяем сессию
       const { data: { session } } = await supabase.auth.getSession()
       
-      // Если есть сессия, пытаемся выйти
       if (session?.access_token) {
         await supabase.auth.signOut()
       }
     } catch (error) {
-      // Ошибку можно проигнорировать, так как локальное состояние уже очищено
       console.error('Logout error:', error)
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
       {children}
     </AuthContext.Provider>
   )
