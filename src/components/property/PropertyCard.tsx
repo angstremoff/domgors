@@ -48,7 +48,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         {/* Sold overlay */}
         {property.status === 'sold' && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
-            <span className="text-white text-xl font-bold">ПРОДАНО</span>
+            <span className="text-white text-xl font-bold">
+              {type === 'sale' ? 'ПРОДАНО' : 'СДАНО'}
+            </span>
           </div>
         )}
         

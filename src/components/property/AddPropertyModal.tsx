@@ -64,6 +64,11 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         return
       }
 
+      if (!formData.city_id) {
+        alert('Пожалуйста, выберите город')
+        return
+      }
+
       // Валидация перед отправкой
       if (!validateNumber(formData.rooms, 1, 20)) {
         alert('Количество комнат должно быть от 1 до 20')
@@ -78,6 +83,12 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         return
       }
 
+      const selectedCity = cities.find(city => city.id.toString() === formData.city_id)
+      if (!selectedCity) {
+        alert('Выбранный город не найден')
+        return
+      }
+
       const property = {
         ...formData,
         price: Number(formData.price),
@@ -85,7 +96,8 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         rooms: Number(formData.rooms),
         images: formData.images,
         features: formData.features,
-        coordinates: selectedCoordinates
+        coordinates: selectedCoordinates,
+        city: selectedCity
       }
 
       await addProperty(property)

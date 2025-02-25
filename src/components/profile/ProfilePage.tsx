@@ -206,7 +206,9 @@ export default function ProfilePage() {
                       />
                       {property.status === 'sold' && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                          <span className="text-white text-xl font-bold">ПРОДАНО</span>
+                          <span className="text-white text-xl font-bold">
+                            {property.type === 'sale' ? 'ПРОДАНО' : 'СДАНО'}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -222,7 +224,7 @@ export default function ProfilePage() {
                           className="mt-4 inline-flex items-center rounded-md bg-gray-900 px-3 py-2
                                    text-sm font-medium text-white hover:bg-gray-800"
                         >
-                          Отметить как проданное
+                          {property.type === 'sale' ? 'Отметить как проданное' : 'Отметить как сданное'}
                         </button>
                       )}
                     </div>
