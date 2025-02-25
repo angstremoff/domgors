@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     email TEXT UNIQUE NOT NULL,
     name TEXT,
+    phone TEXT,
     avatar_url TEXT
 );
 
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS public.properties (
     images TEXT[] NOT NULL DEFAULT '{}',
     features TEXT[] DEFAULT '{}',
     coordinates JSONB,
+    status TEXT CHECK (status IN ('active', 'sold')) DEFAULT 'active',
     user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
     CONSTRAINT valid_price CHECK (price >= 0),
     CONSTRAINT valid_area CHECK (area >= 0),

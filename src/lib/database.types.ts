@@ -67,6 +67,7 @@ export interface Database {
           created_at: string
           email: string
           name: string | null
+          phone: string | null
           avatar_url: string | null
         }
         Insert: {

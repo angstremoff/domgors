@@ -88,21 +88,21 @@ export default function Header() {
                       <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <Menu.Item>
                           {({ active }) => (
-                            <a
-                              href="/profile"
+                            <Link
+                              to="/profile"
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
                                 'block px-4 py-2 text-sm text-gray-700'
                               )}
                             >
                               Профиль
-                            </a>
+                            </Link>
                           )}
                         </Menu.Item>
                         <Menu.Item>
                           {({ active }) => (
                             <button
-                              onClick={() => logout()}
+                              onClick={logout}
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
                                 'block w-full text-left px-4 py-2 text-sm text-gray-700'
@@ -118,81 +118,16 @@ export default function Header() {
                 ) : (
                   <button
                     onClick={() => setIsLoginModalOpen(true)}
-                    className="inline-flex items-center rounded-md bg-secondary-600 px-3 py-2 text-sm font-medium text-white hover:bg-secondary-700 transition-colors"
+                    className="text-white/80 hover:text-white inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-white/10 hover:bg-white/20 backdrop-blur-sm"
                   >
                     Войти
                   </button>
                 )}
               </div>
-              <div className="-mr-2 flex items-center sm:hidden">
-                {/* Mobile menu button */}
-                <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                  <span className="sr-only">Открыть меню</span>
-                  {open ? (
-                    <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
-                  ) : (
-                    <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
-                  )}
-                </Disclosure.Button>
-              </div>
             </div>
           </div>
-
-          <Disclosure.Panel className="sm:hidden">
-            <div className="space-y-1 pb-3 pt-2">
-              {navigation.map((item) => (
-                <Disclosure.Button
-                  key={item.name}
-                  as={Link}
-                  to={item.href}
-                  className={classNames(
-                    item.current
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800',
-                    'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
-                  )}
-                >
-                  {item.name}
-                </Disclosure.Button>
-              ))}
-              {user && (
-                <Disclosure.Button
-                  as="button"
-                  onClick={() => setIsAddPropertyModalOpen(true)}
-                  className="block w-full text-left border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 border-l-4 py-2 pl-3 pr-4 text-base font-medium"
-                >
-                  Добавить объявление
-                </Disclosure.Button>
-              )}
-              <div className="border-t border-gray-200 pt-4 pb-3">
-                <div className="flex items-center px-4">
-                  <div className="flex-shrink-0">
-                    <FavoriteIcon />
-                  </div>
-                  {user ? (
-                    <div className="ml-3">
-                      <div className="text-base font-medium text-gray-800">{user.email}</div>
-                      <button
-                        onClick={() => logout()}
-                        className="mt-1 text-sm text-gray-500 hover:text-gray-700"
-                      >
-                        Выйти
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setIsLoginModalOpen(true)}
-                      className="ml-3 text-base font-medium text-indigo-600 hover:text-indigo-500"
-                    >
-                      Войти
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Disclosure.Panel>
         </>
-      )}
+        )}
       </Disclosure>
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       <AddPropertyModal isOpen={isAddPropertyModalOpen} onClose={() => setIsAddPropertyModalOpen(false)} />

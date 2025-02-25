@@ -145,11 +145,12 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     if (e.target.files && e.target.files.length > 0) {
       try {
         const files = Array.from(e.target.files)
-        const uploadPromises = files.map(async (file) => {
-          const fileExt = file.name.split('.').pop()
-          const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-          const filePath = `property-images/${fileName}`
+        if (files.length + formData.images.length > 10) {
+          alert('Максимальное количество фотографий - 10')
+          return
+        }
 
+        const uploadPromises = files.map(async (file) => {
           // Проверяем размер файла
           if (file.size > 5 * 1024 * 1024) { // 5MB
             throw new Error('Размер файла не должен превышать 5MB')
@@ -159,6 +160,10 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
           if (!file.type.startsWith('image/')) {
             throw new Error('Разрешены только изображения')
           }
+
+          const fileExt = file.name.split('.').pop()
+          const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
+          const filePath = `property-images/${fileName}`
 
           const { error: uploadError, data } = await supabase.storage
             .from('properties')
@@ -177,7 +182,10 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         })
 
         const urls = await Promise.all(uploadPromises)
-        setFormData(prev => ({ ...prev, images: [...prev.images, ...urls] }))
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, ...urls].slice(0, 10)
+        }))
       } catch (error) {
         console.error('Error uploading files:', error)
         alert('Ошибка при загрузке изображений')
@@ -372,7 +380,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
               {/* Фотографии */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Фотографии
+                  Фотографии (до 10 шт.)
                 </label>
                 <input
                   type="file"
@@ -386,7 +394,21 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                     file:text-sm file:font-semibold
                     file:bg-indigo-50 file:text-indigo-700
                     hover:file:bg-indigo-100"
+                  disabled={formData.images.length >= 10}
                 />
+                {formData.images.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {formData.images.map((url, index) => (
+                      <div key={index} className="relative w-24 h-24">
+                        <img
+                          src={url}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

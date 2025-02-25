@@ -9,7 +9,10 @@ export const propertyService = {
     console.log('Fetching properties...');
     const { data, error } = await supabase
       .from('properties')
-      .select('*')
+      .select(`
+        *,
+        user:users(name, phone)
+      `)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -24,7 +27,10 @@ export const propertyService = {
   async getPropertyById(id: string) {
     const { data, error } = await supabase
       .from('properties')
-      .select('*')
+      .select(`
+        *,
+        user:users(name, phone)
+      `)
       .eq('id', id)
       .single()
 

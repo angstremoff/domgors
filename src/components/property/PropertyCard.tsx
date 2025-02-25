@@ -34,11 +34,21 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           <img
             src={images[0]}
             alt={title}
-            className="absolute inset-0 w-full h-full object-cover"
+            className={[
+              'absolute inset-0 w-full h-full object-cover',
+              property.status === 'sold' ? 'grayscale' : ''
+            ].join(' ')}
           />
         ) : (
           <div className="absolute inset-0">
             <PlaceholderImage />
+          </div>
+        )}
+        
+        {/* Sold overlay */}
+        {property.status === 'sold' && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+            <span className="text-white text-xl font-bold">ПРОДАНО</span>
           </div>
         )}
         

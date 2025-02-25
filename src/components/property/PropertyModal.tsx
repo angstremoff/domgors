@@ -1,6 +1,7 @@
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import FavoriteButton from './FavoriteButton'
 import PlaceholderImage from './PlaceholderImage'
 import PropertyMap from './PropertyMap'
@@ -16,10 +17,15 @@ interface Property {
   rooms: number
   description: string
   images: string[]
+  status?: 'sold'
   coordinates: {
     lat: number
     lng: number
   } | null
+  user?: {
+    name: string | null
+    phone: string | null
+  }
 }
 
 interface PropertyModalProps {
@@ -29,7 +35,21 @@ interface PropertyModalProps {
 }
 
 export default function PropertyModal({ property, open, onClose }: PropertyModalProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
   if (!property) return null
+
+  const nextImage = () => {
+    if (property.images && property.images.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % property.images.length)
+    }
+  }
+
+  const previousImage = () => {
+    if (property.images && property.images.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length)
+    }
+  }
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -73,15 +93,47 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                 <div>
                   {/* Images Gallery */}
                   <div className="mb-8">
-                    <div className="aspect-[16/9] overflow-hidden rounded-xl">
+                    <div className="aspect-[16/9] overflow-hidden rounded-xl relative group">
                       {property.images && property.images.length > 0 ? (
-                        <img
-                          src={property.images[0]}
-                          alt={property.title}
-                          className="w-full h-full object-cover"
-                        />
+                        <>
+                          <img
+                            src={property.images[currentImageIndex]}
+                            alt={`${property.title} - изображение ${currentImageIndex + 1}`}
+                            className={`w-full h-full object-cover ${property.status === 'sold' ? 'grayscale' : ''}`}
+                          />
+                          {property.images.length > 1 && (
+                            <>
+                              <button
+                                onClick={previousImage}
+                                className="absolute left-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors duration-200 opacity-0 group-hover:opacity-100"
+                              >
+                                <ChevronLeftIcon className="w-6 h-6 text-gray-800" />
+                              </button>
+                              <button
+                                onClick={nextImage}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors duration-200 opacity-0 group-hover:opacity-100"
+                              >
+                                <ChevronRightIcon className="w-6 h-6 text-gray-800" />
+                              </button>
+                              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                                {property.images.map((_, index) => (
+                                  <button
+                                    key={index}
+                                    onClick={() => setCurrentImageIndex(index)}
+                                    className={`w-2 h-2 rounded-full transition-colors duration-200 ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
+                                  />
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </>
                       ) : (
                         <PlaceholderImage />
+                      )}
+                      {property.status === 'sold' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                          <span className="text-white text-2xl font-bold">ПРОДАНО</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -89,54 +141,73 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   <Dialog.Title as="h3" className="text-2xl font-semibold text-gray-900 mb-2">
                     {property.title}
                   </Dialog.Title>
-                  
-                  <div className="flex items-center gap-4 text-lg mb-6">
-                    <p className="font-semibold text-gray-900">
-                      {property.price.toLocaleString()} €
-                      {property.type === 'rent' && <span className="text-sm font-normal opacity-90">/мес</span>}
-                    </p>
-                    <div className={[
-                      'px-3 py-1 rounded-full text-sm font-medium',
-                      property.type === 'sale' 
-                        ? 'bg-white/90 text-gray-900'
-                        : 'bg-gray-900/90 text-white'
-                        ? 'bg-violet-50 text-violet-900'
-                        : 'bg-violet-100 text-violet-800'
-                    ].join(' ')}>
-                      {property.type === 'sale' ? 'Продажа' : 'Аренда'}
+
+                  {/* Основная информация */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h4 className="text-lg font-medium text-gray-900 mb-3">Основные характеристики</h4>
+                      <div className="space-y-2">
+                        <p className="text-gray-600">
+                          <span className="font-medium">Тип: </span>
+                          {property.type === 'sale' ? 'Продажа' : 'Аренда'}
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium">Тип недвижимости: </span>
+                          {{
+                            'apartment': 'Квартира',
+                            'house': 'Дом',
+                            'commercial': 'Коммерческая недвижимость',
+                            'land': 'Земельный участок'
+                          }[property.property_type] || property.property_type}
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium">Цена: </span>
+                          {property.price.toLocaleString()} €
+                          {property.type === 'rent' && '/мес'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h4 className="text-lg font-medium text-gray-900 mb-3">Характеристики</h4>
+                      <div className="space-y-2">
+                        <p className="text-gray-600">
+                          <span className="font-medium">Площадь: </span>
+                          {property.area} м²
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium">Комнат: </span>
+                          {property.rooms}
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium">Адрес: </span>
+                          {property.location}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-4">Характеристики</h4>
-                      <dl className="grid grid-cols-2 gap-4">
-                        <div>
-                          <dt className="text-sm text-gray-500">Тип</dt>
-                          <dd className="text-gray-900">{property.property_type}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm text-gray-500">Площадь</dt>
-                          <dd className="text-gray-900">{property.area} м²</dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm text-gray-500">Комнат</dt>
-                          <dd className="text-gray-900">{property.rooms}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-sm text-gray-500">Расположение</dt>
-                          <dd className="text-gray-900">{property.location}</dd>
-                        </div>
-                      </dl>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-4">Описание</h4>
-                      <p className="text-gray-700 whitespace-pre-line">
-                        {property.description}
-                      </p>
-                    </div>
+                  {/* Описание */}
+                  <div className="mb-6">
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Описание</h4>
+                    <p className="text-gray-600 whitespace-pre-line">{property.description}</p>
                   </div>
+
+                  {/* Контактная информация продавца */}
+                  {property.user && (
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">Контактная информация</h4>
+                      <div className="space-y-2">
+                        <p className="text-gray-600">
+                          <span className="font-medium">Имя: </span>
+                          {property.user.name || 'Не указано'}
+                        </p>
+                        <p className="text-gray-600">
+                          <span className="font-medium">Телефон: </span>
+                          {property.user.phone || 'Не указан'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Map Section */}
                   {property.coordinates && (
