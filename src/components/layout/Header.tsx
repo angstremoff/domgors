@@ -124,8 +124,74 @@ export default function Header() {
                   </button>
                 )}
               </div>
+
+              {/* Mobile menu button */}
+              <div className="flex items-center sm:hidden">
+                <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                  <span className="sr-only">Открыть меню</span>
+                  {open ? (
+                    <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+                  ) : (
+                    <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+                  )}
+                </Disclosure.Button>
+              </div>
             </div>
           </div>
+
+          {/* Mobile menu panel */}
+          <Disclosure.Panel className="sm:hidden bg-[#1E3A8A]">
+            <div className="space-y-1 px-4 pb-3 pt-2">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={classNames(
+                    'block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20',
+                    item.current ? 'bg-secondary-600 text-white shadow-md hover:bg-secondary-700 border-none' : ''
+                  )}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              {user && (
+                <button
+                  onClick={() => setIsAddPropertyModalOpen(true)}
+                  className="w-full text-left block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
+                >
+                  Добавить объявление
+                </button>
+              )}
+            </div>
+            <div className="border-t border-white/20 pb-3 pt-4">
+              <div className="space-y-1 px-4">
+                {user ? (
+                  <>
+                    <div className="text-base font-medium text-white mb-2 px-3">{user.email}</div>
+                    <Link
+                      to="/profile"
+                      className="block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
+                    >
+                      Профиль
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="w-full text-left block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
+                    >
+                      Выйти
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="w-full text-left block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
+                  >
+                    Войти
+                  </button>
+                )}
+              </div>
+            </div>
+          </Disclosure.Panel>
         </>
         )}
       </Disclosure>
