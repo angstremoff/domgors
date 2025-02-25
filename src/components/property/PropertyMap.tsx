@@ -105,34 +105,20 @@ export default function PropertyMap({
       if (property.coordinates) {
         const marker = new maplibregl.Marker()
           .setLngLat([property.coordinates.lng, property.coordinates.lat])
-          .setPopup(
-            new maplibregl.Popup({ offset: 25 })
-              .setHTML(
-                `<div class="p-2 bg-emerald-50 rounded shadow-lg backdrop-blur-sm">
-                  ${property.title ? `<h3 class="font-medium text-emerald-900">${property.title}</h3>` : ''}
-                  ${property.location ? `<p class="text-sm text-emerald-600">${property.location}</p>` : ''}
-                  ${property.price ? `<p class="text-sm font-medium mt-1 text-emerald-700">${property.price.toLocaleString()} €${property.type === 'rent' ? '/мес' : ''}</p>` : ''}
-                </div>`
-              )
-          )
-          .setPopup(
-            new maplibregl.Popup({ offset: 25 })
-              .setHTML(
-                `<div>
-                  ${property.title ? `<h3 class="font-medium">${property.title}</h3>` : ''}
-                  ${property.location ? `<p class="text-sm text-gray-500">${property.location}</p>` : ''}
-                  ${property.price ? `<p class="text-sm font-medium mt-1">${property.price.toLocaleString()} €${property.type === 'rent' ? '/мес' : ''}</p>` : ''}
-                </div>`
-              )
-          )
-          .addTo(map.current)
-        
+          .addTo(map.current!)
         markers.current.push(marker)
       }
     })
+
+    // Центрируем карту на первом маркере, если он есть
+    if (properties.length === 1 && properties[0].coordinates) {
+      map.current.flyTo({
+        center: [properties[0].coordinates.lng, properties[0].coordinates.lat],
+        zoom: 15,
+        essential: true
+      })
+    }
   }, [properties])
 
-  return (
-    <div ref={mapContainer} className="w-full h-full" />
-  )
+  return <div ref={mapContainer} className="w-full h-full" />
 }

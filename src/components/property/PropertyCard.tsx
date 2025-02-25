@@ -88,7 +88,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 min-h-[2.5rem] leading-snug">
             {title}
           </h3>
-          <p className="text-sm text-gray-500 mt-2 line-clamp-1">{location}</p>
+          <p className="text-sm text-gray-500 mt-2 line-clamp-1">{property.city?.name}, {location}</p>
         </div>
 
         {/* Features */}

@@ -180,7 +180,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         </p>
                         <p className="text-gray-600">
                           <span className="font-medium">Адрес: </span>
-                          {property.location}
+                          {property.city?.name}, {property.location}
                         </p>
                       </div>
                     </div>

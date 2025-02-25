@@ -11,7 +11,8 @@ export const propertyService = {
       .from('properties')
       .select(`
         *,
-        user:users(name, phone)
+        user:users(name, phone),
+        city:cities(name)
       `)
       .order('created_at', { ascending: false })
 
@@ -29,7 +30,8 @@ export const propertyService = {
       .from('properties')
       .select(`
         *,
-        user:users(name, phone)
+        user:users(name, phone),
+        city:cities(name)
       `)
       .eq('id', id)
       .single()
