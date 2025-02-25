@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Property } from '../../contexts/PropertyContext'
+import PropertyCard from './PropertyCard'
 
 interface PropertyMapProps {
   properties?: Property[]
@@ -21,6 +22,7 @@ export default function PropertyMap({
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const markers = useRef<maplibregl.Marker[]>([])
+  const popups = useRef<maplibregl.Popup[]>([])
 
   useEffect(() => {
     if (!mapContainer.current) return
@@ -96,17 +98,60 @@ export default function PropertyMap({
   useEffect(() => {
     if (!map.current) return
 
-    // Удаляем старые маркеры
+    // Удаляем старые маркеры и попапы
     markers.current.forEach(marker => marker.remove())
+    popups.current.forEach(popup => popup.remove())
     markers.current = []
+    popups.current = []
 
     // Добавляем новые маркеры
     properties.forEach(property => {
       if (property.coordinates) {
+        const popup = new maplibregl.Popup({
+          closeButton: true,
+          closeOnClick: false,
+          maxWidth: '300px',
+          className: 'property-popup'
+        })
+
+        const popupContent = document.createElement('div')
+        popupContent.className = 'property-popup-content'
+        popupContent.style.width = '250px'
+        popupContent.innerHTML = `
+          <div class="cursor-pointer">
+            <img src="${property.images?.[0] || '/placeholder.jpg'}" alt="${property.title}" class="w-full h-32 object-cover rounded-t-lg" />
+            <div class="p-2 bg-white rounded-b-lg">
+              <p class="font-semibold">${property.price.toLocaleString()} €${property.type === 'rent' ? '/мес' : ''}</p>
+              <p class="text-sm text-gray-600 truncate">${property.title}</p>
+            </div>
+          </div>
+        `
+
+        popup.setDOMContent(popupContent)
+
+        // Add click event to popup content
+        popupContent.addEventListener('click', () => {
+          // Find and click the property card that matches this property
+          const propertyCards = document.querySelectorAll(`[data-property-id="${property.id}"]`)
+          if (propertyCards.length > 0) {
+            // Create a click event to simulate opening the modal
+            const clickEvent = new MouseEvent('click', {
+              bubbles: true,
+              cancelable: true,
+              view: window
+            })
+            // Trigger the click event on the first matching property card
+            propertyCards[0].dispatchEvent(clickEvent)
+          }
+        })
+
         const marker = new maplibregl.Marker()
           .setLngLat([property.coordinates.lng, property.coordinates.lat])
-          .addTo(map.current!)
+          .setPopup(popup)
+          .addTo(map.current)
+
         markers.current.push(marker)
+        popups.current.push(popup)
       }
     })
 
@@ -119,6 +164,17 @@ export default function PropertyMap({
       })
     }
   }, [properties])
+
+  // Add effect to handle center changes
+  useEffect(() => {
+    if (!map.current) return
+
+    map.current.flyTo({
+      center: center,
+      zoom: zoom,
+      essential: true
+    })
+  }, [center, zoom])
 
   return <div ref={mapContainer} className="w-full h-full" />
 }

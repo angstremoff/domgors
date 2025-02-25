@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react'
 import { useProperties } from '../contexts/PropertyContext'
 import { useSearchParams } from 'react-router-dom'
 import Footer from '../components/layout/Footer'
+import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import CitySelect from '../components/property/CitySelect'
 
 import type { Property } from '../contexts/PropertyContext'
 
@@ -12,6 +14,8 @@ export default function SalePage() {
   const { properties, filteredProperties, setFilteredProperties } = useProperties()
   const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
+  const [isMapExpanded, setIsMapExpanded] = useState(false)
+  const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
   
   // Инициализируем фильтрованные свойства при загрузке
   useEffect(() => {
@@ -44,10 +48,30 @@ export default function SalePage() {
                 <h2 className="text-2xl font-semibold text-gray-900 mb-8">Фильтры</h2>
                 <PropertyFilters type="sale" properties={properties} />
               </div>
-              <div className="bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-200">
-                <div className="h-[400px] relative z-0">
-                  <PropertyMap properties={filteredProperties} />
+              <div className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200">
+                <div 
+                  className="flex items-center justify-between p-8 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setIsMapExpanded(!isMapExpanded)}
+                >
+                  <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
+                    Карта объектов
+                    {isMapExpanded ? (
+                      <ChevronUpIcon className="w-6 h-6 text-gray-400" />
+                    ) : (
+                      <ChevronDownIcon className="w-6 h-6 text-gray-400" />
+                    )}
+                  </h2>
                 </div>
+                {isMapExpanded && (
+                  <div>
+                    <div className="px-8 pb-4">
+                      <CitySelect onCitySelect={({lng, lat}) => setMapCenter([lng, lat])} />
+                    </div>
+                    <div className="h-[400px] relative z-0 rounded-b-3xl overflow-hidden">
+                      <PropertyMap properties={filteredProperties} center={mapCenter} />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

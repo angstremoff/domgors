@@ -6,10 +6,12 @@ import AddProperty from '../components/property/AddProperty'
 import { useProperties } from '../contexts/PropertyContext'
 import Footer from '../components/layout/Footer'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
+import CitySelect from '../components/property/CitySelect'
 
 export default function HomePage() {
   const { properties, filteredProperties, loading, setFilteredProperties } = useProperties()
   const [isMapExpanded, setIsMapExpanded] = useState(false)
+  const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
 
   useEffect(() => {
     setFilteredProperties(properties)
@@ -39,8 +41,13 @@ export default function HomePage() {
               </h2>
             </div>
             {isMapExpanded && (
-              <div className="h-[600px] relative z-0 rounded-b-3xl overflow-hidden">
-                <PropertyMap properties={filteredProperties} />
+              <div>
+                <div className="px-8 pb-4">
+                  <CitySelect onCitySelect={({lng, lat}) => setMapCenter([lng, lat])} />
+                </div>
+                <div className="h-[600px] relative z-0 rounded-b-3xl overflow-hidden">
+                  <PropertyMap properties={filteredProperties} center={mapCenter} />
+                </div>
               </div>
             )}
           </div>

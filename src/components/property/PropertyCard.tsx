@@ -27,6 +27,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
       <div 
         className="group relative bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden transition-all duration-300 hover:translate-y-[-4px] cursor-pointer h-full shadow-lg hover:shadow-xl border border-violet-100/50"
         onClick={() => setIsModalOpen(true)}
+        data-property-id={id}
       >
         {/* Image container */}
         <div className="relative aspect-[4/3] overflow-hidden">
