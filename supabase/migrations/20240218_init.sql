@@ -137,4 +137,21 @@ INSERT INTO public.properties (
     ARRAY['https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&w=500'],
     ARRAY['parking', 'furnished'],
     '{"lat": 44.786567, "lng": 20.448873}'::jsonb
+),
+INSERT INTO cities (name, coordinates) VALUES
+  ('Суботица', '{"lat": 46.100376, "lng": 19.666641}'),
+  ('Лозница', '{"lat": 44.533329, "lng": 19.223273}'),
+  ('Крагуевац', '{"lat": 44.012794, "lng": 20.926773}');
+(
+    'Kragujevac',
+    'Property in Kragujevac',
+    'sale',
+    'apartment',
+    95000,
+    80,
+    3,
+    'Kragujevac',
+    ARRAY['https://example.com/image3.jpg'],
+    ARRAY['balcony'],
+    '{"lat": 44.012794, "lng": 20.926773}'::jsonb
 );
