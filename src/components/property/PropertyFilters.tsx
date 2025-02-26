@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Disclosure } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import { useProperties } from '../../contexts/PropertyContext'
+import { useProperties, Property } from '../../contexts/PropertyContext'
 
 interface PropertyFiltersProps {
   type: 'sale' | 'rent'
@@ -128,19 +128,22 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
     console.log('Total properties before filtering:', properties.length)
 
     const filtered = properties.filter(property => {
-      // Проверяем только те фильтры, которые были выбраны
-      for (const [filterId, values] of Object.entries(localFilters)) {
-        if (!values || values.length === 0) continue
+      // First check if the property matches the transaction type (sale/rent)
+      if (property.type !== type) return false;
 
-        console.log(`Checking filter ${filterId} with values:`, values)
-        console.log('Property values:', property)
+      // Then check other filters
+      for (const [filterId, values] of Object.entries(localFilters)) {
+        if (!values || values.length === 0) continue;
+
+        console.log(`Checking filter ${filterId} with values:`, values);
+        console.log('Property values:', property);
 
         switch (filterId) {
           case 'property_type':
-            const matchesType = values.includes(property.property_type)
-            console.log(`Property type check: ${property.property_type}, matches: ${matchesType}`)
-            if (!matchesType) return false
-            break
+            const matchesType = values.includes(property.property_type);
+            console.log(`Property type check: ${property.property_type}, matches: ${matchesType}`);
+            if (!matchesType) return false;
+            break;
 
           case 'price': {
             for (const range of values) {
@@ -199,7 +202,7 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
               console.log('Property has no features')
               return false
             }
-            const hasFeatures = values.every(feature => property.features.includes(feature))
+            const hasFeatures = values.every(feature => property.features?.includes(feature) ?? false)
             console.log(`Features check: required ${values}, has ${property.features}, matches: ${hasFeatures}`)
             if (!hasFeatures) return false
             break

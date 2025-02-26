@@ -5,28 +5,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import FavoriteButton from './FavoriteButton'
 import PlaceholderImage from './PlaceholderImage'
 import PropertyMap from './PropertyMap'
-
-interface Property {
-  id: string
-  title: string
-  location: string
-  price: number
-  type: 'sale' | 'rent'
-  property_type: string
-  area: number
-  rooms: number
-  description: string
-  images: string[]
-  status?: 'sold'
-  coordinates: {
-    lat: number
-    lng: number
-  } | null
-  user?: {
-    name: string | null
-    phone: string | null
-  }
-}
+import { Property } from '../../contexts/PropertyContext'
 
 interface PropertyModalProps {
   property: Property | null
@@ -77,7 +56,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform rounded-2xl bg-white p-6 text-left shadow-xl transition-all w-full max-w-4xl max-h-[91vh] overflow-y-auto">
+              <Dialog.Panel className="relative transform rounded-2xl bg-white p-4 sm:p-6 text-left shadow-xl transition-all w-full max-w-4xl max-h-[91vh] overflow-y-auto">
                 <div className="absolute right-4 top-4 z-10 flex space-x-2">
                   <FavoriteButton propertyId={property.id} />
                   <button
@@ -138,20 +117,20 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     </div>
                   </div>
 
-                  <Dialog.Title as="h3" className="text-2xl font-semibold text-gray-900 mb-2">
+                  <Dialog.Title as="h3" className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
                     {property.title}
                   </Dialog.Title>
 
                   {/* Основная информация */}
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-lg font-medium text-gray-900 mb-3">Основные характеристики</h4>
-                      <div className="space-y-2">
-                        <p className="text-gray-600">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+                      <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3">Основные характеристики</h4>
+                      <div className="space-y-1 sm:space-y-2">
+                        <p className="text-sm sm:text-base text-gray-600">
                           <span className="font-medium">Тип: </span>
                           {property.type === 'sale' ? 'Продажа' : 'Аренда'}
                         </p>
-                        <p className="text-gray-600">
+                        <p className="text-sm sm:text-base text-gray-600">
                           <span className="font-medium">Тип недвижимости: </span>
                           {{
                             'apartment': 'Квартира',
@@ -160,25 +139,25 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                             'land': 'Земельный участок'
                           }[property.property_type] || property.property_type}
                         </p>
-                        <p className="text-gray-600">
+                        <p className="text-sm sm:text-base text-gray-600">
                           <span className="font-medium">Цена: </span>
                           {property.price.toLocaleString()} €
                           {property.type === 'rent' && '/мес'}
                         </p>
                       </div>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-lg font-medium text-gray-900 mb-3">Характеристики</h4>
-                      <div className="space-y-2">
-                        <p className="text-gray-600">
+                    <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
+                      <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-2 sm:mb-3">Характеристики</h4>
+                      <div className="space-y-1 sm:space-y-2">
+                        <p className="text-sm sm:text-base text-gray-600">
                           <span className="font-medium">Площадь: </span>
                           {property.area} м²
                         </p>
-                        <p className="text-gray-600">
+                        <p className="text-sm sm:text-base text-gray-600">
                           <span className="font-medium">Комнат: </span>
                           {property.rooms}
                         </p>
-                        <p className="text-gray-600">
+                        <p className="text-sm sm:text-base text-gray-600">
                           <span className="font-medium">Адрес: </span>
                           {property.city?.name}, {property.location}
                         </p>
@@ -187,21 +166,21 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   </div>
 
                   {/* Описание */}
-                  <div className="mb-6">
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">Описание</h4>
-                    <p className="text-gray-600 whitespace-pre-line">{property.description}</p>
+                  <div className="mb-4 sm:mb-6">
+                    <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Описание</h4>
+                    <p className="text-sm sm:text-base text-gray-600 whitespace-pre-line">{property.description}</p>
                   </div>
 
                   {/* Контактная информация продавца */}
                   {property.user && (
-                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                      <h4 className="text-lg font-medium text-gray-900 mb-2">Контактная информация</h4>
-                      <div className="space-y-2">
-                        <p className="text-gray-600">
+                    <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                      <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Контактная информация</h4>
+                      <div className="space-y-1 sm:space-y-2">
+                        <p className="text-sm sm:text-base text-gray-600">
                           <span className="font-medium">Имя: </span>
                           {property.user.name || 'Не указано'}
                         </p>
-                        <p className="text-gray-600">
+                        <p className="text-sm sm:text-base text-gray-600">
                           <span className="font-medium">Телефон: </span>
                           {property.user.phone || 'Не указан'}
                         </p>
@@ -213,8 +192,12 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   {property.coordinates && (
                     <div className="mt-8">
                       <h4 className="font-medium text-gray-900 mb-4">Расположение на карте</h4>
-                      <div className="h-[300px] rounded-xl overflow-hidden">
-                        <PropertyMap properties={[property]} />
+                      <div className="h-[400px] relative z-0 rounded-b-3xl overflow-hidden">
+                        <PropertyMap 
+                          properties={property.coordinates ? [property] : []}
+                          center={property.coordinates ? [property.coordinates.lng, property.coordinates.lat] : [20.457273, 44.787197]}
+                          zoom={property.coordinates ? 14 : 11}
+                        />
                       </div>
                     </div>
                   )}

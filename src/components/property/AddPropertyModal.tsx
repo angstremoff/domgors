@@ -43,12 +43,12 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     location: '',
     title: '',
     description: '',
-    type: 'sale',
+    type: 'sale' as 'sale' | 'rent',
     property_type: 'apartment',
     price: '',
     area: '',
     rooms: '',
-    city_id: '',
+    city_id: 0,
     images: [] as string[],
     features: [] as string[],
   })
@@ -83,7 +83,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         return
       }
 
-      const selectedCity = cities.find(city => city.id.toString() === formData.city_id)
+      const selectedCity = cities.find(city => city.id === Number(formData.city_id))
       if (!selectedCity) {
         alert('Выбранный город не найден')
         return
@@ -94,10 +94,11 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         price: Number(formData.price),
         area: Number(formData.area),
         rooms: Number(formData.rooms),
+        city_id: Number(formData.city_id),
         images: formData.images,
         features: formData.features,
         coordinates: selectedCoordinates,
-        city: selectedCity
+        status: 'active' as 'active' | 'sold'
       }
 
       await addProperty(property)
@@ -112,10 +113,10 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         price: '',
         area: '',
         rooms: '',
-        city_id: '',
+        city_id: 0,
         location: '',
         images: [],
-        coordinates: null
+        features: []
       })
     } catch (error) {
       console.error('Error adding property:', error)
@@ -146,8 +147,13 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     if (name === 'city_id') {
       const city = cities.find(c => c.id.toString() === value)
       if (city?.coordinates) {
+        setFormData(prev => ({ ...prev, [name]: Number(value) }))
         setSelectedCoordinates(city.coordinates)
+      } else {
+        setFormData(prev => ({ ...prev, [name]: Number(value) }))
+        setSelectedCoordinates(null)
       }
+      return
     }
 
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -377,15 +383,29 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                 </label>
                 <div className="h-[400px] rounded-lg overflow-hidden border border-gray-300">
                   <PropertyMap
-                    center={selectedCoordinates ? [selectedCoordinates.lng, selectedCoordinates.lat] : undefined}
-                    zoom={14}
-                    properties={selectedCoordinates ? [{ coordinates: selectedCoordinates, title: 'Выбранное местоположение' } as Property] : []}
+                    center={selectedCoordinates ? [selectedCoordinates.lng, selectedCoordinates.lat] : [20.457273, 44.787197]}
+                    zoom={selectedCoordinates ? 14 : 11}
+                    properties={selectedCoordinates ? [{
+                      id: 'temp-marker',
+                      title: 'Выбранное местоположение',
+                      description: 'Временная метка для выбора расположения',
+                      coordinates: selectedCoordinates,
+                      type: 'sale',
+                      property_type: formData.property_type,
+                      price: 0,
+                      area: 0,
+                      rooms: 0,
+                      city_id: 0,
+                      images: [],
+                      created_at: new Date().toISOString(),
+                      location: formData.location
+                    }] : []}
                     onMarkerPlace={setSelectedCoordinates}
                     allowMarkerPlacement={true}
                   />
                 </div>
                 <p className="mt-2 text-sm text-gray-500">
-                  Выберите город, чтобы указать расположение объекта на карте
+                  {selectedCoordinates ? 'Кликните на карту, чтобы изменить расположение' : 'Выберите город, чтобы указать расположение объекта на карте'}
                 </p>
               </div>
 

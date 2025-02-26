@@ -39,15 +39,9 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 npm run dev
 ```
 
-## Оптимизация
-В проекте используются следующие индексы для оптимизации поиска:
-```sql
-CREATE INDEX properties_type_idx ON properties(type);
-CREATE INDEX properties_property_type_idx ON properties(property_type);
-CREATE INDEX properties_price_idx ON properties(price);
-CREATE INDEX properties_rooms_idx ON properties(rooms);
-CREATE INDEX properties_created_at_idx ON properties(created_at DESC);
-```
+## Последние изменения
+
+1. Исправлены координаты городов Суботица, Лозница и Крагуевац для корректного отображения на карте
 
 ## Лицензия
 MIT

@@ -19,6 +19,20 @@ export type Property = {
     lat: number
     lng: number
   }
+  status?: 'active' | 'sold'
+  location: string
+  city?: {
+    id: number
+    name: string
+    coordinates?: {
+      lat: number
+      lng: number
+    }
+  }
+  user?: {
+    name?: string
+    phone?: string
+  }
 }
 
 interface PropertyContextType {

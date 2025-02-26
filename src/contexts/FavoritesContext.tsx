@@ -125,7 +125,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
           if (insertError) {
             // If we get a conflict error, the record might have been created concurrently
-            if (insertError.code === '23505' || insertError.status === 409) {
+            if (insertError.code === '23505') {
               console.log('Favorite already exists, skipping insert')
             } else {
               throw insertError

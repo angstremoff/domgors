@@ -16,6 +16,7 @@ export default function SalePage() {
   const [searchParams] = useSearchParams()
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
+  const [mapZoom, setMapZoom] = useState<number>(11)
   
   // Инициализируем фильтрованные свойства при загрузке
   useEffect(() => {
@@ -37,6 +38,22 @@ export default function SalePage() {
   useEffect(() => {
     setLoading(false)
   }, [])
+
+  const handleCitySelect = ({lat, lng}: {lat: number; lng: number}) => {
+    // Сначала обновляем состояние
+    setMapCenter([lng, lat])
+    setMapZoom(12)
+    
+    // Даем время для обновления состояния
+    setTimeout(() => {
+      // Принудительное обновление карты
+      const mapElement = document.querySelector('.maplibregl-map')
+      if (mapElement) {
+        const resizeEvent = new Event('resize')
+        window.dispatchEvent(resizeEvent)
+      }
+    }, 100)
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -65,10 +82,10 @@ export default function SalePage() {
                 {isMapExpanded && (
                   <div>
                     <div className="px-8 pb-4">
-                      <CitySelect onCitySelect={({lng, lat}) => setMapCenter([lng, lat])} />
+                      <CitySelect onCitySelect={handleCitySelect} />
                     </div>
                     <div className="h-[400px] relative z-0 rounded-b-3xl overflow-hidden">
-                      <PropertyMap properties={filteredProperties} center={mapCenter} />
+                      <PropertyMap properties={filteredProperties} center={mapCenter} zoom={mapZoom} />
                     </div>
                   </div>
                 )}

@@ -52,7 +52,11 @@ export const propertyService = {
         ...property,
         user_id: session.session.user.id
       })
-      .select()
+      .select(`
+        *,
+        user:users(name, phone),
+        city:cities(name)
+      `)
       .single()
 
     if (error) throw error

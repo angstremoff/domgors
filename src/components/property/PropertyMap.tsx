@@ -2,7 +2,6 @@ import { useRef, useEffect } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Property } from '../../contexts/PropertyContext'
-import PropertyCard from './PropertyCard'
 
 interface PropertyMapProps {
   properties?: Property[]
@@ -94,17 +93,34 @@ export default function PropertyMap({
     }
   }, [])
 
-  // Обновляем маркеры при изменении properties
+  // Update map center, zoom, and markers when props change
+  // Update map center and zoom when props change
   useEffect(() => {
     if (!map.current) return
 
-    // Удаляем старые маркеры и попапы
+    // Update center and zoom
+    map.current.flyTo({
+      center: center,
+      zoom: zoom,
+      essential: true,
+      duration: 0
+    })
+
+    // Force map resize
+    map.current.resize()
+  }, [center, zoom])
+
+  // Update markers separately from center/zoom
+  useEffect(() => {
+    if (!map.current) return
+
+    // Remove old markers and popups
     markers.current.forEach(marker => marker.remove())
     popups.current.forEach(popup => popup.remove())
     markers.current = []
     popups.current = []
 
-    // Добавляем новые маркеры
+    // Add new markers
     properties.forEach(property => {
       if (property.coordinates) {
         const popup = new maplibregl.Popup({
@@ -121,7 +137,7 @@ export default function PropertyMap({
           <div class="cursor-pointer">
             <img src="${property.images?.[0] || '/placeholder.jpg'}" alt="${property.title}" class="w-full h-32 object-cover rounded-t-lg" />
             <div class="p-2 bg-white rounded-b-lg">
-              <p class="font-semibold">${property.price.toLocaleString()} €${property.type === 'rent' ? '/мес' : ''}</p>
+              <p class="font-semibold">${property.price ? property.price.toLocaleString() : 'Цена не указана'} ${property.price ? `€${property.type === 'rent' ? '/мес' : ''}` : ''}</p>
               <p class="text-sm text-gray-600 truncate">${property.title}</p>
             </div>
           </div>
@@ -131,16 +147,13 @@ export default function PropertyMap({
 
         // Add click event to popup content
         popupContent.addEventListener('click', () => {
-          // Find and click the property card that matches this property
           const propertyCards = document.querySelectorAll(`[data-property-id="${property.id}"]`)
           if (propertyCards.length > 0) {
-            // Create a click event to simulate opening the modal
             const clickEvent = new MouseEvent('click', {
               bubbles: true,
               cancelable: true,
               view: window
             })
-            // Trigger the click event on the first matching property card
             propertyCards[0].dispatchEvent(clickEvent)
           }
         })
@@ -148,33 +161,27 @@ export default function PropertyMap({
         const marker = new maplibregl.Marker()
           .setLngLat([property.coordinates.lng, property.coordinates.lat])
           .setPopup(popup)
-          .addTo(map.current)
-
-        markers.current.push(marker)
-        popups.current.push(popup)
+        
+        if (map.current) {
+          marker.addTo(map.current)
+          markers.current.push(marker)
+          popups.current.push(popup)
+        }
       }
     })
-
-    // Центрируем карту на первом маркере, если он есть
-    if (properties.length === 1 && properties[0].coordinates) {
-      map.current.flyTo({
-        center: [properties[0].coordinates.lng, properties[0].coordinates.lat],
-        zoom: 15,
-        essential: true
-      })
-    }
   }, [properties])
 
-  // Add effect to handle center changes
+  // Add window resize handler
   useEffect(() => {
-    if (!map.current) return
+    const handleResize = () => {
+      if (map.current) {
+        map.current.resize()
+      }
+    }
 
-    map.current.flyTo({
-      center: center,
-      zoom: zoom,
-      essential: true
-    })
-  }, [center, zoom])
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return <div ref={mapContainer} className="w-full h-full" />
 }

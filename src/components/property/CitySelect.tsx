@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 
-interface CitySelectProps {
-  onCitySelect: (coordinates: { lng: number; lat: number }) => void
-}
-
 interface City {
   id: number
   name: string
@@ -47,11 +43,13 @@ export default function CitySelect({ onCitySelect }: CitySelectProps) {
     const cityId = parseInt(event.target.value)
     const selectedCity = cities.find(city => city.id === cityId)
     
-    if (selectedCity) {
-      onCitySelect({
-        lng: selectedCity.coordinates.lng,
-        lat: selectedCity.coordinates.lat
-      })
+    if (selectedCity?.coordinates) {
+      // Убедимся, что координаты переданы в правильном формате
+      const coordinates = {
+        lat: selectedCity.coordinates.lat,
+        lng: selectedCity.coordinates.lng
+      }
+      onCitySelect(coordinates)
     }
   }
 

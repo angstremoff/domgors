@@ -15,6 +15,7 @@ interface PropertyFormData {
   images: File[]
   features: string[]
   coordinates: { lat: number; lng: number } | null
+  city_id: number | null
 }
 
 export default function PropertyForm() {
@@ -31,7 +32,8 @@ export default function PropertyForm() {
     location: '',
     images: [],
     features: [],
-    coordinates: null
+    coordinates: null,
+    city_id: null
   })
 
   const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

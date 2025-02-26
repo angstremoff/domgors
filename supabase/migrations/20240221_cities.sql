@@ -5,6 +5,13 @@ CREATE TABLE IF NOT EXISTS public.cities (
     coordinates JSONB NOT NULL
 );
 
+-- Add city_id to properties table
+ALTER TABLE public.properties
+ADD COLUMN IF NOT EXISTS city_id INTEGER REFERENCES public.cities(id);
+
+-- Create index for city_id
+CREATE INDEX IF NOT EXISTS properties_city_id_idx ON public.properties(city_id);
+
 -- Update city coordinates
 UPDATE public.cities 
 SET coordinates = '{"lat": 46.100376, "lng": 19.666641}'::jsonb 
