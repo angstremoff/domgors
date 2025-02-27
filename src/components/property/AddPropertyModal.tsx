@@ -12,12 +12,9 @@ interface AddPropertyModalProps {
 
 export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalProps) {
   const [cities, setCities] = useState<{ id: number; name: string; coordinates?: { lng: number; lat: number } }[]>([])
-  const [loading, setLoading] = useState(false)
-
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        setLoading(true)
         const { data, error } = await supabase
           .from('cities')
           .select('id, name, coordinates')
@@ -27,8 +24,6 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         if (data) setCities(data)
       } catch (error) {
         console.error('Error fetching cities:', error)
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -40,7 +35,6 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
   const [selectedCoordinates, setSelectedCoordinates] = useState<{ lng: number; lat: number } | null>(null)
 
   const [formData, setFormData] = useState({
-    location: '',
     title: '',
     description: '',
     type: 'sale' as 'sale' | 'rent',
@@ -49,6 +43,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     area: '',
     rooms: '',
     city_id: 0,
+    location: '',
     images: [] as string[],
     features: [] as string[],
   })
@@ -61,6 +56,11 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     try {
       if (!selectedCoordinates) {
         alert('Пожалуйста, укажите расположение объекта на карте')
+        return
+      }
+
+      if (!formData.location || formData.location.trim() === '') {
+        alert('Пожалуйста, укажите корректный адрес объекта')
         return
       }
 
@@ -98,7 +98,9 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         images: formData.images,
         features: formData.features,
         coordinates: selectedCoordinates,
-        status: 'active' as 'active' | 'sold'
+        location: formData.location.trim(),
+        status: 'active' as 'active' | 'sold',
+        user_id: null // Add the required user_id property
       }
 
       await addProperty(property)
@@ -118,11 +120,11 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         images: [],
         features: []
       })
+      setSelectedCoordinates(null) // Сбрасываем выбранные координаты
     } catch (error) {
       console.error('Error adding property:', error)
-      // TODO: Показать уведомление об ошибке
+      alert('Произошла ошибка при добавлении объявления. Пожалуйста, проверьте введенные данные и попробуйте снова.')
     }
-
   }
 
   const validateNumber = (value: string, min: number, max: number) => {
@@ -183,7 +185,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
           const filePath = `property-images/${fileName}`
 
-          const { error: uploadError, data } = await supabase.storage
+          const { error: uploadError } = await supabase.storage
             .from('properties')
             .upload(filePath, file, {
               cacheControl: '3600',
@@ -210,6 +212,8 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
       }
     }
   }
+
+
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -269,7 +273,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
               {/* Заголовок */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Заголовок объявления
+                  Заголовок
                 </label>
                 <input
                   type="text"
@@ -378,10 +382,8 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
 
               {/* Карта */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Расположение на карте
-                </label>
-                <div className="h-[400px] rounded-lg overflow-hidden border border-gray-300">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Расположение на карте</label>
+                <div className="h-[400px] rounded-lg overflow-hidden">
                   <PropertyMap
                     center={selectedCoordinates ? [selectedCoordinates.lng, selectedCoordinates.lat] : [20.457273, 44.787197]}
                     zoom={selectedCoordinates ? 14 : 11}
@@ -397,6 +399,9 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                       rooms: 0,
                       city_id: 0,
                       images: [],
+                      features: [],
+                      status: 'active',
+                      user_id: null,
                       created_at: new Date().toISOString(),
                       location: formData.location
                     }] : []}
@@ -404,9 +409,11 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                     allowMarkerPlacement={true}
                   />
                 </div>
-                <p className="mt-2 text-sm text-gray-500">
-                  {selectedCoordinates ? 'Кликните на карту, чтобы изменить расположение' : 'Выберите город, чтобы указать расположение объекта на карте'}
-                </p>
+                {formData.location && (
+                  <div className="mt-2 text-sm text-gray-500">
+                    Выбранный адрес: {formData.location}
+                  </div>
+                )}
               </div>
 
               {/* Фотографии */}

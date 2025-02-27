@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { propertyService } from '../services/propertyService'
-import type { Database } from '../lib/database.types'
 
 export type Property = {
   id: string
@@ -13,14 +12,15 @@ export type Property = {
   rooms: number
   city_id: number
   images: string[]
-  features?: string[]
+  features: string[]
   created_at: string
-  coordinates?: {
+  coordinates: {
     lat: number
     lng: number
-  }
-  status?: 'active' | 'sold'
+  } | null
+  status: 'active' | 'sold'
   location: string
+  user_id: string | null
   city?: {
     id: number
     name: string
@@ -30,8 +30,8 @@ export type Property = {
     }
   }
   user?: {
-    name?: string
-    phone?: string
+    name: string | null
+    phone: string | null
   }
 }
 
@@ -43,6 +43,7 @@ interface PropertyContextType {
   getPropertiesByType: (type: 'sale' | 'rent') => Property[]
   setFilteredProperties: (properties: Property[]) => void
   refreshProperties: () => Promise<void>
+  togglePropertyStatus: (propertyId: string) => Promise<void>
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined)
@@ -51,6 +52,27 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [filteredProperties, setFilteredProperties] = useState<Property[]>(properties)
+
+  const togglePropertyStatus = async (propertyId: string) => {
+    try {
+      const property = properties.find(p => p.id === propertyId)
+      if (!property) return
+
+      const newStatus = property.status === 'sold' ? 'active' : 'sold'
+      await propertyService.updateProperty(propertyId, { status: newStatus })
+
+      setProperties(prev => prev.map(p => 
+        p.id === propertyId ? { ...p, status: newStatus } : p
+      ))
+
+      setFilteredProperties(prev => prev.map(p => 
+        p.id === propertyId ? { ...p, status: newStatus } : p
+      ))
+    } catch (error) {
+      console.error('Error toggling property status:', error)
+      throw error
+    }
+  }
 
   const addProperty = async (newProperty: Omit<Property, 'id' | 'created_at'>) => {
     try {
@@ -94,7 +116,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       addProperty,
       getPropertiesByType,
       setFilteredProperties,
-      refreshProperties: loadProperties
+      refreshProperties: loadProperties,
+      togglePropertyStatus
     }}>
       {children}
     </PropertyContext.Provider>

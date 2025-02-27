@@ -26,6 +26,7 @@ export interface Database {
           coordinates: Json | null
           user_id: string | null
           location: string
+          status: 'active' | 'sold'
         }
         Insert: {
           id?: string
@@ -43,6 +44,7 @@ export interface Database {
           coordinates?: Json | null
           user_id?: string | null
           location: string
+          status?: 'active' | 'sold'
         }
         Update: {
           id?: string
@@ -59,6 +61,7 @@ export interface Database {
           features?: string[]
           coordinates?: Json | null
           user_id?: string | null
+          status?: 'active' | 'sold'
         }
       }
       users: {

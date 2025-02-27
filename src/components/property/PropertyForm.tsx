@@ -2,6 +2,9 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
 
 interface PropertyFormData {
   title: string
@@ -16,6 +19,29 @@ interface PropertyFormData {
   features: string[]
   coordinates: { lat: number; lng: number } | null
   city_id: number | null
+}
+
+const defaultIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+})
+
+function LocationMarker({ position, setPosition }: {
+  position: { lat: number; lng: number } | null
+  setPosition: (pos: { lat: number; lng: number }) => void
+}) {
+  const map = useMapEvents({
+    click(e: L.LeafletMouseEvent) {
+      setPosition(e.latlng)
+      map.flyTo(e.latlng, map.getZoom())
+    },
+  })
+
+  return position === null ? null : (
+    <Marker position={position} icon={defaultIcon} />
+  )
 }
 
 export default function PropertyForm() {
@@ -48,6 +74,28 @@ export default function PropertyForm() {
     }))
   }, [formData.images])
 
+  const handleLocationSelect = async (position: { lat: number; lng: number }) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${position.lat}&lon=${position.lng}&format=json`
+      )
+      const data = await response.json()
+      
+      // Извлекаем только название улицы из полного адреса
+      const street = data.address?.road || data.address?.street || ''
+      const houseNumber = data.address?.house_number || ''
+      const location = street + (houseNumber ? `, ${houseNumber}` : '')
+
+      setFormData(prev => ({
+        ...prev,
+        location: location,
+        coordinates: position
+      }))
+    } catch (error) {
+      console.error('Error fetching address:', error)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
@@ -74,7 +122,8 @@ export default function PropertyForm() {
       const { error } = await supabase.from('properties').insert({
         ...formData,
         images: imageUrls,
-        user_id: user.id
+        user_id: user.id,
+        status: 'active'
       })
 
       if (error) throw error
@@ -111,7 +160,6 @@ export default function PropertyForm() {
         </div>
       </div>
 
-      {/* Other form fields */}
       <div className="grid grid-cols-1 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700">Заголовок</label>
@@ -134,7 +182,92 @@ export default function PropertyForm() {
           />
         </div>
 
-        {/* Add other necessary fields */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Тип объявления</label>
+          <select
+            value={formData.type}
+            onChange={e => setFormData(prev => ({ ...prev, type: e.target.value as 'sale' | 'rent' }))}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          >
+            <option value="sale">Продажа</option>
+            <option value="rent">Аренда</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Тип недвижимости</label>
+          <select
+            value={formData.property_type}
+            onChange={e => setFormData(prev => ({ ...prev, property_type: e.target.value }))}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          >
+            <option value="apartment">Квартира</option>
+            <option value="house">Дом</option>
+            <option value="commercial">Коммерческая недвижимость</option>
+            <option value="land">Земельный участок</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Цена</label>
+          <input
+            type="number"
+            required
+            min="0"
+            value={formData.price}
+            onChange={e => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Площадь (м²)</label>
+          <input
+            type="number"
+            required
+            min="0"
+            value={formData.area}
+            onChange={e => setFormData(prev => ({ ...prev, area: Number(e.target.value) }))}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Количество комнат</label>
+          <input
+            type="number"
+            required
+            min="1"
+            value={formData.rooms}
+            onChange={e => setFormData(prev => ({ ...prev, rooms: Number(e.target.value) }))}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Расположение на карте</label>
+          <div className="h-[400px] rounded-lg overflow-hidden">
+            <MapContainer
+              center={[44.787197, 20.457273]}
+              zoom={13}
+              style={{ height: '100%', width: '100%' }}
+            >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+              <LocationMarker
+                position={formData.coordinates}
+                setPosition={handleLocationSelect}
+              />
+            </MapContainer>
+          </div>
+          {formData.location && (
+            <div className="mt-2 text-sm text-gray-500">
+              Выбранный адрес: {formData.location}
+            </div>
+          )}
+        </div>
       </div>
 
       <button
