@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { useAuth } from '../../contexts/AuthContext'
+import EmailVerificationModal from './EmailVerificationModal'
 
 interface RegisterModalProps {
   isOpen: boolean
@@ -13,6 +14,7 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,8 +26,10 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     }
     
     try {
-      await register(email, password)
-      onClose()
+      const { needsEmailVerification } = await register(email, password)
+      if (needsEmailVerification) {
+        setShowVerificationModal(true)
+      }
     } catch (err: any) {
       if (err?.message) {
         setError(err.message)
@@ -33,6 +37,15 @@ export default function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         setError('Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.')
       }
     }
+  }
+
+  const handleVerificationModalClose = () => {
+    setShowVerificationModal(false)
+    onClose()
+  }
+
+  if (showVerificationModal) {
+    return <EmailVerificationModal isOpen={true} onClose={handleVerificationModalClose} email={email} />
   }
 
   return (

@@ -18,29 +18,38 @@ export default function AuthCallback() {
         }
 
         if (data.session) {
-          // Проверяем, существует ли запись в таблице users
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('id')
-            .eq('id', data.session.user.id)
-            .single()
-
-          // Если записи нет, создаем ее
-          if (userError && userError.code === 'PGRST116') {
-            const { error: insertError } = await supabase
+          // Проверяем, что email подтвержден
+          if (data.session.user.email_confirmed_at) {
+            // Проверяем, существует ли запись в таблице users
+            const { data: userData, error: userError } = await supabase
               .from('users')
-              .insert({
-                id: data.session.user.id,
-                email: data.session.user.email
-              })
+              .select('id')
+              .eq('id', data.session.user.id)
+              .single()
 
-            if (insertError) {
-              console.error('Error creating user record:', insertError)
+            // Если записи нет, создаем ее только после подтверждения email
+            if (userError && userError.code === 'PGRST116') {
+              const { error: insertError } = await supabase
+                .from('users')
+                .insert({
+                  id: data.session.user.id,
+                  email: data.session.user.email
+                })
+
+              if (insertError) {
+                console.error('Error creating user record:', insertError)
+              }
             }
-          }
 
-          // Перенаправляем на страницу профиля
-          navigate('/profile')
+            // Перенаправляем на страницу профиля
+            navigate('/profile')
+          } else {
+            // Email не подтвержден, показываем сообщение
+            setError('Пожалуйста, подтвердите ваш email перед входом в систему')
+            // Выходим из системы, так как email не подтвержден
+            await supabase.auth.signOut()
+            navigate('/')
+          }
         } else {
           // Если сессия не найдена, перенаправляем на главную страницу
           navigate('/')

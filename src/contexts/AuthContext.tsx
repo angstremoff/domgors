@@ -10,7 +10,7 @@ interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  register: (email: string, password: string) => Promise<void>
+  register: (email: string, password: string) => Promise<{user: User | null, needsEmailVerification: boolean}>
   signInWithGoogle: () => Promise<void>
   isLoading: boolean
 }
@@ -38,12 +38,15 @@ function AuthProvider({ children }: { children: ReactNode }) {
     // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const userData = {
-          id: session.user.id,
-          email: session.user.email!
+        // Only set the user if email is verified
+        if (session.user.email_confirmed_at) {
+          const userData = {
+            id: session.user.id,
+            email: session.user.email!
+          }
+          setUser(userData)
+          localStorage.setItem('user', JSON.stringify(userData))
         }
-        setUser(userData)
-        localStorage.setItem('user', JSON.stringify(userData))
       } else {
         setUser(null)
         localStorage.removeItem('user')
@@ -56,7 +59,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
+      if (session?.user && session.user.email_confirmed_at) {
         setUser({
           id: session.user.id,
           email: session.user.email!
@@ -92,7 +95,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: "https://domgors.onrender.com",
           data: {
             email: email
           }
@@ -101,18 +104,21 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error
 
+      // Return user data and verification status without setting the user state
       if (data.user) {
         const userData = {
           id: data.user.id,
           email: data.user.email!
         }
         
-        // Запись в таблице users создается автоматически через триггер on_auth_user_created
-        // Не нужно вручную создавать запись
-
-        setUser(userData)
-        localStorage.setItem('user', JSON.stringify(userData))
+        // Check if email confirmation is needed
+        const needsEmailVerification = !data.user.email_confirmed_at
+        
+        // Don't set the user or store in localStorage until email is verified
+        return { user: userData, needsEmailVerification }
       }
+      
+      return { user: null, needsEmailVerification: false }
     } catch (error: any) {
       console.error('Registration error:', error)
       throw error
@@ -128,11 +134,14 @@ function AuthProvider({ children }: { children: ReactNode }) {
       
       if (error) throw error
       
-      if (data.user) {
+      // Only set the user if email is verified
+      if (data.user && data.user.email_confirmed_at) {
         setUser({
           id: data.user.id,
           email: data.user.email!
         })
+      } else if (data.user && !data.user.email_confirmed_at) {
+        throw new Error('Пожалуйста, подтвердите ваш email перед входом в систему')
       }
     } catch (error) {
       console.error('Login error:', error)
