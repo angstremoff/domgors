@@ -54,7 +54,7 @@ export default function SalePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 py-6 sm:py-8 lg:py-12">
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           <div className="lg:w-2/5">

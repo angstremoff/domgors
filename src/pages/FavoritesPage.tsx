@@ -17,7 +17,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-semibold text-violet-900 mb-6">Избранные объявления</h1>
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Избранные объявления</h1>
       
       {isLoading ? (
         <div className="text-center py-12">
