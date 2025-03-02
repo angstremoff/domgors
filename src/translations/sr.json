@@ -1,0 +1,145 @@
+{
+  "common": {
+    "filters": "Filteri",
+    "objectsMap": "Mapa objekata",
+    "newListings": "Novi oglasi",
+    "applyFilters": "Primeni filtere",
+    "addListing": "Dodaj oglas",
+    "profile": "Profil",
+    "logout": "Odjavi se",
+    "login": "Prijavi se",
+    "openMenu": "Otvori meni",
+    "cancel": "Otkaži",
+    "publish": "Objavi",
+    "save": "Sačuvaj",
+    "saving": "Čuvanje...",
+    "loading": "Učitavanje...",
+    "edit": "Izmeni",
+    "markAsSold": "Označi kao prodato",
+    "markAsRented": "Označi kao izdato",
+    "personalInfo": "Lični podaci",
+    "myListings": "Moji oglasi",
+    "selectCity": "Izaberite grad",
+    "favorites": "Omiljeni oglasi",
+    "roomsShort": "sobe",
+    "perMonth": "/mes"
+  },
+  "footer": {
+    "mobileApps": "Mobilne aplikacije",
+    "contacts": "Kontakti",
+    "developedBy": "Razvijeno"
+  },
+  "favorites": {
+    "empty": "Nemate omiljenih oglasa"
+  },
+  "propertyTypes": {
+    "apartment": "Stan",
+    "house": "Kuća",
+    "commercial": "Poslovni prostor",
+    "land": "Plac"
+  },
+  "transactionTypes": {
+    "sale": "Prodaja",
+    "rent": "Izdavanje"
+  },
+  "quickFilters": {
+    "rentApartments": "Izdavanje stanova",
+    "rentHouses": "Izdavanje kuća",
+    "rentCommercial": "Izdavanje posl. prostora",
+    "saleApartments": "Prodaja stanova",
+    "saleHouses": "Prodaja kuća",
+    "saleCommercial": "Prodaja posl. prostora",
+    "land": "Placevi"
+  },
+  "filters": {
+    "propertyType": "Tip nekretnine",
+    "price": "Cena",
+    "pricePerMonth": "Mesečna cena",
+    "rooms": "Broj soba",
+    "area": "Površina",
+    "features": "Karakteristike"
+  },
+  "features": {
+    "parking": "Parking",
+    "balcony": "Terasa",
+    "elevator": "Lift",
+    "furnished": "Namešten"
+  },
+  "rooms": {
+    "one": "1 soba",
+    "two": "2 sobe",
+    "three": "3 sobe",
+    "fourPlus": "4+ sobe"
+  },
+  "priceRanges": {
+    "sale": {
+      "upTo100k": "Do 100.000 €",
+      "100kTo300k": "100.000 € - 300.000 €",
+      "300kTo500k": "300.000 € - 500.000 €",
+      "500kTo1m": "500.000 € - 1.000.000 €",
+      "over1m": "Preko 1.000.000 €"
+    },
+    "rent": {
+      "upTo500": "Do 500 €",
+      "500To1000": "500 € - 1.000 €",
+      "1000To2000": "1.000 € - 2.000 €",
+      "2000To3000": "2.000 € - 3.000 €",
+      "over3000": "Preko 3.000 €"
+    }
+  },
+  "areaRanges": {
+    "sale": {
+      "upTo50": "Do 50 m²",
+      "50To100": "50-100 m²",
+      "100To200": "100-200 m²",
+      "over200": "Preko 200 m²"
+    },
+    "rent": {
+      "upTo40": "Do 40 m²",
+      "40To60": "40-60 m²",
+      "60To100": "60-100 m²",
+      "over100": "Preko 100 m²"
+    }
+  },
+  "status": {
+    "sold": "Prodato",
+    "rented": "Izdato"
+  },
+  "squareMeters": "m²",
+  "addProperty": {
+    "title": "Dodaj oglas",
+    "form": {
+      "title": "Naslov",
+      "description": "Opis",
+      "address": "Adresa",
+      "addressPlaceholder": "Unesite adresu",
+      "descriptionPlaceholder": "Unesite opis nekretnine",
+      "pricePlaceholder": "Unesite cenu",
+      "areaPlaceholder": "Unesite površinu",
+      "roomsPlaceholder": "Unesite broj soba",
+      "photos": "Fotografije",
+      "maxPhotos": "maksimalno 10",
+      "noFileSelected": "Nije izabran fajl",
+      "selectFiles": "Izaberite fajlove",
+      "preview": "Pregled",
+      "mapLocation": "Lokacija na mapi",
+      "selectedLocation": "Izabrana lokacija",
+      "temporaryMarker": "Privremeni marker",
+      "selectedAddress": "Izabrana adresa"
+    },
+    "validation": {
+      "selectLocation": "Molimo izaberite lokaciju na mapi",
+      "enterAddress": "Molimo unesite adresu",
+      "selectCity": "Molimo izaberite grad",
+      "roomsRange": "Broj soba mora biti između 1 i 20",
+      "areaRange": "Površina mora biti između 1 i 1000 m²",
+      "priceRange": "Cena mora biti između 1 i 100.000.000 €",
+      "cityNotFound": "Izabrani grad nije pronađen",
+      "maxPhotos": "Maksimalno 10 fotografija",
+      "maxFileSize": "Maksimalna veličina fajla je 5MB",
+      "onlyImages": "Možete uploadovati samo slike",
+      "uploadError": "Greška pri uploadu fajlova",
+      "addError": "Greška pri dodavanju oglasa"
+    }
+  }
+}

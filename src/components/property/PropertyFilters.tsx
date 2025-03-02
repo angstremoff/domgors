@@ -2,126 +2,132 @@ import { useState } from 'react'
 import { Disclosure } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { useProperties, Property } from '../../contexts/PropertyContext'
+import { useTranslation } from 'react-i18next'
 
 interface PropertyFiltersProps {
   type: 'sale' | 'rent'
   properties: Property[]
 }
 
-const saleFilters = [
-  {
-    id: 'property_type',
-    name: 'Тип недвижимости',
-    options: [
-      { value: 'apartment', label: 'Квартира' },
-      { value: 'house', label: 'Дом' },
-      { value: 'commercial', label: 'Коммерческая' },
-      { value: 'land', label: 'Земельный участок' },
-    ],
-  },
-  {
-    id: 'price',
-    name: 'Цена',
-    options: [
-      { value: '0-100000', label: 'До 100,000 €' },
-      { value: '100000-300000', label: '100,000 € - 300,000 €' },
-      { value: '300000-500000', label: '300,000 € - 500,000 €' },
-      { value: '500000-1000000', label: '500,000 € - 1,000,000 €' },
-      { value: '1000000+', label: 'Более 1,000,000 €' },
-    ],
-  },
-  {
-    id: 'rooms',
-    name: 'Количество комнат',
-    options: [
-      { value: '1', label: '1 комната' },
-      { value: '2', label: '2 комнаты' },
-      { value: '3', label: '3 комнаты' },
-      { value: '4+', label: '4+ комнаты' },
-    ],
-  },
-  {
-    id: 'area',
-    name: 'Площадь',
-    options: [
-      { value: '0-50', label: 'До 50 м²' },
-      { value: '50-100', label: '50-100 м²' },
-      { value: '100-200', label: '100-200 м²' },
-      { value: '200+', label: 'Более 200 м²' },
-    ],
-  },
-  {
-    id: 'features',
-    name: 'Особенности',
-    options: [
-      { value: 'parking', label: 'Парковка' },
-      { value: 'balcony', label: 'Балкон' },
-      { value: 'elevator', label: 'Лифт' },
-      { value: 'furnished', label: 'С мебелью' },
-    ],
-  },
-]
+// Removed static filters in favor of dynamic translation-based filters
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 
-const rentFilters = [
+const getSaleFilters = (t: (key: string) => string) => [
   {
     id: 'property_type',
-    name: 'Тип недвижимости',
+    name: t('filters.propertyType'),
     options: [
-      { value: 'apartment', label: 'Квартира' },
-      { value: 'house', label: 'Дом' },
-      { value: 'commercial', label: 'Коммерческая' },
+      { value: 'apartment', label: t('propertyTypes.apartment') },
+      { value: 'house', label: t('propertyTypes.house') },
+      { value: 'commercial', label: t('propertyTypes.commercial') },
+      { value: 'land', label: t('propertyTypes.land') },
     ],
   },
   {
     id: 'price',
-    name: 'Цена в месяц',
+    name: t('filters.price'),
     options: [
-      { value: '0-500', label: 'До 500 €' },
-      { value: '500-1000', label: '500 € - 1,000 €' },
-      { value: '1000-2000', label: '1,000 € - 2,000 €' },
-      { value: '2000-3000', label: '2,000 € - 3,000 €' },
-      { value: '3000+', label: 'Более 3,000 €' },
+      { value: '0-100000', label: t('priceRanges.sale.upTo100k') },
+      { value: '100000-300000', label: t('priceRanges.sale.100kTo300k') },
+      { value: '300000-500000', label: t('priceRanges.sale.300kTo500k') },
+      { value: '500000-1000000', label: t('priceRanges.sale.500kTo1m') },
+      { value: '1000000+', label: t('priceRanges.sale.over1m') },
     ],
   },
   {
     id: 'rooms',
-    name: 'Количество комнат',
+    name: t('filters.rooms'),
     options: [
-      { value: '1', label: '1 комната' },
-      { value: '2', label: '2 комнаты' },
-      { value: '3', label: '3 комнаты' },
-      { value: '4+', label: '4+ комнаты' },
+      { value: '1', label: t('rooms.one') },
+      { value: '2', label: t('rooms.two') },
+      { value: '3', label: t('rooms.three') },
+      { value: '4+', label: t('rooms.fourPlus') },
     ],
   },
   {
     id: 'area',
-    name: 'Площадь',
+    name: t('filters.area'),
     options: [
-      { value: '0-40', label: 'До 40 м²' },
-      { value: '40-60', label: '40-60 м²' },
-      { value: '60-100', label: '60-100 м²' },
-      { value: '100+', label: 'Более 100 м²' },
+      { value: '0-50', label: t('areaRanges.sale.upTo50') },
+      { value: '50-100', label: t('areaRanges.sale.50To100') },
+      { value: '100-200', label: t('areaRanges.sale.100To200') },
+      { value: '200+', label: t('areaRanges.sale.over200') },
     ],
   },
   {
     id: 'features',
-    name: 'Особенности',
+    name: t('filters.features'),
     options: [
-      { value: 'parking', label: 'Парковка' },
-      { value: 'balcony', label: 'Балкон' },
-      { value: 'elevator', label: 'Лифт' },
-      { value: 'furnished', label: 'С мебелью' },
+      { value: 'parking', label: t('features.parking') },
+      { value: 'balcony', label: t('features.balcony') },
+      { value: 'elevator', label: t('features.elevator') },
+      { value: 'furnished', label: t('features.furnished') },
     ],
   },
-]
+];
+
+const getRentFilters = (t: (key: string) => string) => [
+  {
+    id: 'property_type',
+    name: t('filters.propertyType'),
+    options: [
+      { value: 'apartment', label: t('propertyTypes.apartment') },
+      { value: 'house', label: t('propertyTypes.house') },
+      { value: 'commercial', label: t('propertyTypes.commercial') },
+    ],
+  },
+  {
+    id: 'price',
+    name: t('filters.pricePerMonth'),
+    options: [
+      { value: '0-500', label: t('priceRanges.rent.upTo500') },
+      { value: '500-1000', label: t('priceRanges.rent.500To1000') },
+      { value: '1000-2000', label: t('priceRanges.rent.1000To2000') },
+      { value: '2000-3000', label: t('priceRanges.rent.2000To3000') },
+      { value: '3000+', label: t('priceRanges.rent.over3000') },
+    ],
+  },
+  {
+    id: 'rooms',
+    name: t('filters.rooms'),
+    options: [
+      { value: '1', label: t('rooms.one') },
+      { value: '2', label: t('rooms.two') },
+      { value: '3', label: t('rooms.three') },
+      { value: '4+', label: t('rooms.fourPlus') },
+    ],
+  },
+  {
+    id: 'area',
+    name: t('filters.area'),
+    options: [
+      { value: '0-40', label: t('areaRanges.rent.upTo40') },
+      { value: '40-60', label: t('areaRanges.rent.40To60') },
+      { value: '60-100', label: t('areaRanges.rent.60To100') },
+      { value: '100+', label: t('areaRanges.rent.over100') },
+    ],
+  },
+  {
+    id: 'features',
+    name: t('filters.features'),
+    options: [
+      { value: 'parking', label: t('features.parking') },
+      { value: 'balcony', label: t('features.balcony') },
+      { value: 'elevator', label: t('features.elevator') },
+      { value: 'furnished', label: t('features.furnished') },
+    ],
+  },
+];
+
+// Removed static filters in favor of dynamic translation-based filters
 
 export default function PropertyFilters({ type, properties }: PropertyFiltersProps) {
   const { setFilteredProperties } = useProperties()
   const [localFilters, setLocalFilters] = useState<Record<string, string[]>>({})
+  const { t } = useTranslation()
 
   const applyFilters = () => {
     console.log('Applying filters:', localFilters)
@@ -227,7 +233,7 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
     })
   }
 
-  const currentFilters = type === 'sale' ? saleFilters : rentFilters
+  const currentFilters = type === 'sale' ? getSaleFilters(t) : getRentFilters(t)
 
   return (
     <div className="space-y-4">
@@ -278,7 +284,7 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
           onClick={applyFilters}
           className="w-full bg-[#1E3A8A] text-white py-3 px-4 rounded-xl hover:bg-[#1E3A8A]/90 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
         >
-          Применить фильтры
+          {t('common.applyFilters')}
         </button>
       </div>
     </div>

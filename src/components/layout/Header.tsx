@@ -3,10 +3,12 @@ import { Link, useLocation } from 'react-router-dom'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import FavoriteIcon from './FavoriteIcon'
+import LanguageSelector from './LanguageSelector'
+import { useTranslation } from 'react-i18next'
 
-const getNavigation = (pathname: string) => [
-  { name: 'Аренда', href: '/rent', current: pathname === '/rent' },
-  { name: 'Продажа', href: '/buy', current: pathname === '/buy' }
+const getNavigation = (pathname: string, t: (key: string) => string) => [
+  { name: t('transactionTypes.rent'), href: '/rent', current: pathname === '/rent' },
+  { name: t('transactionTypes.sale'), href: '/buy', current: pathname === '/buy' }
 ]
 
 function classNames(...classes: string[]) {
@@ -23,7 +25,8 @@ export default function Header() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
   const [isAddPropertyModalOpen, setIsAddPropertyModalOpen] = useState(false)
   const { pathname } = useLocation()
-  const navigation = getNavigation(pathname)
+  const { t } = useTranslation()
+  const navigation = getNavigation(pathname, t)
   return (
     <>
       <Disclosure as="nav" className="bg-[#1E3A8A] shadow-md sticky top-0 z-50">
@@ -60,11 +63,14 @@ export default function Header() {
                     onClick={() => setIsAddPropertyModalOpen(true)}
                     className="text-white/80 hover:text-white inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-white/10 hover:bg-white/20 backdrop-blur-sm mr-3"
                   >
-                    Добавить объявление
+                    {t('common.addListing')}
                   </button>
                 )}
                 <div className="mr-3">
                   <FavoriteIcon />
+                </div>
+                <div className="mr-3">
+                  <LanguageSelector />
                 </div>
 
                 {user ? (
@@ -95,7 +101,7 @@ export default function Header() {
                                 'block px-4 py-2 text-sm text-gray-700'
                               )}
                             >
-                              Профиль
+                              {t('common.profile')}
                             </Link>
                           )}
                         </Menu.Item>
@@ -108,7 +114,7 @@ export default function Header() {
                                 'block w-full text-left px-4 py-2 text-sm text-gray-700'
                               )}
                             >
-                              Выйти
+                              {t('common.logout')}
                             </button>
                           )}
                         </Menu.Item>
@@ -120,7 +126,7 @@ export default function Header() {
                     onClick={() => setIsLoginModalOpen(true)}
                     className="text-white/80 hover:text-white inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-white/10 hover:bg-white/20 backdrop-blur-sm"
                   >
-                    Войти
+                    {t('common.login')}
                   </button>
                 )}
               </div>
@@ -128,7 +134,7 @@ export default function Header() {
               {/* Mobile menu button */}
               <div className="flex items-center sm:hidden">
                 <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
-                  <span className="sr-only">Открыть меню</span>
+                  <span className="sr-only">{t('common.openMenu')}</span>
                   {open ? (
                     <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
                   ) : (
@@ -159,7 +165,7 @@ export default function Header() {
                   onClick={() => setIsAddPropertyModalOpen(true)}
                   className="w-full text-left block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
                 >
-                  Добавить объявление
+                  {t('common.addListing')}
                 </button>
               )}
             </div>
@@ -172,13 +178,13 @@ export default function Header() {
                       to="/profile"
                       className="block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
                     >
-                      Профиль
+                      {t('common.profile')}
                     </Link>
                     <button
                       onClick={logout}
                       className="w-full text-left block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
                     >
-                      Выйти
+                      {t('common.logout')}
                     </button>
                   </>
                 ) : (
@@ -186,7 +192,7 @@ export default function Header() {
                     onClick={() => setIsLoginModalOpen(true)}
                     className="w-full text-left block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
                   >
-                    Войти
+                    {t('common.login')}
                   </button>
                 )}
               </div>

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { HiOutlineHome, HiOutlineOfficeBuilding } from 'react-icons/hi'
 import { BiBuildings } from 'react-icons/bi'
 import { MdOutlineLandscape } from 'react-icons/md'
+import { useTranslation } from 'react-i18next'
 
 interface QuickFilterButtonProps {
   icon: React.ReactNode
@@ -21,43 +22,44 @@ const QuickFilterButton = ({ icon, label, onClick }: QuickFilterButtonProps) => 
 
 export default function QuickFilters() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const filters = [
-    // Аренда
+    // Rent
     {
       icon: <BiBuildings />,
-      label: 'Аренда квартир',
+      label: t('quickFilters.rentApartments'),
       onClick: () => navigate('/rent?propertyType=apartment')
     },
     {
       icon: <HiOutlineHome />,
-      label: 'Аренда домов',
+      label: t('quickFilters.rentHouses'),
       onClick: () => navigate('/rent?propertyType=house')
     },
     {
       icon: <HiOutlineOfficeBuilding />,
-      label: 'Аренда коммерческой',
+      label: t('quickFilters.rentCommercial'),
       onClick: () => navigate('/rent?propertyType=commercial')
     },
-    // Продажа
+    // Sale
     {
       icon: <BiBuildings />,
-      label: 'Продажа квартир',
+      label: t('quickFilters.saleApartments'),
       onClick: () => navigate('/buy?propertyType=apartment')
     },
     {
       icon: <HiOutlineHome />,
-      label: 'Продажа домов',
+      label: t('quickFilters.saleHouses'),
       onClick: () => navigate('/buy?propertyType=house')
     },
     {
       icon: <HiOutlineOfficeBuilding />,
-      label: 'Продажа коммерческой',
+      label: t('quickFilters.saleCommercial'),
       onClick: () => navigate('/buy?propertyType=commercial')
     },
     {
       icon: <MdOutlineLandscape />,
-      label: 'Земельные участки',
+      label: t('quickFilters.land'),
       onClick: () => navigate('/buy?propertyType=land')
     }
   ]

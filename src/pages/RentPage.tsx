@@ -7,10 +7,12 @@ import { useSearchParams } from 'react-router-dom'
 import Footer from '../components/layout/Footer'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import CitySelect from '../components/property/CitySelect'
+import { useTranslation } from 'react-i18next';
 
 import type { Property } from '../contexts/PropertyContext'
 
 export default function RentPage() {
+  const { t } = useTranslation();
   const { properties, filteredProperties, setFilteredProperties } = useProperties()
   const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
@@ -45,7 +47,7 @@ export default function RentPage() {
           <div className="lg:w-2/5">
             <div className="sticky top-4 space-y-4 lg:space-y-8">
               <div className="bg-white rounded-3xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-200 hover:shadow-xl transition-all duration-300">
-                <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-4 lg:mb-8">Фильтры</h2>
+                <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-4 lg:mb-8">{t('common.filters')}</h2>
                 <PropertyFilters type="rent" properties={properties} />
               </div>
               <div className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200">
@@ -54,7 +56,7 @@ export default function RentPage() {
                   onClick={() => setIsMapExpanded(!isMapExpanded)}
                 >
                   <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 flex items-center gap-3">
-                    Карта объектов
+                    {t('common.objectsMap')}
                     {isMapExpanded ? (
                       <ChevronUpIcon className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400" />
                     ) : (

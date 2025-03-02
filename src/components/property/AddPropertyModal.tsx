@@ -4,6 +4,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useProperties } from '../../contexts/PropertyContext'
 import { supabase } from '../../lib/supabaseClient'
 import PropertyMap from '../property/PropertyMap'
+import { useTranslation } from 'react-i18next'
 
 interface AddPropertyModalProps {
   isOpen: boolean
@@ -11,6 +12,7 @@ interface AddPropertyModalProps {
 }
 
 export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalProps) {
+  const { t } = useTranslation()
   const [cities, setCities] = useState<{ id: number; name: string; coordinates?: { lng: number; lat: number } }[]>([])
   useEffect(() => {
     const fetchCities = async () => {
@@ -55,37 +57,37 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     
     try {
       if (!selectedCoordinates) {
-        alert('Пожалуйста, укажите расположение объекта на карте')
+        alert(t('addProperty.validation.selectLocation'))
         return
       }
 
       if (!formData.location || formData.location.trim() === '') {
-        alert('Пожалуйста, укажите корректный адрес объекта')
+        alert(t('addProperty.validation.enterAddress'))
         return
       }
 
       if (!formData.city_id) {
-        alert('Пожалуйста, выберите город')
+        alert(t('addProperty.validation.selectCity'))
         return
       }
 
       // Валидация перед отправкой
       if (!validateNumber(formData.rooms, 1, 20)) {
-        alert('Количество комнат должно быть от 1 до 20')
+        alert(t('addProperty.validation.roomsRange'))
         return
       }
       if (!validateNumber(formData.area, 1, 1000)) {
-        alert('Площадь должна быть от 1 до 1000 м²')
+        alert(t('addProperty.validation.areaRange'))
         return
       }
       if (!validateNumber(formData.price, 1, 100000000)) {
-        alert('Цена должна быть от 1 до 100,000,000')
+        alert(t('addProperty.validation.priceRange'))
         return
       }
 
       const selectedCity = cities.find(city => city.id === Number(formData.city_id))
       if (!selectedCity) {
-        alert('Выбранный город не найден')
+        alert(t('addProperty.validation.cityNotFound'))
         return
       }
 
@@ -123,7 +125,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
       setSelectedCoordinates(null) // Сбрасываем выбранные координаты
     } catch (error) {
       console.error('Error adding property:', error)
-      alert('Произошла ошибка при добавлении объявления. Пожалуйста, проверьте введенные данные и попробуйте снова.')
+      alert(t('addProperty.validation.addError'))
     }
   }
 
@@ -166,19 +168,19 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
       try {
         const files = Array.from(e.target.files)
         if (files.length + formData.images.length > 10) {
-          alert('Максимальное количество фотографий - 10')
+          alert(t('addProperty.validation.maxPhotos'))
           return
         }
 
         const uploadPromises = files.map(async (file) => {
           // Проверяем размер файла
           if (file.size > 5 * 1024 * 1024) { // 5MB
-            throw new Error('Размер файла не должен превышать 5MB')
+            throw new Error(t('addProperty.validation.maxFileSize'))
           }
 
           // Проверяем тип файла
           if (!file.type.startsWith('image/')) {
-            throw new Error('Разрешены только изображения')
+            throw new Error(t('addProperty.validation.onlyImages'))
           }
 
           const fileExt = file.name.split('.').pop()
@@ -208,7 +210,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         }))
       } catch (error) {
         console.error('Error uploading files:', error)
-        alert('Ошибка при загрузке изображений')
+        alert(t('addProperty.validation.uploadError'))
       }
     }
   }
@@ -222,8 +224,8 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
       <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto mt-16">
         <Dialog.Panel className="w-full max-w-2xl bg-white rounded-xl shadow-lg max-h-[91vh] overflow-y-auto">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <Dialog.Title className="text-lg font-semibold text-gray-900">
-              Добавить объявление
+            <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+              {t('addProperty.title')}
             </Dialog.Title>
             <button
               type="button"
@@ -239,7 +241,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
               {/* Тип сделки */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Тип сделки
+                  {t('filters.propertyType')}
                 </label>
                 <select
                   name="type"
@@ -247,15 +249,15 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                 >
-                  <option value="sale">Продажа</option>
-                  <option value="rent">Аренда</option>
+                  <option value="sale">{t('transactionTypes.sale')}</option>
+                  <option value="rent">{t('transactionTypes.rent')}</option>
                 </select>
               </div>
 
               {/* Тип недвижимости */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Тип недвижимости
+                  {t('filters.propertyType')}
                 </label>
                 <select
                   name="property_type"
@@ -263,17 +265,17 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                 >
-                  <option value="apartment">Квартира</option>
-                  <option value="house">Дом</option>
-                  <option value="commercial">Коммерческая недвижимость</option>
-                  <option value="land">Земельный участок</option>
+                  <option value="apartment">{t('propertyTypes.apartment')}</option>
+                  <option value="house">{t('propertyTypes.house')}</option>
+                  <option value="commercial">{t('propertyTypes.commercial')}</option>
+                  {formData.type === 'sale' && <option value="land">{t('propertyTypes.land')}</option>}
                 </select>
               </div>
 
               {/* Заголовок */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Заголовок
+                  {t('addProperty.form.title')}
                 </label>
                 <input
                   type="text"
@@ -288,7 +290,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
               {/* Адрес */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Адрес
+                  {t('addProperty.form.address')}
                 </label>
                 <input
                   type="text"
@@ -297,14 +299,14 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                   required
-                  placeholder="Например: ул. Пушкина, д. 10"
+                  placeholder={t('addProperty.form.addressPlaceholder')}
                 />
               </div>
 
               {/* Описание */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Описание
+                  {t('addProperty.form.description')}
                 </label>
                 <textarea
                   name="description"
@@ -313,13 +315,14 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                   rows={4}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                   required
+                  placeholder={t('addProperty.form.descriptionPlaceholder')}
                 />
               </div>
 
               {/* Цена */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Цена (€)
+                  {formData.type === 'rent' ? t('filters.pricePerMonth') : t('filters.price')} (€)
                 </label>
                 <input
                   type="number"
@@ -328,13 +331,14 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                   required
+                  placeholder={t('addProperty.form.pricePlaceholder')}
                 />
               </div>
 
               {/* Площадь */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Площадь (м²)
+                  {t('filters.area')} (м²)
                 </label>
                 <input
                   type="number"
@@ -343,13 +347,14 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                   required
+                  placeholder={t('addProperty.form.areaPlaceholder')}
                 />
               </div>
 
               {/* Количество комнат */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Количество комнат
+                  {t('filters.rooms')}
                 </label>
                 <input
                   type="number"
@@ -358,13 +363,14 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                   onChange={handleChange}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                   required
+                  placeholder={t('addProperty.form.roomsPlaceholder')}
                 />
               </div>
 
               {/* Город */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Город
+                  {t('common.selectCity')}
                 </label>
                 <select
                   name="city_id"
@@ -373,7 +379,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                   className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                   required
                 >
-                  <option value="">Выберите город</option>
+                  <option value="">{t('common.selectCity')}</option>
                   {cities.map(city => (
                     <option key={city.id} value={city.id}>{city.name}</option>
                   ))}
@@ -382,15 +388,15 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
 
               {/* Карта */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Расположение на карте</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('addProperty.form.mapLocation')}</label>
                 <div className="h-[400px] rounded-lg overflow-hidden">
                   <PropertyMap
                     center={selectedCoordinates ? [selectedCoordinates.lng, selectedCoordinates.lat] : [20.457273, 44.787197]}
                     zoom={selectedCoordinates ? 14 : 11}
                     properties={selectedCoordinates ? [{
                       id: 'temp-marker',
-                      title: 'Выбранное местоположение',
-                      description: 'Временная метка для выбора расположения',
+                      title: t('addProperty.form.selectedLocation'),
+                      description: t('addProperty.form.temporaryMarker'),
                       coordinates: selectedCoordinates,
                       type: 'sale',
                       property_type: formData.property_type,
@@ -411,7 +417,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                 </div>
                 {formData.location && (
                   <div className="mt-2 text-sm text-gray-500">
-                    Выбранный адрес: {formData.location}
+                    {t('addProperty.form.selectedAddress')}: {formData.location}
                   </div>
                 )}
               </div>
@@ -419,7 +425,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
               {/* Фотографии */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Фотографии (до 10 шт.)
+                  {t('addProperty.form.photos')} ({t('addProperty.form.maxPhotos')})
                 </label>
                 <input
                   type="file"
@@ -434,6 +440,8 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                     file:bg-indigo-50 file:text-indigo-700
                     hover:file:bg-indigo-100"
                   disabled={formData.images.length >= 10}
+                  title={t('addProperty.form.noFileSelected')}
+                  data-browse={t('addProperty.form.selectFiles')}
                 />
                 {formData.images.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -441,7 +449,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                       <div key={index} className="relative w-24 h-24">
                         <img
                           src={url}
-                          alt={`Preview ${index + 1}`}
+                          alt={`${t('addProperty.form.preview')} ${index + 1}`}
                           className="w-full h-full object-cover rounded"
                         />
                       </div>
@@ -457,13 +465,13 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                 onClick={onClose}
                 className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               >
-                Отмена
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 className="rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               >
-                Опубликовать
+                {t('common.publish')}
               </button>
             </div>
           </form>

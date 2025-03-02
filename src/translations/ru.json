@@ -1,0 +1,155 @@
+{
+  "common": {
+    "filters": "Фильтры",
+    "objectsMap": "Карта объектов",
+    "newListings": "Новые объявления",
+    "applyFilters": "Применить фильтры",
+    "addListing": "Добавить объявление",
+    "profile": "Профиль",
+    "logout": "Выйти",
+    "login": "Войти",
+    "openMenu": "Открыть меню",
+    "cancel": "Отмена",
+    "publish": "Опубликовать",
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "loading": "Загрузка...",
+    "edit": "Редактировать",
+    "markAsSold": "Отметить как проданное",
+    "markAsRented": "Отметить как сданное",
+    "personalInfo": "Личная информация",
+    "myListings": "Мои объявления",
+    "selectCity": "Выберите город",
+    "favorites": "Избранное",
+    "roomsShort": "комн."
+  },
+  "footer": {
+    "mobileApps": "Мобильные приложения",
+    "contacts": "Контакты",
+    "developedBy": "Разработано"
+  },
+  "propertyTypes": {
+    "apartment": "Квартира",
+    "house": "Дом",
+    "commercial": "Коммерческая",
+    "land": "Участок"
+  },
+  "transactionTypes": {
+    "sale": "Продажа",
+    "rent": "Аренда"
+  },
+  "quickFilters": {
+    "rentApartments": "Аренда квартир",
+    "rentHouses": "Аренда домов",
+    "rentCommercial": "Аренда коммерческой",
+    "saleApartments": "Продажа квартир",
+    "saleHouses": "Продажа домов",
+    "saleCommercial": "Продажа коммерческой",
+    "land": "Земельные участки"
+  },
+  "filters": {
+    "propertyType": "Тип недвижимости",
+    "price": "Цена",
+    "pricePerMonth": "Цена в месяц",
+    "rooms": "Количество комнат",
+    "area": "Площадь",
+    "features": "Особенности"
+  },
+  "features": {
+    "parking": "Парковка",
+    "balcony": "Балкон",
+    "elevator": "Лифт",
+    "furnished": "С мебелью"
+  },
+  "rooms": {
+    "one": "1 комната",
+    "two": "2 комнаты",
+    "three": "3 комнаты",
+    "fourPlus": "4+ комнаты"
+  },
+  "priceRanges": {
+    "sale": {
+      "upTo100k": "До 100,000 €",
+      "100kTo300k": "100,000 € - 300,000 €",
+      "300kTo500k": "300,000 € - 500,000 €",
+      "500kTo1m": "500,000 € - 1,000,000 €",
+      "over1m": "Более 1,000,000 €"
+    },
+    "rent": {
+      "upTo500": "До 500 €",
+      "500To1000": "500 € - 1,000 €",
+      "1000To2000": "1,000 € - 2,000 €",
+      "2000To3000": "2,000 € - 3,000 €",
+      "over3000": "Более 3,000 €"
+    }
+  },
+  "areaRanges": {
+    "sale": {
+      "upTo50": "До 50 м²",
+      "50To100": "50-100 м²",
+      "100To200": "100-200 м²",
+      "over200": "Более 200 м²"
+    },
+    "rent": {
+      "upTo40": "До 40 м²",
+      "40To60": "40-60 м²",
+      "60To100": "60-100 м²",
+      "over100": "Более 100 м²"
+    }
+  },
+  "status": {
+    "sold": "Продано",
+    "rented": "Сдано"
+  },
+  "perMonth": "/мес",
+  "squareMeters": "м²",
+  "addProperty": {
+    "title": "Добавить объявление",
+    "chooseFiles": "Выбрать файлы",
+    "noFileChosen": "Файл не выбран",
+    "form": {
+      "title": "Заголовок объявления",
+      "address": "Адрес",
+      "addressPlaceholder": "Например: ул. Пушкина, д. 10",
+      "description": "Описание объявления",
+      "descriptionPlaceholder": "Подробно опишите ваш объект",
+      "pricePlaceholder": "Введите цену",
+      "areaPlaceholder": "Введите площадь",
+      "roomsPlaceholder": "Количество комнат",
+      "mapLocation": "Расположение на карте",
+      "selectedLocation": "Выбранное местоположение",
+      "temporaryMarker": "Временная метка",
+      "selectedAddress": "Выбранный адрес",
+      "photos": "Фотографии",
+      "maxPhotos": "(максимум 10)",
+      "selectFiles": "Выбрать файлы",
+      "noFileSelected": "Файл не выбран",
+      "preview": "Предпросмотр"
+    },
+    "validation": {
+      "selectLocation": "Пожалуйста, выберите местоположение на карте",
+      "enterAddress": "Пожалуйста, введите адрес",
+      "selectCity": "Пожалуйста, выберите город",
+      "roomsRange": "Количество комнат должно быть от 1 до 20",
+      "areaRange": "Площадь должна быть от 1 до 1000 м²",
+      "priceRange": "Цена должна быть от 1 до 100000000",
+      "cityNotFound": "Выбранный город не найден",
+      "maxPhotos": "Максимальное количество фотографий - 10",
+      "maxFileSize": "Максимальный размер файла - 5MB",
+      "onlyImages": "Можно загружать только изображения",
+      "uploadError": "Ошибка при загрузке файлов",
+      "addError": "Ошибка при добавлении объявления"
+    },
+    "transactionType": "Тип сделки",
+    "propertyType": "Тип недвижимости",
+    "propertyTitle": "Заголовок",
+    "address": "Адрес",
+    "addressPlaceholder": "Например: ул. Пушкина, д. 10",
+    "description": "Описание",
+    "price": "Цена",
+    "area": "Площадь",
+    "rooms": "Количество комнат",
+    "city": "Город",
+    "selectCity": "Выберите город"
+  }
+}

@@ -4,12 +4,14 @@ import { supabase } from '../../lib/supabaseClient'
 import { Tab } from '@headlessui/react'
 import { Property } from '../../contexts/PropertyContext'
 import EditPropertyModal from '../property/EditPropertyModal'
+import { useTranslation } from 'react-i18next'
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 
 export default function ProfilePage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -135,7 +137,7 @@ export default function ProfilePage() {
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold mb-6">Профиль</h1>
+        <h1 className="text-2xl font-bold mb-6">{t('common.profile')}</h1>
 
         <Tab.Group>
           <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 p-1 mb-6">
@@ -150,7 +152,7 @@ export default function ProfilePage() {
                 )
               }
             >
-              Личная информация
+              {t('common.personalInfo')}
             </Tab>
             <Tab
               className={({ selected }) =>
@@ -163,7 +165,7 @@ export default function ProfilePage() {
                 )
               }
             >
-              Мои объявления
+              {t('common.myListings')}
             </Tab>
           </Tab.List>
 
@@ -172,7 +174,7 @@ export default function ProfilePage() {
               <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Имя
+                    {t('profile.name')}
                   </label>
                   <input
                     type="text"
@@ -187,7 +189,7 @@ export default function ProfilePage() {
 
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                    Телефон
+                    {t('profile.phone')}
                   </label>
                   <input
                     type="tel"
@@ -208,14 +210,14 @@ export default function ProfilePage() {
                            hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500
                            focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSaving ? 'Сохранение...' : 'Сохранить'}
+                  {isSaving ? t('common.saving') : t('common.save')}
                 </button>
               </form>
             </Tab.Panel>
 
             <Tab.Panel>
               {isLoading ? (
-                <div>Загрузка...</div>
+                <div>{t('common.loading')}</div>
               ) : (
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {userProperties.map((property) => (
@@ -253,14 +255,14 @@ export default function ProfilePage() {
                               className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2
                                        text-sm font-medium text-white hover:bg-indigo-700"
                             >
-                              Редактировать
+                              {t('common.edit')}
                             </button>
                             <button
                               onClick={() => handlePropertyStatusUpdate(property.id)}
                               className="inline-flex items-center justify-center rounded-md bg-gray-900 px-3 py-2
                                        text-sm font-medium text-white hover:bg-gray-800"
                             >
-                              {property.type === 'sale' ? 'Отметить как проданное' : 'Отметить как сданное'}
+                              {property.type === 'sale' ? t('common.markAsSold') : t('common.markAsRented')}
                             </button>
                           </div>
                         )}

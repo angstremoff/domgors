@@ -10,9 +10,12 @@ interface PropertyCardProps {
   property: Property
 }
 
+import { useTranslation } from 'react-i18next'
+
 export default function PropertyCard({ property }: PropertyCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { } = useProperties()
+  const { t } = useTranslation()
   const {
     id,
     title,
@@ -34,7 +37,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         {/* Status Badge */}
         {property.status === 'sold' && (
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 bg-black/80 text-white px-6 py-2 rounded-full text-lg font-semibold backdrop-blur-sm">
-            {property.type === 'sale' ? 'Продано' : 'Сдано'}
+            {t(`status.${property.type === 'sale' ? 'sold' : 'rented'}`)}
           </div>
         )}
         {/* Image container */}
@@ -67,7 +70,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               ? 'bg-emerald-500/90 text-white'
               : 'bg-blue-500/90 text-white'
           ].join(' ')}>
-            {type === 'sale' ? 'Продажа' : 'Аренда'}
+            {t(`transactionTypes.${type}`)}
           </div>
           <div className={[
             'px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md text-white',
@@ -76,10 +79,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             property.property_type === 'commercial' && 'bg-cyan-600/90',
             property.property_type === 'land' && 'bg-lime-600/90'
           ].filter(Boolean).join(' ')}>
-            {property.property_type === 'apartment' && 'Квартира'}
-            {property.property_type === 'house' && 'Дом'}
-            {property.property_type === 'commercial' && 'Коммерческая'}
-            {property.property_type === 'land' && 'Участок'}
+            {t(`propertyTypes.${property.property_type}`)}
           </div>
         </div>
 
@@ -128,7 +128,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                           d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m4-6h3m-3 0V9m0 6v6" />
                   </svg>
                 ) : null}
-                <span className="text-base">{rooms} комн.</span>
+                <span className="text-base">{rooms} {t('common.roomsShort')}</span>
               </span>
             </div>
           )}

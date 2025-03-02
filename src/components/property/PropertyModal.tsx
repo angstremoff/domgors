@@ -1,6 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { Fragment, useState } from 'react'
 import { Database } from '../../lib/database.types'
+import { useTranslation } from 'react-i18next'
 import PropertyMap from './PropertyMap'
 import { Property as ContextProperty } from '../../contexts/PropertyContext'
 import PlaceholderImage from './PlaceholderImage'
@@ -32,6 +33,7 @@ type PropertyModalProps = {
 }
 
 export default function PropertyModal({ property, open, onClose }: PropertyModalProps) {
+  const { t } = useTranslation()
   const [isPhoneVisible, setIsPhoneVisible] = useState(false)
 
   // Преобразуем свойство в формат, ожидаемый компонентом PropertyMap
@@ -97,7 +99,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     {property.status === 'sold' && (
                       <div className="absolute inset-0 flex items-center justify-center z-20">
                         <div className="bg-black/80 text-white px-4 py-1.5 rounded-full text-base font-semibold backdrop-blur-sm">
-                          {property.type === 'sale' ? 'Продано' : 'Сдано'}
+                          {property.type === 'sale' ? t('status.sold') : t('status.rented')}
                         </div>
                       </div>
                     )}
@@ -141,7 +143,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       'px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-md text-white',
                       property.type === 'sale' ? 'bg-emerald-500/90' : 'bg-blue-500/90'
                     ].join(' ')}>
-                      {property.type === 'sale' ? 'Продажа' : 'Аренда'}
+                      {property.type === 'sale' ? t('transactionTypes.sale') : t('transactionTypes.rent')}
                     </div>
                     <div className={[
                       'px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-md text-white',
@@ -150,10 +152,10 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       property.property_type === 'commercial' && 'bg-cyan-600/90',
                       property.property_type === 'land' && 'bg-lime-600/90'
                     ].filter(Boolean).join(' ')}>
-                      {property.property_type === 'apartment' && 'Квартира'}
-                      {property.property_type === 'house' && 'Дом'}
-                      {property.property_type === 'commercial' && 'Коммерческая'}
-                      {property.property_type === 'land' && 'Участок'}
+                      {property.property_type === 'apartment' && t('propertyTypes.apartment')}
+                      {property.property_type === 'house' && t('propertyTypes.house')}
+                      {property.property_type === 'commercial' && t('propertyTypes.commercial')}
+                      {property.property_type === 'land' && t('propertyTypes.land')}
                     </div>
                   </div>
                 </div>
@@ -163,7 +165,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-gray-900">{property.title}</h2>
                     <div className="text-lg font-bold text-[#1E3A8A]">
-                      {property.price.toLocaleString()} €{property.type === 'rent' && '/мес'}
+                      {property.price.toLocaleString()} €{property.type === 'rent' && t('common.perMonth')}
                     </div>
                   </div>
                   <p className="text-sm text-gray-600">{property.city?.name}, {property.location}</p>
@@ -180,7 +182,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           </svg>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Комнат</p>
+                          <p className="text-xs text-gray-500">{t('filters.rooms')}</p>
                           <p className="text-base font-semibold text-gray-900">{property.rooms}</p>
                         </div>
                       </div>
@@ -195,8 +197,8 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         </svg>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Площадь</p>
-                        <p className="text-base font-semibold text-gray-900">{property.area} м²</p>
+                        <p className="text-xs text-gray-500">{t('filters.area')}</p>
+                        <p className="text-base font-semibold text-gray-900">{property.area} {t('squareMeters')}</p>
                       </div>
                     </div>
                   </div>
@@ -210,7 +212,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         </svg>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Расположение</p>
+                        <p className="text-xs text-gray-500">{t('addProperty.form.mapLocation')}</p>
                         <p className="text-base font-semibold text-gray-900">{property.city?.name}</p>
                       </div>
                     </div>
@@ -223,7 +225,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     <svg className="w-4 h-4 mr-2 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Описание
+                    {t('addProperty.form.description')}
                   </h4>
                   <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                     <p className="text-sm text-gray-600 leading-relaxed">{property.description}</p>
@@ -237,7 +239,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       <svg className="w-4 h-4 mr-2 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                       </svg>
-                      Особенности
+                      {t('filters.features')}
                     </h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                       {property.features.includes('elevator') && (
@@ -291,7 +293,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       <svg className="w-4 h-4 mr-2 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
-                      Контактная информация
+                      {t('footer.contacts')}
                     </h4>
                     <div className="space-y-2">
                       {property.user.name && (
@@ -320,7 +322,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      Расположение на карте
+                      {t('addProperty.form.mapLocation')}
                     </h4>
                     <div className="h-[400px] rounded-lg overflow-hidden">
                       <PropertyMap

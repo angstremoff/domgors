@@ -198,13 +198,12 @@ export default function PropertyForm() {
           <label className="block text-sm font-medium text-gray-700">Тип недвижимости</label>
           <select
             value={formData.property_type}
-            onChange={e => setFormData(prev => ({ ...prev, property_type: e.target.value }))}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            onChange={e => setFormData(prev => ({ ...prev, property_type: e.target.value }))}            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           >
             <option value="apartment">Квартира</option>
             <option value="house">Дом</option>
             <option value="commercial">Коммерческая недвижимость</option>
-            <option value="land">Земельный участок</option>
+            {formData.type === 'sale' && <option value="land">Земельный участок</option>}
           </select>
         </div>
 

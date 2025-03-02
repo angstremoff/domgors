@@ -7,8 +7,10 @@ import { useProperties } from '../contexts/PropertyContext'
 import Footer from '../components/layout/Footer'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import CitySelect from '../components/property/CitySelect'
+import { useTranslation } from 'react-i18next';
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const { properties, filteredProperties, loading, setFilteredProperties } = useProperties()
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
@@ -32,7 +34,7 @@ export default function HomePage() {
               onClick={() => setIsMapExpanded(!isMapExpanded)}
             >
               <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
-                Карта объектов
+                {t('common.objectsMap')}
                 {isMapExpanded ? (
                   <ChevronUpIcon className="w-6 h-6 text-gray-400" />
                 ) : (
@@ -55,7 +57,7 @@ export default function HomePage() {
 
         {/* Featured properties */}
         <div className="mb-24">
-          <h3 className="text-xl text-gray-900 mb-6">Новые объявления</h3>
+          <h3 className="text-xl text-gray-900 mb-6">{t('common.newListings')}</h3>
           <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
             {[...filteredProperties]
               .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
