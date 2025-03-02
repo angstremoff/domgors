@@ -58,7 +58,7 @@ CREATE POLICY "Users can view their own data"
 CREATE POLICY "Enable insert for users during registration"
     ON public.users
     FOR INSERT
-    WITH CHECK (auth.uid() IS NOT NULL);
+    WITH CHECK (true);
 
 CREATE POLICY "Anyone can view properties"
     ON public.properties

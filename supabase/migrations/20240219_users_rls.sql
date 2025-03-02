@@ -18,4 +18,4 @@ create policy "Users can view own record"
 create policy "Users can insert during registration"
     on users
     for insert
-    with check (auth.uid() = id);
+    with check (true);

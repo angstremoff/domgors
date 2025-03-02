@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   register: (email: string, password: string) => Promise<void>
+  signInWithGoogle: () => Promise<void>
   isLoading: boolean
 }
 
@@ -68,6 +69,22 @@ function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      })
+
+      if (error) throw error
+    } catch (error) {
+      console.error('Error signing in with Google:', error)
+      throw error
+    }
+  }
+
   const register = async (email: string, password: string) => {
     try {
       // Регистрация пользователя в системе аутентификации
@@ -90,17 +107,8 @@ function AuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email!
         }
         
-        // Создаем запись в таблице users
-        const { error: userError } = await supabase
-          .from('users')
-          .insert(userData)
-          .select()
-          .single()
-
-        if (userError) {
-          console.error('Error creating user record:', userError)
-          throw userError
-        }
+        // Запись в таблице users создается автоматически через триггер on_auth_user_created
+        // Не нужно вручную создавать запись
 
         setUser(userData)
         localStorage.setItem('user', JSON.stringify(userData))
@@ -148,7 +156,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, signInWithGoogle, isLoading }}>
       {children}
     </AuthContext.Provider>
   )

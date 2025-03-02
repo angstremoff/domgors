@@ -5,6 +5,7 @@ import RentPage from './pages/RentPage'
 import SalePage from './pages/SalePage'
 import FavoritesPage from './pages/FavoritesPage'
 import ProfilePage from './components/profile/ProfilePage'
+import AuthCallback from './components/auth/AuthCallback'
 import { AuthProvider } from './contexts/AuthContext'
 import { PropertyProvider } from './contexts/PropertyContext'
 import { FavoritesProvider } from './contexts/FavoritesContext'
@@ -25,6 +26,7 @@ export default function App() {
                   <Route path="/buy" element={<SalePage />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
                 </Routes>
               </div>
             </Router>
