@@ -1,36 +1,10 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { Fragment, useState } from 'react'
-import { Database } from '../../lib/database.types'
 import { useTranslation } from 'react-i18next'
 import PropertyMap from './PropertyMap'
-import { Property as ContextProperty } from '../../contexts/PropertyContext'
 import PlaceholderImage from './PlaceholderImage'
 import FavoriteButton from './FavoriteButton'
-
-type DatabaseProperty = Database['public']['Tables']['properties']['Row'] & {
-  user?: {
-    name: string | null
-    phone: string | null
-  } | null
-  coordinates: {
-    lat: number
-    lng: number
-  } | null
-  city?: {
-    id: number
-    name: string
-    coordinates?: {
-      lat: number
-      lng: number
-    }
-  } | null
-}
-
-type PropertyModalProps = {
-  property: DatabaseProperty
-  open: boolean
-  onClose: () => void
-}
+import { DatabaseProperty, PropertyModalProps, ContextProperty } from './types'
 
 export default function PropertyModal({ property, open, onClose }: PropertyModalProps) {
   const { t } = useTranslation()
