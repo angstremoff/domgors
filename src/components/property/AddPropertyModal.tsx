@@ -5,6 +5,7 @@ import { useProperties } from '../../contexts/PropertyContext'
 import { supabase } from '../../lib/supabaseClient'
 import PropertyMap from '../property/PropertyMap'
 import { useTranslation } from 'react-i18next'
+import { propertyService } from '../../services/propertyService'
 
 interface AddPropertyModalProps {
   isOpen: boolean
@@ -56,6 +57,20 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     e.preventDefault()
     
     try {
+      // Проверка авторизации
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        alert('Необходимо авторизоваться')
+        return
+      }
+      
+      // Проверка лимита объявлений (максимум 20)
+      const userPropertiesCount = await propertyService.getUserPropertiesCount(user.id)
+      if (userPropertiesCount >= 20) {
+        alert(t('addProperty.validation.maxPropertiesError'))
+        return
+      }
+
       if (!selectedCoordinates) {
         alert(t('addProperty.validation.selectLocation'))
         return

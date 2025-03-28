@@ -117,5 +117,19 @@ export const propertyService = {
       if (error) throw error
       return true
     }
+  },
+
+  async getUserPropertiesCount(userId: string) {
+    const { count, error } = await supabase
+      .from('properties')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+
+    if (error) {
+      console.error(`Error counting properties for user ${userId}:`, error)
+      throw error
+    }
+
+    return count || 0
   }
 }

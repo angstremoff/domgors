@@ -170,13 +170,14 @@
       "selectCity": "Molimo izaberite grad",
       "roomsRange": "Broj soba mora biti između 1 i 20",
       "areaRange": "Površina mora biti između 1 i 1000 m²",
-      "priceRange": "Cena mora biti između 1 i 100.000.000 €",
+      "priceRange": "Cena mora biti između 1 i 100000000",
       "cityNotFound": "Izabrani grad nije pronađen",
-      "maxPhotos": "Maksimalno 10 fotografija",
-      "maxFileSize": "Maksimalna veličina fajla je 5MB",
-      "onlyImages": "Možete uploadovati samo slike",
-      "uploadError": "Greška pri uploadu fajlova",
-      "addError": "Greška pri dodavanju oglasa"
+      "maxFileSize": "Maksimalna veličina datoteke je 5MB",
+      "onlyImages": "Možete otpremiti samo slike",
+      "uploadError": "Greška pri otpremanju datoteka",
+      "addError": "Greška pri dodavanju oglasa",
+      "maxPhotos": "Maksimalan broj fotografija je 10",
+      "maxPropertiesError": "Dostigli ste limit oglasa (20). Izbrišite stare oglase pre nego što dodate nove."
     }
   },
   "auth": {
