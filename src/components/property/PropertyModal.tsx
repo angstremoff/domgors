@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react'
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import PropertyMap from './PropertyMap'
 import PlaceholderImage from './PlaceholderImage'
@@ -40,7 +40,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
   }
 
   return (
-    <Transition.Root show={open} as={Fragment}>
+    <Transition.Root show={open} as="div" className="transition-root">
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         
@@ -93,7 +93,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                               onClick={() => setIsFullScreenOpen(true)}
                             />
                             {property.images.length > 1 && (
-                              <>
+                              <div className="image-navigation">
                                 <button
                                   onClick={prevImage}
                                   className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -110,7 +110,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                   </svg>
                                 </button>
-                              </>
+                              </div>
                             )}
                           </>
                         ) : (
@@ -320,7 +320,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
       </Dialog>
       
       {/* Full Screen Image Viewer */}
-      <Transition show={isFullScreenOpen} as={Fragment}>
+      <Transition show={isFullScreenOpen} as="div" className="transition-root">
         <Dialog as="div" className="fixed inset-0 z-50 overflow-hidden" onClose={() => setIsFullScreenOpen(false)}>
           <Transition.Child
             as="div"
@@ -368,7 +368,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                 
                 {/* Navigation buttons */}
                 {property.images && property.images.length > 1 && (
-                  <>
+                  <div className="navigation-controls">
                     <button
                       onClick={prevImage}
                       className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
@@ -385,7 +385,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </button>
-                  </>
+                  </div>
                 )}
                 
                 {/* Image counter */}
