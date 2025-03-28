@@ -11,4 +11,7 @@ services:
         sync: false
       - key: VITE_MAPTILER_KEY
         sync: false
+      - key: NODE_ENV
+        value: production
     staticPublishPath: ./dist
+    autoDeploy: true
