@@ -308,8 +308,8 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                     required
                   >
-                    <option value="sale">{t('addProperty.form.transactionType.sale')}</option>
-                    <option value="rent">{t('addProperty.form.transactionType.rent')}</option>
+                    <option value="sale">{t('addProperty.form.sale')}</option>
+                    <option value="rent">{t('addProperty.form.rent')}</option>
                   </select>
                 </div>
 
@@ -325,10 +325,10 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                     required
                   >
-                    <option value="apartment">{t('addProperty.form.propertyType.apartment')}</option>
-                    <option value="house">{t('addProperty.form.propertyType.house')}</option>
-                    <option value="commercial">{t('addProperty.form.propertyType.commercial')}</option>
-                    <option value="land">{t('addProperty.form.propertyType.land')}</option>
+                    <option value="apartment">{t('addProperty.form.apartment')}</option>
+                    <option value="house">{t('addProperty.form.house')}</option>
+                    <option value="commercial">{t('addProperty.form.commercial')}</option>
+                    <option value="land">{t('addProperty.form.land')}</option>
                   </select>
                 </div>
 
@@ -466,10 +466,10 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                         />
                         <span className="ml-2 text-sm text-gray-700">
                           {{
-                            parking: t('addProperty.form.features.parking'),
-                            balcony: t('addProperty.form.features.balcony'),
-                            elevator: t('addProperty.form.features.elevator'),
-                            furnished: t('addProperty.form.features.furnished')
+                            parking: t('addProperty.form.parking'),
+                            balcony: t('addProperty.form.balcony'),
+                            elevator: t('addProperty.form.elevator'),
+                            furnished: t('addProperty.form.furnished')
                           }[feature]}
                         </span>
                       </label>
