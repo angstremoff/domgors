@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Загрузка данных пользователя и его объявлений
   useEffect(() => {
@@ -63,7 +64,19 @@ export default function ProfilePage() {
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+    
+    // Валидация полей - проверяем, что имя и телефон не пустые
+    if (!name || name.trim() === '') {
+      setError('Имя не может быть пустым')
+      return
+    }
+    
+    if (!phone || phone.trim() === '') {
+      setError('Номер телефона не может быть пустым')
+      return
+    }
 
+    setError(null)
     setIsSaving(true)
     try {
       const { error } = await supabase
@@ -201,6 +214,10 @@ export default function ProfilePage() {
                              sm:text-sm bg-white/50"
                   />
                 </div>
+
+                {error && (
+                  <div className="text-red-500 text-sm">{error}</div>
+                )}
 
                 <button
                   type="submit"
