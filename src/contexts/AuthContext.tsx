@@ -53,17 +53,36 @@ function AuthProvider({ children }: { children: ReactNode }) {
             
             // Сохраняем данные пользователя в таблицу users после подтверждения email
             const saveUserProfile = async () => {
+              // Сначала проверяем, есть ли уже запись для этого пользователя
+              const { data: existingProfile, error: fetchError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+              
+              if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 - код ошибки "не найдено"
+                console.error('Error fetching user profile:', fetchError);
+                return;
+              }
+              
+              // Если профиль уже существует, не обновляем его данными из метаданных
+              if (existingProfile) {
+                console.log('User profile already exists, not overwriting');
+                return;
+              }
+              
+              // Создаем новый профиль только если его еще нет
               const { error: profileError } = await supabase
                 .from('users')
-                .upsert({ 
+                .insert({ 
                   id: session.user.id, 
                   email: session.user.email!,
                   name: metadata?.name || '',
                   phone: metadata?.phone || ''
-                }, { onConflict: 'id' })
+                });
                 
               if (profileError) {
-                console.error('Error saving user profile after verification:', profileError)
+                console.error('Error creating user profile after verification:', profileError);
               }
             }
             
