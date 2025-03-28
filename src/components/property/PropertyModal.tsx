@@ -73,47 +73,66 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   <div className="lg:w-1/2 flex flex-col">
                     {/* Property Images */}
                     <div className="mb-3 sm:mb-6 relative rounded-lg sm:rounded-xl overflow-hidden">
-                      {property.status === 'sold' && (
-                        <div className="absolute inset-0 flex items-center justify-center z-20">
-                          <div className="bg-black/80 text-white px-4 py-1.5 rounded-full text-base font-semibold backdrop-blur-sm">
-                            {property.type === 'sale' ? t('status.sold') : t('status.rented')}
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        {property.status === 'sold' && (
+                          <div className="absolute inset-0 flex items-center justify-center z-20">
+                            <div className="bg-black/80 text-white px-4 py-1.5 rounded-full text-base font-semibold backdrop-blur-sm">
+                              {property.type === 'sale' ? t('status.sold') : t('status.rented')}
+                            </div>
                           </div>
+                        )}
+                        {property.images && property.images.length > 0 ? (
+                          <>
+                            <img
+                              src={property.images[currentImageIndex]}
+                              alt={property.title}
+                              className={[
+                                'absolute inset-0 w-full h-full object-cover',
+                                property.status === 'sold' ? 'grayscale' : ''
+                              ].join(' ')}
+                            />
+                            {property.images.length > 1 && (
+                              <>
+                                <button
+                                  onClick={prevImage}
+                                  className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={nextImage}
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                >
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </button>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <PlaceholderImage />
+                        )}
+                      </div>
+                      <div className="absolute top-3 left-3 z-10 flex gap-2">
+                        <div className={[
+                          'px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-md text-white',
+                          property.type === 'sale' ? 'bg-emerald-500/90' : 'bg-blue-500/90'
+                        ].join(' ')}>
+                          {t(`transactionTypes.${property.type}`)}
                         </div>
-                      )}
-                      {property.images && property.images.length > 0 ? (
-                        <>
-                          <img
-                            src={property.images[currentImageIndex]}
-                            alt={property.title}
-                            className={[
-                              'absolute inset-0 w-full h-full object-cover',
-                              property.status === 'sold' ? 'grayscale' : ''
-                            ].join(' ')}
-                          />
-                          {property.images.length > 1 && (
-                            <>
-                              <button
-                                onClick={prevImage}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={nextImage}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </button>
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        <PlaceholderImage />
-                      )}
+                        <div className={[
+                          'px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-md text-white',
+                          property.property_type === 'apartment' && 'bg-violet-600/90',
+                          property.property_type === 'house' && 'bg-orange-500/90',
+                          property.property_type === 'commercial' && 'bg-cyan-600/90',
+                          property.property_type === 'land' && 'bg-lime-600/90'
+                        ].filter(Boolean).join(' ')}>
+                          {t(`propertyTypes.${property.property_type}`)}
+                        </div>
+                      </div>
                     </div>
                     
                     {/* Карта - видна только на десктопе */}
@@ -186,7 +205,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       </div>
                       <div className="bg-white rounded-b-lg sm:rounded-b-xl p-2 sm:p-3 border border-gray-100 shadow-sm">
                         <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
-                          {property.description}
+                          {property.description || t('common.noDescription')}
                         </p>
                       </div>
                     </div>
@@ -198,7 +217,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                          <h4 className="text-base sm:text-lg font-bold">{t('addProperty.form.features')}</h4>
+                          <h4 className="text-base sm:text-lg font-bold">{t('filters.features')}</h4>
                         </div>
                         <div className="bg-white rounded-b-lg sm:rounded-b-xl p-2 sm:p-3 border border-gray-100 shadow-sm">
                           <div className="grid grid-cols-2 gap-1 sm:gap-2">
@@ -237,7 +256,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
-                        <h4 className="text-base sm:text-lg font-bold">{t('addProperty.form.contactInfo')}</h4>
+                        <h4 className="text-base sm:text-lg font-bold">{t('footer.contacts')}</h4>
                       </div>
                       <div className="bg-white rounded-b-lg sm:rounded-b-xl p-2 sm:p-3 border border-gray-100 shadow-sm">
                         <div className="space-y-1 sm:space-y-2">
