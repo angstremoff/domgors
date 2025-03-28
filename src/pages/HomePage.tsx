@@ -26,32 +26,32 @@ export default function HomePage() {
         canonicalUrl="https://domgo.rs/"
       />
       {/* Main content */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-12">
         {/* Map section */}
-        <div className="mb-24">
-          <div className="mb-12">
+        <div className="mb-8 sm:mb-24">
+          <div className="mb-4 sm:mb-12">
             <QuickFilters />
           </div>
           <div className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200">
             <div 
-              className="flex items-center justify-between p-8 cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between p-4 sm:p-8 cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => setIsMapExpanded(!isMapExpanded)}
             >
-              <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center gap-3">
                 {t('common.objectsMap')}
                 {isMapExpanded ? (
-                  <ChevronUpIcon className="w-6 h-6 text-gray-400" />
+                  <ChevronUpIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                 ) : (
-                  <ChevronDownIcon className="w-6 h-6 text-gray-400" />
+                  <ChevronDownIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                 )}
               </h2>
             </div>
             {isMapExpanded && (
               <div>
-                <div className="px-8 pb-4">
+                <div className="px-4 sm:px-8 pb-2 sm:pb-4">
                   <CitySelect onCitySelect={({lng, lat}) => setMapCenter([lng, lat])} />
                 </div>
-                <div className="h-[600px] relative z-0 rounded-b-3xl overflow-hidden">
+                <div className="h-[400px] sm:h-[600px] relative z-0 rounded-b-3xl overflow-hidden">
                   <PropertyMap properties={filteredProperties} center={mapCenter} />
                 </div>
               </div>
@@ -60,9 +60,9 @@ export default function HomePage() {
         </div>
 
         {/* Featured properties */}
-        <div className="mb-24">
-          <h3 className="text-xl text-gray-900 mb-6">{t('common.newListings')}</h3>
-          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-8 sm:mb-24">
+          <h3 className="text-lg sm:text-xl text-gray-900 mb-3 sm:mb-6">{t('common.newListings')}</h3>
+          <div className="grid grid-cols-1 gap-4 sm:gap-10 sm:grid-cols-2 lg:grid-cols-3">
             {[...filteredProperties]
               .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
               .slice(0, 9)

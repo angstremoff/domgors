@@ -30,7 +30,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   return (
     <>
       <div 
-        className="group relative bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden transition-all duration-300 hover:translate-y-[-4px] cursor-pointer h-full shadow-lg hover:shadow-xl border border-violet-100/50"
+        className="group relative bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-3xl overflow-hidden transition-all duration-300 hover:translate-y-[-4px] cursor-pointer h-full shadow-lg hover:shadow-xl border border-violet-100/50"
         onClick={() => setIsModalOpen(true)}
         data-property-id={id}
       >
@@ -63,9 +63,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
         {/* Type badge */}
-        <div className="absolute top-4 left-4 z-10 flex gap-2">
+        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-10 flex gap-1 sm:gap-2">
           <div className={[
-            'px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md',
+            'px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium backdrop-blur-md',
             type === 'sale' 
               ? 'bg-emerald-500/90 text-white'
               : 'bg-blue-500/90 text-white'
@@ -73,7 +73,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             {t(`transactionTypes.${type}`)}
           </div>
           <div className={[
-            'px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md text-white',
+            'px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium backdrop-blur-md text-white',
             property.property_type === 'apartment' && 'bg-violet-600/90',
             property.property_type === 'house' && 'bg-orange-500/90',
             property.property_type === 'commercial' && 'bg-cyan-600/90',
@@ -84,60 +84,48 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </div>
 
         {/* Favorite button */}
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10">
           <FavoriteButton propertyId={id} />
         </div>
 
         {/* Price overlay */}
-        <div className="absolute bottom-4 left-4 right-4 z-10">
-          <p className="text-lg font-semibold text-white">
+        <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4 z-10">
+          <p className="text-base sm:text-lg font-semibold text-white">
             {price.toLocaleString()} €
-            {type === 'rent' && <span className="text-sm font-normal opacity-90">/мес</span>}
+            {type === 'rent' && <span className="text-xs sm:text-sm font-normal opacity-90">/мес</span>}
           </p>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-8 flex flex-col h-[195px]">
+      <div className="p-4 sm:p-8 flex flex-col h-[160px] sm:h-[195px]">
         {/* Title and Location */}
-        <div className="mb-6">
-          <h3 className="text-base font-semibold text-gray-900 line-clamp-2 min-h-[3rem] leading-snug">
+        <div className="mb-1 sm:mb-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 line-clamp-2 min-h-[3rem] leading-snug">
             {title}
           </h3>
-          <p className="text-base text-gray-500 mt-3 line-clamp-1">{property.city?.name}, {location}</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2 line-clamp-2">
+            {property.city?.name}, {location}
+          </p>
         </div>
 
         {/* Features */}
-        <div className="flex items-center justify-between text-base text-gray-500 pt-4 border-t border-gray-200">
+        <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-gray-700 mt-auto">
           {property.property_type !== 'land' && (
-            <div className="flex items-center gap-2">
-              <span className="flex items-center text-base">
-                {property.property_type === 'apartment' ? (
-                  <svg className="w-6 h-6 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                ) : property.property_type === 'house' ? (
-                  <svg className="w-6 h-6 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                ) : property.property_type === 'commercial' ? (
-                  <svg className="w-6 h-6 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m4-6h3m-3 0V9m0 6v6" />
-                  </svg>
-                ) : null}
-                <span className="text-base">{rooms} {t('common.roomsShort')}</span>
-              </span>
+            <div className="flex items-center gap-1.5">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m4-6h3m-3 0V9m0 6v6" />
+              </svg>
+              <span className="text-xs sm:text-sm">{rooms} {t('common.roomsShort')}</span>
             </div>
           )}
-          <div className="flex items-center">
-            <svg className="w-6 h-6 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-1.5">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                     d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
             </svg>
-            <span className="text-base">{area} м²</span>
+            <span className="text-xs sm:text-sm">{area} м²</span>
           </div>
         </div>
       </div>
