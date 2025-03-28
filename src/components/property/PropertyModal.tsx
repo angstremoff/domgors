@@ -46,7 +46,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
         
         <div className="fixed inset-0 flex items-start justify-center p-2 sm:p-4 overflow-y-auto mt-16">
           <Transition.Child
-            as={Fragment}
+            as="div"
             enter="ease-out duration-300"
             enterFrom="opacity-0 scale-95"
             enterTo="opacity-100 scale-100"
@@ -323,7 +323,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
       <Transition show={isFullScreenOpen} as={Fragment}>
         <Dialog as="div" className="fixed inset-0 z-50 overflow-hidden" onClose={() => setIsFullScreenOpen(false)}>
           <Transition.Child
-            as={Fragment}
+            as="div"
             enter="ease-out duration-300"
             enterFrom="opacity-0"
             enterTo="opacity-100"
@@ -336,7 +336,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Transition.Child
-              as={Fragment}
+              as="div"
               enter="ease-out duration-300"
               enterFrom="opacity-0 scale-95"
               enterTo="opacity-100 scale-100"
