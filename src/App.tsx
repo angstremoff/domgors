@@ -11,8 +11,25 @@ import { PropertyProvider } from './contexts/PropertyContext'
 import { FavoritesProvider } from './contexts/FavoritesContext'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { HelmetProvider } from 'react-helmet-async'
+import { useEffect } from 'react'
+
+// Функция для перенаправления с domgors.onrender.com на domgo.rs
+const useRedirectToPrimaryDomain = () => {
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    const primaryDomain = 'domgo.rs';
+    const devDomain = 'domgors.onrender.com';
+    
+    if (hostname === devDomain) {
+      const newUrl = `https://${primaryDomain}${window.location.pathname}${window.location.search}`;
+      window.location.href = newUrl;
+    }
+  }, []);
+};
 
 export default function App() {
+  useRedirectToPrimaryDomain();
+  
   return (
     <HelmetProvider>
       <LanguageProvider>

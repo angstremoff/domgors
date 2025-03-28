@@ -7,3 +7,18 @@
     @apply bg-background;
   }
 }
+
+/* Стили для блокировки прокрутки и интерфейса при открытии фото на весь экран */
+body.fullscreen-open .fixed.z-10 {
+  pointer-events: none; /* Блокирует все клики на модальном окне */
+}
+
+/* Но разрешаем взаимодействие с полноэкранным элементом */
+body.fullscreen-open .fixed.z-50 {
+  pointer-events: auto;
+}
+
+body.fullscreen-open {
+  overflow: hidden;
+  touch-action: none; /* Для мобильных устройств */
+}
