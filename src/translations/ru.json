@@ -17,6 +17,8 @@
     "edit": "Редактировать",
     "markAsSold": "Отметить как проданное",
     "markAsRented": "Отметить как сданное",
+    "markAsNotSold": "Не продано",
+    "markAsNotRented": "Не сдано",
     "personalInfo": "Личная информация",
     "myListings": "Мои объявления",
     "selectCity": "Выберите город",

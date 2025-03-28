@@ -17,6 +17,8 @@
     "edit": "Izmeni",
     "markAsSold": "Označi kao prodato",
     "markAsRented": "Označi kao izdato",
+    "markAsNotSold": "Nije prodato",
+    "markAsNotRented": "Nije izdato",
     "personalInfo": "Lični podaci",
     "myListings": "Moji oglasi",
     "selectCity": "Izaberite grad",

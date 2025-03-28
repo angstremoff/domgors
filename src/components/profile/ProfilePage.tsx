@@ -110,11 +110,14 @@ export default function ProfilePage() {
     }
   }
 
-  const handlePropertyStatusUpdate = async (propertyId: string) => {
+  const handlePropertyStatusUpdate = async (propertyId: string, currentStatus: string) => {
     try {
+      // Определяем новый статус (переключаем между 'active' и 'sold')
+      const newStatus = currentStatus === 'sold' ? 'active' : 'sold'
+      
       const { error } = await supabase
         .from('properties')
-        .update({ status: 'sold' })
+        .update({ status: newStatus })
         .eq('id', propertyId)
         .eq('user_id', user?.id)
 
@@ -123,7 +126,7 @@ export default function ProfilePage() {
       // Обновляем локальное состояние
       setUserProperties(prev =>
         prev.map(prop =>
-          prop.id === propertyId ? { ...prop, status: 'sold' } : prop
+          prop.id === propertyId ? { ...prop, status: newStatus } : prop
         )
       )
     } catch (error) {
@@ -276,8 +279,9 @@ export default function ProfilePage() {
                         <p className="mt-1 text-sm text-gray-500">
                           {property.price.toLocaleString()} ₽
                         </p>
-                        {property.status !== 'sold' && (
-                          <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                        
+                        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                          {property.status !== 'sold' && (
                             <button
                               onClick={() => handleEditProperty(property.id)}
                               className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2
@@ -285,15 +289,21 @@ export default function ProfilePage() {
                             >
                               {t('common.edit')}
                             </button>
-                            <button
-                              onClick={() => handlePropertyStatusUpdate(property.id)}
-                              className="inline-flex items-center justify-center rounded-md bg-gray-900 px-3 py-2
-                                       text-sm font-medium text-white hover:bg-gray-800"
-                            >
-                              {property.type === 'sale' ? t('common.markAsSold') : t('common.markAsRented')}
-                            </button>
-                          </div>
-                        )}
+                          )}
+                          
+                          <button
+                            onClick={() => handlePropertyStatusUpdate(property.id, property.status)}
+                            className="inline-flex items-center justify-center rounded-md px-3 py-2
+                                     text-sm font-medium text-white hover:opacity-90"
+                            style={{ 
+                              backgroundColor: property.status === 'sold' ? '#4caf50' : '#212121'
+                            }}
+                          >
+                            {property.status === 'sold' 
+                              ? (property.type === 'sale' ? t('common.markAsNotSold') : t('common.markAsNotRented'))
+                              : (property.type === 'sale' ? t('common.markAsSold') : t('common.markAsRented'))}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
