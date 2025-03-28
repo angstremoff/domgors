@@ -8,22 +8,49 @@ import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import CitySelect from '../components/property/CitySelect'
 import { useTranslation } from 'react-i18next'
 import SEO from '../components/SEO'
+import PropertyModal from '../components/property/PropertyModal'
+import { DatabaseProperty } from '../components/property/types'
 
 export default function HomePage() {
   const { t } = useTranslation()
   const { properties, filteredProperties, setFilteredProperties } = useProperties()
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
+  const [selectedProperty, setSelectedProperty] = useState<DatabaseProperty | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     setFilteredProperties(properties)
   }, [properties, setFilteredProperties])
 
+  useEffect(() => {
+    // Получаем параметр propertyId из URL
+    const searchParams = new URLSearchParams(window.location.search)
+    const propertyId = searchParams.get('propertyId')
+    
+    if (propertyId && properties.length > 0) {
+      const foundProperty = properties.find(p => p.id === propertyId)
+      if (foundProperty) {
+        setSelectedProperty(foundProperty)
+        setIsModalOpen(true)
+      }
+    }
+  }, [properties])
+
+  // Закрытие модального окна и очистка URL
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedProperty(null)
+    // Очищаем параметр propertyId из URL без перезагрузки страницы
+    const url = new URL(window.location.href)
+    url.searchParams.delete('propertyId')
+    window.history.replaceState({}, '', url)
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <SEO 
         title={t('seo.homePageTitle')}
-        canonicalUrl="https://domgo.rs/"
       />
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-12">
@@ -77,6 +104,13 @@ export default function HomePage() {
         </div>
       </div>
       <Footer />
+      {isModalOpen && selectedProperty && (
+        <PropertyModal 
+          property={selectedProperty} 
+          open={isModalOpen} 
+          onClose={handleCloseModal} 
+        />
+      )}
     </div>
   )
 }
