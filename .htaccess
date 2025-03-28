@@ -40,3 +40,11 @@
   Header set X-XSS-Protection "1; mode=block"
   Header set X-Frame-Options "SAMEORIGIN"
 </IfModule>
+
+# Перенаправление на Render
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTP_HOST} ^domgo\.rs$ [OR]
+  RewriteCond %{HTTP_HOST} ^www\.domgo\.rs$
+  RewriteRule ^(.*)$ https://domgors.onrender.com/$1 [R=301,L]
+</IfModule>
