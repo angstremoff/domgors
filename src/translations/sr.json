@@ -22,7 +22,13 @@
     "selectCity": "Izaberite grad",
     "favorites": "Omiljeni oglasi",
     "roomsShort": "sobe",
-    "perMonth": "/mes"
+    "perMonth": "/mes",
+    "share": "Podeli",
+    "copyLink": "Kopiraj link",
+    "copied": "Kopirano!",
+    "shareViaTelegram": "Telegram",
+    "shareViaWhatsApp": "WhatsApp",
+    "shareViaViber": "Viber"
   },
   "profile": {
     "name": "Vaše ime",

@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react'
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import PropertyMap from './PropertyMap'
 import PlaceholderImage from './PlaceholderImage'
@@ -9,6 +9,41 @@ import { PropertyModalProps, ContextProperty } from './types'
 export default function PropertyModal({ property, open, onClose }: PropertyModalProps) {
   const { t } = useTranslation()
   const [isPhoneVisible, setIsPhoneVisible] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isFullScreenOpen, setIsFullScreenOpen] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (isCopied) {
+      timer = setTimeout(() => {
+        setIsCopied(false)
+      }, 2000)
+    }
+    return () => clearTimeout(timer)
+  }, [isCopied])
+
+  const handleCopyLink = () => {
+    const propertyUrl = `${window.location.origin}/property/${property.id}`
+    navigator.clipboard.writeText(propertyUrl)
+    setIsCopied(true)
+  }
+
+  const getShareUrl = (platform: string) => {
+    const propertyUrl = `${window.location.origin}/property/${property.id}`
+    const title = encodeURIComponent(property.title)
+    
+    switch (platform) {
+      case 'telegram':
+        return `https://t.me/share/url?url=${encodeURIComponent(propertyUrl)}&text=${title}`
+      case 'whatsapp':
+        return `https://wa.me/?text=${encodeURIComponent(property.title + " " + propertyUrl)}`
+      case 'viber':
+        return `viber://forward?text=${encodeURIComponent(property.title + " " + propertyUrl)}`
+      default:
+        return '#'
+    }
+  }
 
   // Преобразуем свойство в формат, ожидаемый компонентом PropertyMap
   const mapProperty: ContextProperty = {
@@ -23,9 +58,6 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
     } : undefined,
     city: property.city || undefined
   }
-
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [isFullScreenOpen, setIsFullScreenOpen] = useState(false)
 
   const nextImage = () => {
     if (property.images && property.images.length > 0) {
@@ -294,6 +326,59 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                                 </button>
                               </div>
                             )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Share Section */}
+                      <div className="mb-3 sm:mb-6">
+                        <div className="bg-[#1E3A8A] text-white p-2 sm:p-3 rounded-t-lg sm:rounded-t-xl flex items-center">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.342-1.358-.228-.42-.542-.659-.874-.659-.633 0-1.146.659-1.146 1.146v7.202c0 .487.513 1.146 1.146 1.146.632 0 1.15-.659 1.146-1.146v-2.051l-4.51 4.51c-.194.196-.42.3-.65.3s-.452-.104-.65-.3l-.15-.15c-.3-.3-.3-.76 0-1.06l4.51-4.51c.3-.3.76-.3 1.06 0z" />
+                          </svg>
+                          <h4 className="text-base sm:text-lg font-bold">{t('common.share')}</h4>
+                        </div>
+                        <div className="bg-white rounded-b-lg sm:rounded-b-xl p-2 sm:p-3 border border-gray-100 shadow-sm">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleCopyLink}
+                              className="p-1.5 sm:p-2 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                              </svg>
+                              {isCopied && <span className="text-xs text-gray-500 ml-1">{t('common.linkCopied')}</span>}
+                            </button>
+                            <a
+                              href={getShareUrl('telegram')}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 sm:p-2 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                            </a>
+                            <a
+                              href={getShareUrl('whatsapp')}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 sm:p-2 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                              </svg>
+                            </a>
+                            <a
+                              href={getShareUrl('viber')}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 sm:p-2 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l-4 4m0 0l-4-4m4 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h2l4-4 4 4z" />
+                              </svg>
+                            </a>
                           </div>
                         </div>
                       </div>

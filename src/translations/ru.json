@@ -22,7 +22,13 @@
     "selectCity": "Выберите город",
     "favorites": "Избранное",
     "roomsShort": "комн.",
-    "perMonth": "/мес"
+    "perMonth": "/мес",
+    "share": "Поделиться",
+    "copyLink": "Копировать ссылку",
+    "copied": "Скопировано!",
+    "shareViaTelegram": "Telegram",
+    "shareViaWhatsApp": "WhatsApp",
+    "shareViaViber": "Viber"
   },
   "profile": {
     "name": "Ваше имя",
