@@ -21,7 +21,8 @@
     "myListings": "Мои объявления",
     "selectCity": "Выберите город",
     "favorites": "Избранное",
-    "roomsShort": "комн."
+    "roomsShort": "комн.",
+    "perMonth": "/мес"
   },
   "profile": {
     "name": "Ваше имя",
