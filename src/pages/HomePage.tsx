@@ -2,16 +2,16 @@ import { useEffect, useState } from 'react'
 import PropertyCard from '../components/property/PropertyCard'
 import PropertyMap from '../components/property/PropertyMap'
 import QuickFilters from '../components/property/QuickFilters'
-import AddProperty from '../components/property/AddProperty'
 import { useProperties } from '../contexts/PropertyContext'
 import Footer from '../components/layout/Footer'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import CitySelect from '../components/property/CitySelect'
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next'
+import SEO from '../components/SEO'
 
 export default function HomePage() {
-  const { t } = useTranslation();
-  const { properties, filteredProperties, loading, setFilteredProperties } = useProperties()
+  const { t } = useTranslation()
+  const { properties, filteredProperties, setFilteredProperties } = useProperties()
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
 
@@ -21,6 +21,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      <SEO 
+        title={t('seo.homePageTitle')}
+        canonicalUrl="https://domgo.rs/"
+      />
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
         {/* Map section */}

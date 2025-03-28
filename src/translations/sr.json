@@ -27,7 +27,7 @@
   "footer": {
     "mobileApps": "Mobilne aplikacije",
     "contacts": "Kontakti",
-    "developedBy": "Razvijeno"
+    "developedBy": "Razvijeno od"
   },
   "favorites": {
     "empty": "Nemate omiljenih oglasa"
@@ -141,5 +141,14 @@
       "uploadError": "Greška pri uploadu fajlova",
       "addError": "Greška pri dodavanju oglasa"
     }
+  },
+  "seo": {
+    "defaultTitle": "Nekretnine u Srbiji - prodaja i najam",
+    "defaultDescription": "Najbolje ponude za prodaju i najam stanova, kuća i poslovnih prostora u Srbiji. Veliki izbor objekata, aktuelne cene.",
+    "defaultKeywords": "nekretnine srbija, kupiti stan u srbiji, najam kuće srbija, poslovni prostor srbija, beograd nekretnine",
+    "homePageTitle": "Početna - Nekretnine u Srbiji",
+    "salePageTitle": "Prodaja nekretnina u Srbiji",
+    "rentPageTitle": "Najam nekretnina u Srbiji",
+    "favoritesPageTitle": "Omiljene nekretnine"
   }
 }

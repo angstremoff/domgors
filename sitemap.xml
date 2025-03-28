@@ -1,21 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://domgo.rs/</loc>
     <lastmod>2025-03-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://domgo.rs/?lang=ru"/>
+    <xhtml:link rel="alternate" hreflang="sr-Latn" href="https://domgo.rs/?lang=sr"/>
   </url>
   <url>
     <loc>https://domgo.rs/sale</loc>
     <lastmod>2025-03-28</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://domgo.rs/sale?lang=ru"/>
+    <xhtml:link rel="alternate" hreflang="sr-Latn" href="https://domgo.rs/sale?lang=sr"/>
   </url>
   <url>
     <loc>https://domgo.rs/rent</loc>
     <lastmod>2025-03-28</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://domgo.rs/rent?lang=ru"/>
+    <xhtml:link rel="alternate" hreflang="sr-Latn" href="https://domgo.rs/rent?lang=sr"/>
   </url>
 </urlset>

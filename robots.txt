@@ -1,3 +1,14 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /*.json$
+
+# Разрешаем индексацию важных страниц
+Allow: /sale
+Allow: /rent
+
+# Карта сайта
 Sitemap: https://domgo.rs/sitemap.xml
+
+# Хост (для Яндекса)
+Host: https://domgo.rs
