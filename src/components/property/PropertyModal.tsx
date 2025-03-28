@@ -82,7 +82,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           </div>
                         )}
                         {property.images && property.images.length > 0 ? (
-                          <>
+                          <div className="image-container">
                             <img
                               src={property.images[currentImageIndex]}
                               alt={property.title}
@@ -112,7 +112,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                                 </button>
                               </div>
                             )}
-                          </>
+                          </div>
                         ) : (
                           <PlaceholderImage />
                         )}
