@@ -41,20 +41,6 @@ const useRedirectToPrimaryDomain = () => {
       window.location.replace(newUrl);
       return;
     }
-    
-    // Третий метод - проверка через HTTP заголовки
-    fetch('/detect-domain', { method: 'HEAD' })
-      .then(response => {
-        const host = response.headers.get('Host');
-        if (host && host.includes(devDomain)) {
-          console.log('Headers indicate dev domain, redirecting');
-          const newUrl = `https://${primaryDomain}${window.location.pathname}${window.location.search}`;
-          window.location.replace(newUrl);
-        }
-      })
-      .catch(() => {
-        // Игнорируем ошибки, чтобы не нарушать работу приложения
-      });
   }, []);
 };
 
