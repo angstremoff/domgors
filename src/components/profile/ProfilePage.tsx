@@ -79,7 +79,8 @@ export default function ProfilePage() {
     setError(null)
     setIsSaving(true)
     try {
-      const { error } = await supabase
+      // Обновляем данные в таблице users
+      const { error: userError } = await supabase
         .from('users')
         .upsert({
           id: user.id,
@@ -88,7 +89,17 @@ export default function ProfilePage() {
           email: user.email
         })
 
-      if (error) throw error
+      if (userError) throw userError
+
+      // Обновляем метаданные пользователя в Auth
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { 
+          name: name,
+          phone: phone
+        }
+      })
+
+      if (authError) throw authError
 
       // Show success message or handle success case
       console.log('Profile updated successfully')
