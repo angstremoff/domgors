@@ -54,7 +54,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Dialog.Panel className="w-[95%] md:w-[90%] lg:w-[85%] max-w-7xl bg-white rounded-xl shadow-lg max-h-[91vh] overflow-y-auto relative">
+            <Dialog.Panel className="w-[90%] h-[90vh] bg-white rounded-xl shadow-lg overflow-y-auto relative">
               <div className="sticky top-0 right-0 z-30 flex items-center gap-1 sm:gap-2 p-2 sm:p-3 justify-end bg-gradient-to-b from-black/50 to-transparent">
                 <FavoriteButton propertyId={property.id} />
                 <button
@@ -189,7 +189,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       {property.area && (
                         <div className="flex items-center px-3 py-1 bg-indigo-50 rounded-full">
                           <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m5 5v-4m0 4h-4" />
                           </svg>
                           <span className="text-sm sm:text-base text-gray-700">{property.area} {t('squareMeters')}</span>
                         </div>
@@ -320,80 +320,73 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
       </Dialog>
       
       {/* Full Screen Image Viewer */}
-      {isFullScreenOpen && (
-        <div className="fixed inset-0 z-[100] overflow-hidden" onClick={(e) => {
-          // Закрывать только если клик был на фоне, а не на изображении или кнопках
-          if (e.target === e.currentTarget) {
-            setIsFullScreenOpen(false);
-          }
-        }}>
-          <div className="fixed inset-0 bg-black bg-opacity-90" />
+      <div className={`fixed inset-0 z-[9999] overflow-hidden ${isFullScreenOpen ? 'block' : 'hidden'}`} onClick={() => setIsFullScreenOpen(false)}>
+        <div className="fixed inset-0 bg-black bg-opacity-95" />
 
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <div className="relative w-full h-full flex items-center justify-center">
-              {/* Close button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsFullScreenOpen(false);
-                }}
-                className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              
-              {/* Image */}
-              <div className="relative w-full h-full flex items-center justify-center">
-                {property.images && property.images.length > 0 && (
-                  <img
-                    src={property.images[currentImageIndex]}
-                    alt={property.title}
-                    className="max-h-[90vh] max-w-[90vw] object-contain"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                )}
-              </div>
-              
-              {/* Navigation buttons */}
-              {property.images && property.images.length > 1 && (
-                <div className="navigation-controls">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      prevImage();
-                    }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
-                  >
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      nextImage();
-                    }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
-                  >
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-              
-              {/* Image counter */}
-              {property.images && property.images.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/50 text-white rounded-full text-sm">
-                  {currentImageIndex + 1} / {property.images.length}
-                </div>
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* Close button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFullScreenOpen(false);
+              }}
+              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Image */}
+            <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              {property.images && property.images.length > 0 && (
+                <img
+                  src={property.images[currentImageIndex]}
+                  alt={property.title}
+                  className="max-h-[90vh] max-w-[90vw] object-contain"
+                  onClick={(e) => e.stopPropagation()}
+                />
               )}
             </div>
+            
+            {/* Navigation buttons */}
+            {property.images && property.images.length > 1 && (
+              <div className="navigation-controls">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevImage();
+                  }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextImage();
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
+                >
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
+            
+            {/* Image counter */}
+            {property.images && property.images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/50 text-white rounded-full text-sm">
+                {currentImageIndex + 1} / {property.images.length}
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </Transition.Root>
   )
 }
