@@ -10,7 +10,7 @@ interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  register: (email: string, password: string) => Promise<{user: User | null, needsEmailVerification: boolean}>
+  register: (email: string, password: string, name: string, phone: string) => Promise<{user: User | null, needsEmailVerification: boolean}>
   signInWithGoogle: () => Promise<void>
   isLoading: boolean
 }
@@ -36,22 +36,24 @@ function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
 
     // Subscribe to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        // Only set the user if email is verified
-        if (session.user.email_confirmed_at) {
-          const userData = {
-            id: session.user.id,
-            email: session.user.email!
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_, session) => {
+        if (session?.user) {
+          // Only set the user if email is verified
+          if (session.user.email_confirmed_at) {
+            const userData = {
+              id: session.user.id,
+              email: session.user.email!
+            }
+            setUser(userData)
+            localStorage.setItem('user', JSON.stringify(userData))
           }
-          setUser(userData)
-          localStorage.setItem('user', JSON.stringify(userData))
+        } else {
+          setUser(null)
+          localStorage.removeItem('user')
         }
-      } else {
-        setUser(null)
-        localStorage.removeItem('user')
       }
-    })
+    )
 
     return () => subscription.unsubscribe()
   }, [])
@@ -72,12 +74,16 @@ function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const getRedirectURL = () => {
+    return window.location.origin
+  }
+
   const signInWithGoogle = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: getRedirectURL()
         }
       })
 
@@ -88,7 +94,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const register = async (email: string, password: string) => {
+  const register = async (email: string, password: string, name: string, phone: string) => {
     try {
       // Регистрация пользователя в системе аутентификации
       const { data, error } = await supabase.auth.signUp({
@@ -97,7 +103,9 @@ function AuthProvider({ children }: { children: ReactNode }) {
         options: {
           emailRedirectTo: "https://domgors.onrender.com",
           data: {
-            email: email
+            email: email,
+            name: name,
+            phone: phone
           }
         }
       })
@@ -109,6 +117,20 @@ function AuthProvider({ children }: { children: ReactNode }) {
         const userData = {
           id: data.user.id,
           email: data.user.email!
+        }
+        
+        // Сохраняем дополнительные данные пользователя в таблицу users
+        const { error: profileError } = await supabase
+          .from('users')
+          .upsert({ 
+            id: data.user.id, 
+            email: email,
+            name: name,
+            phone: phone
+          }, { onConflict: 'id' })
+          
+        if (profileError) {
+          console.error('Error saving user profile:', profileError)
         }
         
         // Check if email confirmation is needed

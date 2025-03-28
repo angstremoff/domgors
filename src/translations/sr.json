@@ -171,6 +171,25 @@
       "addError": "Greška pri dodavanju oglasa"
     }
   },
+  "auth": {
+    "login": "Prijava",
+    "signup": "Registracija",
+    "logout": "Odjava",
+    "email": "Email",
+    "password": "Lozinka",
+    "confirmPassword": "Potvrdi lozinku",
+    "passwordsNotMatch": "Lozinke se ne podudaraju",
+    "forgotPassword": "Zaboravili ste lozinku?",
+    "needAccount": "Potreban vam je nalog?",
+    "haveAccount": "Već imate nalog?",
+    "loginError": "Greška pri prijavi",
+    "signupError": "Greška pri registraciji",
+    "signupSuccess": "Registracija uspešna",
+    "verifyEmail": "Proverite svoju e-poštu",
+    "checkEmailVerification": "Poslali smo e-mail za potvrdu na vašu adresu. Molimo vas da proverite svoju e-poštu i kliknite na link za potvrdu.",
+    "name": "Ime",
+    "phone": "Telefon"
+  },
   "seo": {
     "defaultTitle": "Nekretnine u Srbiji - prodaja i najam",
     "defaultDescription": "Najbolje ponude za prodaju i najam stanova, kuća i poslovnih prostora u Srbiji. Veliki izbor objekata, aktuelne cene.",
