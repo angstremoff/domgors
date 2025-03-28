@@ -13,10 +13,10 @@ interface QuickFilterButtonProps {
 const QuickFilterButton = ({ icon, label, onClick }: QuickFilterButtonProps) => (
   <button
     onClick={onClick}
-    className="flex flex-col items-center p-2 sm:p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow"
+    className="flex flex-col items-center p-1.5 sm:p-4 bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow"
   >
-    <div className="text-xl sm:text-2xl text-indigo-600 mb-1 sm:mb-2">{icon}</div>
-    <span className="text-xs sm:text-sm text-gray-700 text-center">{label}</span>
+    <div className="text-lg sm:text-2xl text-indigo-600 mb-0.5 sm:mb-2">{icon}</div>
+    <span className="text-[10px] sm:text-sm text-gray-700 text-center leading-tight">{label}</span>
   </button>
 )
 
@@ -65,8 +65,8 @@ export default function QuickFilters() {
   ]
 
   return (
-    <div className="relative overflow-x-auto pb-4 sm:pb-0 -mx-4 sm:mx-0 px-4 sm:px-0">
-      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-4 min-w-[550px] sm:min-w-0">
+    <div className="mb-6 sm:mb-12">
+      <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-1.5 sm:gap-4">
         {filters.map((filter, index) => (
           <QuickFilterButton
             key={index}
