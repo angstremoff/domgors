@@ -2,7 +2,7 @@ import { Dialog } from '@headlessui/react'
 import { useState, useEffect } from 'react'
 import { XMarkIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { supabase } from '../../lib/supabaseClient'
-
+import { useTranslation } from 'react-i18next'
 
 interface EditPropertyModalProps {
   isOpen: boolean
@@ -11,6 +11,7 @@ interface EditPropertyModalProps {
 }
 
 export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditPropertyModalProps) {
+  const { t } = useTranslation()
   const [cities, setCities] = useState<{ id: number; name: string; coordinates?: { lng: number; lat: number } }[]>([])
   const [loading, setLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -131,19 +132,19 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
       try {
         const files = Array.from(e.target.files)
         if (files.length + existingImages.length + formData.images.length > 10) {
-          alert('Максимальное количество фотографий - 10')
+          alert(t('addProperty.form.maxPhotos'))
           return
         }
 
         const uploadPromises = files.map(async (file) => {
           // Проверяем размер файла
           if (file.size > 5 * 1024 * 1024) { // 5MB
-            throw new Error('Размер файла не должен превышать 5MB')
+            throw new Error(t('addProperty.form.fileSizeError'))
           }
 
           // Проверяем тип файла
           if (!file.type.startsWith('image/')) {
-            throw new Error('Разрешены только изображения')
+            throw new Error(t('addProperty.form.fileTypeError'))
           }
 
           const fileExt = file.name.split('.').pop()
@@ -173,7 +174,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
         }))
       } catch (error) {
         console.error('Error uploading files:', error)
-        alert('Ошибка при загрузке изображений')
+        alert(t('addProperty.form.uploadError'))
       }
     }
   }
@@ -196,30 +197,30 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
       setIsSaving(true)
       
       if (!selectedCoordinates) {
-        alert('Пожалуйста, укажите расположение объекта на карте')
+        alert(t('addProperty.validation.selectLocation'))
         setIsSaving(false)
         return
       }
 
       if (!formData.city_id) {
-        alert('Пожалуйста, выберите город')
+        alert(t('addProperty.validation.selectCity'))
         setIsSaving(false)
         return
       }
 
       // Валидация перед отправкой
       if (!validateNumber(formData.rooms, 1, 20)) {
-        alert('Количество комнат должно быть от 1 до 20')
+        alert(t('addProperty.validation.roomsRange'))
         setIsSaving(false)
         return
       }
       if (!validateNumber(formData.area, 1, 1000)) {
-        alert('Площадь должна быть от 1 до 1000 м²')
+        alert(t('addProperty.validation.areaRange'))
         setIsSaving(false)
         return
       }
       if (!validateNumber(formData.price, 1, 100000000)) {
-        alert('Цена должна быть от 1 до 100,000,000')
+        alert(t('addProperty.validation.priceRange'))
         setIsSaving(false)
         return
       }
@@ -250,7 +251,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
       onClose()
     } catch (error) {
       console.error('Error updating property:', error)
-      alert('Ошибка при обновлении объявления')
+      alert(t('addProperty.form.updateError'))
     } finally {
       setIsSaving(false)
     }
@@ -277,7 +278,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
         <Dialog.Panel className="w-full max-w-2xl bg-white rounded-xl shadow-lg max-h-[91vh] overflow-y-auto">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <Dialog.Title className="text-lg font-semibold text-gray-900">
-              Редактировать объявление
+              {t('addProperty.editTitle')}
             </Dialog.Title>
             <button
               type="button"
@@ -290,7 +291,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
 
           {loading ? (
             <div className="p-6 flex justify-center">
-              <p>Загрузка данных...</p>
+              <p>{t('common.loading')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="p-6">
@@ -298,7 +299,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                 {/* Тип сделки */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Тип сделки
+                    {t('addProperty.form.transactionType')}
                   </label>
                   <select
                     name="type"
@@ -307,15 +308,15 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                     required
                   >
-                    <option value="sale">Продажа</option>
-                    <option value="rent">Аренда</option>
+                    <option value="sale">{t('addProperty.form.transactionType.sale')}</option>
+                    <option value="rent">{t('addProperty.form.transactionType.rent')}</option>
                   </select>
                 </div>
 
                 {/* Тип недвижимости */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Тип недвижимости
+                    {t('addProperty.form.propertyType')}
                   </label>
                   <select
                     name="property_type"
@@ -324,17 +325,17 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                     required
                   >
-                    <option value="apartment">Квартира</option>
-                    <option value="house">Дом</option>
-                    <option value="commercial">Коммерческая недвижимость</option>
-                    <option value="land">Земельный участок</option>
+                    <option value="apartment">{t('addProperty.form.propertyType.apartment')}</option>
+                    <option value="house">{t('addProperty.form.propertyType.house')}</option>
+                    <option value="commercial">{t('addProperty.form.propertyType.commercial')}</option>
+                    <option value="land">{t('addProperty.form.propertyType.land')}</option>
                   </select>
                 </div>
 
                 {/* Заголовок */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Заголовок объявления
+                    {t('addProperty.form.title')}
                   </label>
                   <input
                     type="text"
@@ -349,7 +350,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                 {/* Адрес */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Адрес
+                    {t('addProperty.form.address')}
                   </label>
                   <input
                     type="text"
@@ -358,14 +359,14 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                     onChange={handleChange}
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                     required
-                    placeholder="Например: ул. Пушкина, д. 10"
+                    placeholder={t('addProperty.form.addressPlaceholder')}
                   />
                 </div>
 
                 {/* Описание */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Описание
+                    {t('addProperty.form.description')}
                   </label>
                   <textarea
                     name="description"
@@ -380,7 +381,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                 {/* Город */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Город
+                    {t('addProperty.form.city')}
                   </label>
                   <select
                     name="city_id"
@@ -389,7 +390,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                     className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500"
                     required
                   >
-                    <option value="0">Выберите город</option>
+                    <option value="0">{t('addProperty.form.cityPlaceholder')}</option>
                     {cities.map(city => (
                       <option key={city.id} value={city.id}>{city.name}</option>
                     ))}
@@ -399,7 +400,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                 {/* Цена */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Цена {formData.type === 'rent' ? 'в месяц' : ''} (€)
+                    {t('addProperty.form.price')} {formData.type === 'rent' ? t('addProperty.form.pricePerMonth') : ''}
                   </label>
                   <input
                     type="number"
@@ -416,7 +417,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                 {/* Площадь */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Площадь (м²)
+                    {t('addProperty.form.area')}
                   </label>
                   <input
                     type="number"
@@ -434,7 +435,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                 {formData.property_type !== 'land' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Количество комнат
+                      {t('addProperty.form.rooms')}
                     </label>
                     <input
                       type="number"
@@ -452,7 +453,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                 {/* Особенности */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Особенности
+                    {t('addProperty.form.features')}
                   </label>
                   <div className="space-y-2">
                     {['parking', 'balcony', 'elevator', 'furnished'].map(feature => (
@@ -465,10 +466,10 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                         />
                         <span className="ml-2 text-sm text-gray-700">
                           {{
-                            parking: 'Парковка',
-                            balcony: 'Балкон',
-                            elevator: 'Лифт',
-                            furnished: 'Мебель'
+                            parking: t('addProperty.form.features.parking'),
+                            balcony: t('addProperty.form.features.balcony'),
+                            elevator: t('addProperty.form.features.elevator'),
+                            furnished: t('addProperty.form.features.furnished')
                           }[feature]}
                         </span>
                       </label>
@@ -479,7 +480,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                 {/* Фотографии */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Фотографии
+                    {t('addProperty.form.photos')}
                   </label>
                   <input
                     type="file"
@@ -493,7 +494,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                       file:bg-violet-50 file:text-violet-700
                       hover:file:bg-violet-100"
                   />
-                  <p className="mt-1 text-sm text-gray-500">До 10 фотографий. Максимальный размер файла: 5MB</p>
+                  <p className="mt-1 text-sm text-gray-500">{t('addProperty.form.photosHint')}</p>
 
                   {/* Предпросмотр существующих фотографий */}
                   {existingImages.length > 0 && (
@@ -502,7 +503,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                         <div key={index} className="relative group">
                           <img
                             src={image}
-                            alt={`Фото ${index + 1}`}
+                            alt={t('addProperty.form.existingPhoto', { index: index + 1 })}
                             className="h-24 w-full object-cover rounded-lg"
                           />
                           <button
@@ -524,7 +525,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                         <div key={index} className="relative group">
                           <img
                             src={image}
-                            alt={`Новое фото ${index + 1}`}
+                            alt={t('addProperty.form.newPhoto', { index: index + 1 })}
                             className="h-24 w-full object-cover rounded-lg"
                           />
                           <button
@@ -549,14 +550,14 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                     onClick={onClose}
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
-                    Отмена
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={isSaving}
                     className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSaving ? 'Сохранение...' : 'Сохранить'}
+                    {isSaving ? t('common.saving') : t('common.save')}
                   </button>
                 </div>
               </div>
