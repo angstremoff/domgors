@@ -1,0 +1,36 @@
+# Принудительное перенаправление на Render
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Перенаправление на Render
+  RewriteCond %{HTTP_HOST} ^(www\.)?domgo\.rs$ [NC]
+  RewriteRule ^(.*)$ https://domgors.onrender.com/$1 [R=301,L]
+</IfModule>
+
+# Настройки PHP
+<IfModule mod_php.c>
+  php_flag display_errors Off
+  php_value max_execution_time 30
+  php_value memory_limit 128M
+  php_value post_max_size 8M
+  php_value upload_max_filesize 2M
+</IfModule>
+
+# Правильные типы MIME
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType text/css .css
+  AddType image/svg+xml .svg
+</IfModule>
+
+# Настройки доступа (может потребоваться для некоторых хостингов)
+<Files ~ "^\.">
+  Order allow,deny
+  Deny from all
+</Files>
+
+# Разрешить все для основного файла
+<Files "index.php">
+  Allow from all
+</Files>
