@@ -1,1 +1,5 @@
 /* /index.html 200
+
+# Перенаправление со старого домена на новый
+https://domgors.onrender.com/* https://domgo.rs/:splat 301!
+http://domgors.onrender.com/* https://domgo.rs/:splat 301!

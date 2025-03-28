@@ -31,6 +31,13 @@ const SEO = ({
   const pageDescription = description || t('seo.defaultDescription')
   const pageKeywords = keywords || t('seo.defaultKeywords')
 
+  // Определяем правильные URL для текущих страниц для каждого языка
+  const baseURL = 'https://domgo.rs'
+  const path = window.location.pathname
+  const currentURL = `${baseURL}${path}`
+  const ruURL = `${currentURL}${currentURL.includes('?') ? '&' : '?'}lang=ru`
+  const srURL = `${currentURL}${currentURL.includes('?') ? '&' : '?'}lang=sr`
+
   return (
     <Helmet>
       <title>{pageTitle}</title>
@@ -42,12 +49,13 @@ const SEO = ({
       <meta property="og:title" content={pageTitle} />
       <meta property="og:description" content={pageDescription} />
       <meta property="og:type" content={type} />
-      <meta property="og:url" content={canonicalUrl} />
+      <meta property="og:url" content={currentURL} />
       {imageUrl && <meta property="og:image" content={imageUrl} />}
       
-      <link rel="canonical" href={canonicalUrl} />
-      <link rel="alternate" hrefLang="ru" href={`${canonicalUrl}${canonicalUrl.includes('?') ? '&' : '?'}lang=ru`} />
-      <link rel="alternate" hrefLang="sr-Latn" href={`${canonicalUrl}${canonicalUrl.includes('?') ? '&' : '?'}lang=sr`} />
+      <link rel="canonical" href={currentURL} />
+      <link rel="alternate" hrefLang="ru" href={ruURL} />
+      <link rel="alternate" hrefLang="sr-Latn" href={srURL} />
+      <link rel="alternate" hrefLang="x-default" href={baseURL} />
       <meta name="language" content={currentLang === 'ru' ? 'Russian' : 'Serbian'} />
     </Helmet>
   )

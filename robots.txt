@@ -3,6 +3,11 @@ Allow: /
 Disallow: /admin/
 Disallow: /*.json$
 
+# Запрет индексации старого домена
+User-agent: *
+Host: domgors.onrender.com
+Disallow: /
+
 # Разрешаем индексацию важных страниц
 Allow: /sale
 Allow: /rent
