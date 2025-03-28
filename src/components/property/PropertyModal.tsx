@@ -44,7 +44,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         
-        <div className="fixed inset-0 flex items-start justify-center p-4 overflow-y-auto mt-16">
+        <div className="fixed inset-0 flex items-start justify-center p-2 sm:p-4 overflow-y-auto mt-16">
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -54,7 +54,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Dialog.Panel className="w-[85%] bg-white rounded-xl shadow-lg max-h-[91vh] overflow-y-auto relative">
+            <Dialog.Panel className="w-[95%] sm:w-[85%] bg-white rounded-xl shadow-lg max-h-[91vh] overflow-y-auto relative">
               <div className="sticky top-0 right-0 z-30 flex items-center gap-2 p-3 justify-end bg-gradient-to-b from-black/50 to-transparent">
                 <FavoriteButton propertyId={property.id} />
                 <button
@@ -69,7 +69,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
               <div className="p-4">
                 {/* Two column layout */}
                 <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Left column: Images and Map */}
+                  {/* Left column: Images */}
                   <div className="lg:w-1/2">
                     {/* Property Images */}
                     <div className="mb-6 relative rounded-xl overflow-hidden">
@@ -137,28 +137,6 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         </div>
                       </div>
                     </div>
-
-                    {/* Карта */}
-                    {property.coordinates && (
-                      <div className="mb-4">
-                        <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 flex items-center">
-                          <svg className="w-5 h-5 mr-2 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          {t('addProperty.form.mapLocation')}
-                        </h4>
-                        <div className="h-[300px] rounded-lg overflow-hidden">
-                          <PropertyMap
-                            center={[property.coordinates.lng, property.coordinates.lat]}
-                            zoom={14}
-                            properties={[mapProperty]}
-                            onMarkerPlace={() => {}}
-                            allowMarkerPlacement={false}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   {/* Right column: Property Info */}
@@ -326,6 +304,28 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   </div>
                 </div>
               </div>
+              {property.coordinates && (
+                <div className="mt-4">
+                  <div className="bg-[#1E3A8A] text-white p-3 rounded-t-xl flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <h4 className="text-lg font-bold">{t('addProperty.form.mapLocation')}</h4>
+                  </div>
+                  <div className="bg-white rounded-b-xl p-0 border border-gray-100 shadow-sm">
+                    <div className="h-[300px] rounded-b-lg overflow-hidden">
+                      <PropertyMap
+                        center={[property.coordinates.lng, property.coordinates.lat]}
+                        zoom={14}
+                        properties={[mapProperty]}
+                        onMarkerPlace={() => {}}
+                        allowMarkerPlacement={false}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </Dialog.Panel>
           </Transition.Child>
         </div>
