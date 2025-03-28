@@ -5,7 +5,6 @@ interface SEOProps {
   title?: string
   description?: string
   keywords?: string
-  canonicalUrl?: string
   imageUrl?: string
   type?: string
   noindex?: boolean
@@ -15,7 +14,6 @@ const SEO = ({
   title,
   description,
   keywords,
-  canonicalUrl = 'https://domgo.rs',
   imageUrl,
   type = 'website',
   noindex = false

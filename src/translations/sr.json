@@ -191,12 +191,12 @@
     "phone": "Telefon"
   },
   "seo": {
-    "defaultTitle": "Nekretnine u Srbiji - prodaja i najam",
-    "defaultDescription": "Najbolje ponude za prodaju i najam stanova, kuća i poslovnih prostora u Srbiji. Veliki izbor objekata, aktuelne cene.",
-    "defaultKeywords": "nekretnine srbija, kupiti stan u srbiji, najam kuće srbija, poslovni prostor srbija, beograd nekretnine",
-    "homePageTitle": "Početna - Nekretnine u Srbiji",
-    "salePageTitle": "Prodaja nekretnina u Srbiji",
-    "rentPageTitle": "Najam nekretnina u Srbiji",
+    "defaultTitle": "Nekretnine u Srbiji - prodaja i izdavanje",
+    "defaultDescription": "Najbolje ponude za kupovinu i izdavanje stanova, kuća i zemljišta u Srbiji. Veliki izbor objekata, aktuelne cene za strance i lokalne kupce.",
+    "defaultKeywords": "nekretnine u srbiji, stanovi na prodaju beograd, izdavanje stanova srbija, kuće na prodaju, komercijalne nekretnine srbija, placevi na prodaju, stanovi za strance, nekretnine za ruse u srbiji, luksuzne nekretnine beograd, zemljište na prodaju srbija, stanovi novi beograd, nekretnine golden visa srbija",
+    "homePageTitle": "DomGo - Nekretnine u Srbiji za prodaju i izdavanje",
+    "salePageTitle": "Kupiti nekretnine u Srbiji - stanovi, kuće, placevi",
+    "rentPageTitle": "Izdavanje nekretnina u Srbiji - stanovi i kuće",
     "favoritesPageTitle": "Omiljene nekretnine"
   }
 }
