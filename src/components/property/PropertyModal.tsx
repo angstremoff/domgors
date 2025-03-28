@@ -164,18 +164,20 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   {/* Right column: Property Info */}
                   <div className="lg:w-1/2">
                     {/* Property Title and Price */}
-                    <div className="mb-6 space-y-2">
-                      <div className="flex items-start justify-between flex-col sm:flex-row">
-                        <h2 className="text-xl font-bold text-gray-900">{property.title}</h2>
-                        <div className="text-xl font-bold text-[#1E3A8A] mt-2 sm:mt-0">
+                    <div className="mb-6">
+                      <div className="bg-[#1E3A8A] text-white p-4 rounded-t-xl">
+                        <h2 className="text-xl font-bold">{property.title}</h2>
+                        <p className="text-sm opacity-90 mt-1">{property.city?.name}, {property.location}</p>
+                      </div>
+                      <div className="bg-white p-4 rounded-b-xl border border-gray-100 shadow-sm">
+                        <div className="text-xl font-bold text-[#1E3A8A]">
                           {property.price.toLocaleString()} €{property.type === 'rent' && t('common.perMonth')}
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600">{property.city?.name}, {property.location}</p>
                     </div>
 
                     {/* Main Characteristics */}
-                    <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="mb-6 grid grid-cols-3 gap-3">
                       {property.property_type !== 'land' && (
                         <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow transition-shadow">
                           <div className="flex flex-col items-center text-center">
@@ -218,15 +220,13 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
                     {/* Section: Description */}
                     <div className="mb-6">
-                      <div className="flex items-center mb-3">
-                        <div className="w-8 h-8 flex items-center justify-center bg-blue-50 rounded-full mr-2">
-                          <svg className="w-4 h-4 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </div>
-                        <h4 className="text-lg font-bold text-gray-900">{t('addProperty.form.description')}</h4>
+                      <div className="bg-[#1E3A8A] text-white p-3 rounded-t-xl flex items-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <h4 className="text-lg font-bold">{t('addProperty.form.description')}</h4>
                       </div>
-                      <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                      <div className="bg-white rounded-b-xl p-4 border border-gray-100 shadow-sm">
                         <p className="text-sm text-gray-700 leading-relaxed">{property.description || t('common.noDescription')}</p>
                       </div>
                     </div>
@@ -234,55 +234,55 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     {/* Section: Features */}
                     {property.features && property.features.length > 0 && (
                       <div className="mb-6">
-                        <div className="flex items-center mb-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-blue-50 rounded-full mr-2">
-                            <svg className="w-4 h-4 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                            </svg>
-                          </div>
-                          <h4 className="text-lg font-bold text-gray-900">{t('filters.features')}</h4>
+                        <div className="bg-[#1E3A8A] text-white p-3 rounded-t-xl flex items-center">
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                          </svg>
+                          <h4 className="text-lg font-bold">{t('filters.features')}</h4>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          {property.features.includes('elevator') && (
-                            <div className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
-                              <div className="p-2 bg-blue-50 rounded-full flex-shrink-0">
-                                <svg className="w-5 h-5 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
+                        <div className="bg-white rounded-b-xl p-4 border border-gray-100 shadow-sm">
+                          <div className="grid grid-cols-2 gap-3">
+                            {property.features.includes('elevator') && (
+                              <div className="p-3 bg-blue-50 rounded-xl flex items-center gap-3">
+                                <div className="p-2 bg-white rounded-full flex-shrink-0">
+                                  <svg className="w-5 h-5 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                  </svg>
+                                </div>
+                                <span className="text-sm font-medium text-gray-800">Лифт</span>
                               </div>
-                              <span className="text-sm font-medium text-gray-800">Лифт</span>
-                            </div>
-                          )}
-                          {property.features.includes('parking') && (
-                            <div className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
-                              <div className="p-2 bg-blue-50 rounded-full flex-shrink-0">
-                                <svg className="w-5 h-5 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1z M16 16h3a1 1 0 001-1V7a1 1 0 00-1-1h-3" />
-                                </svg>
+                            )}
+                            {property.features.includes('parking') && (
+                              <div className="p-3 bg-blue-50 rounded-xl flex items-center gap-3">
+                                <div className="p-2 bg-white rounded-full flex-shrink-0">
+                                  <svg className="w-5 h-5 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1z M16 16h3a1 1 0 001-1V7a1 1 0 00-1-1h-3" />
+                                  </svg>
+                                </div>
+                                <span className="text-sm font-medium text-gray-800">Парковка</span>
                               </div>
-                              <span className="text-sm font-medium text-gray-800">Парковка</span>
-                            </div>
-                          )}
-                          {property.features.includes('balcony') && (
-                            <div className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
-                              <div className="p-2 bg-blue-50 rounded-full flex-shrink-0">
-                                <svg className="w-5 h-5 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12h18M3 6h18M3 18h18" />
-                                </svg>
+                            )}
+                            {property.features.includes('balcony') && (
+                              <div className="p-3 bg-blue-50 rounded-xl flex items-center gap-3">
+                                <div className="p-2 bg-white rounded-full flex-shrink-0">
+                                  <svg className="w-5 h-5 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12h18M3 6h18M3 18h18" />
+                                  </svg>
+                                </div>
+                                <span className="text-sm font-medium text-gray-800">Балкон</span>
                               </div>
-                              <span className="text-sm font-medium text-gray-800">Балкон</span>
-                            </div>
-                          )}
-                          {property.features.includes('furnished') && (
-                            <div className="p-3 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
-                              <div className="p-2 bg-blue-50 rounded-full flex-shrink-0">
-                                <svg className="w-5 h-5 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 12V8h-4V4h-8v4H4v4m0 0v6a2 2 0 002 2h12a2 2 0 002-2v-6M4 12h16" />
-                                </svg>
+                            )}
+                            {property.features.includes('furnished') && (
+                              <div className="p-3 bg-blue-50 rounded-xl flex items-center gap-3">
+                                <div className="p-2 bg-white rounded-full flex-shrink-0">
+                                  <svg className="w-5 h-5 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 12V8h-4V4h-8v4H4v4m0 0v6a2 2 0 002 2h12a2 2 0 002-2v-6M4 12h16" />
+                                  </svg>
+                                </div>
+                                <span className="text-sm font-medium text-gray-800">Мебель</span>
                               </div>
-                              <span className="text-sm font-medium text-gray-800">Мебель</span>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -290,15 +290,13 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     {/* Section: Contact Info */}
                     {property.user && (
                       <div className="mb-2">
-                        <div className="flex items-center mb-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-blue-50 rounded-full mr-2">
-                            <svg className="w-4 h-4 text-[#1E3A8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                          </div>
-                          <h4 className="text-lg font-bold text-gray-900">{t('footer.contacts')}</h4>
+                        <div className="bg-[#1E3A8A] text-white p-3 rounded-t-xl flex items-center">
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <h4 className="text-lg font-bold">{t('footer.contacts')}</h4>
                         </div>
-                        <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                        <div className="bg-white rounded-b-xl p-4 border border-gray-100 shadow-sm">
                           <div className="space-y-3">
                             {property.user.name && (
                               <div className="flex items-center">
