@@ -47,6 +47,27 @@ function AuthProvider({ children }: { children: ReactNode }) {
             }
             setUser(userData)
             localStorage.setItem('user', JSON.stringify(userData))
+            
+            // Получаем метаданные пользователя
+            const metadata = session.user.user_metadata;
+            
+            // Сохраняем данные пользователя в таблицу users после подтверждения email
+            const saveUserProfile = async () => {
+              const { error: profileError } = await supabase
+                .from('users')
+                .upsert({ 
+                  id: session.user.id, 
+                  email: session.user.email!,
+                  name: metadata?.name || '',
+                  phone: metadata?.phone || ''
+                }, { onConflict: 'id' })
+                
+              if (profileError) {
+                console.error('Error saving user profile after verification:', profileError)
+              }
+            }
+            
+            saveUserProfile();
           }
         } else {
           setUser(null)
