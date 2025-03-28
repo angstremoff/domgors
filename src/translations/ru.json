@@ -23,6 +23,10 @@
     "favorites": "Избранное",
     "roomsShort": "комн."
   },
+  "profile": {
+    "name": "Ваше имя",
+    "phone": "Номер телефона"
+  },
   "footer": {
     "mobileApps": "Мобильные приложения",
     "contacts": "Контакты",

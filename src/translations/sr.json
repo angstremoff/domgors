@@ -24,6 +24,10 @@
     "roomsShort": "sobe",
     "perMonth": "/mes"
   },
+  "profile": {
+    "name": "Vaše ime",
+    "phone": "Broj telefona"
+  },
   "footer": {
     "mobileApps": "Mobilne aplikacije",
     "contacts": "Kontakti",
