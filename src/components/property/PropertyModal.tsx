@@ -67,7 +67,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-[95%] max-w-6xl bg-white rounded-xl shadow-xl overflow-y-auto relative max-h-[90vh]">
-                <div className="sticky top-0 right-0 z-30 flex items-center gap-1 sm:gap-2 p-2 sm:p-3 justify-end bg-gradient-to-b from-black/50 to-transparent">
+                <div className="sticky top-4 sm:top-3 right-0 z-30 flex items-center gap-1 sm:gap-2 p-2 sm:p-3 justify-end bg-gradient-to-b from-black/50 to-transparent">
                   <FavoriteButton propertyId={property.id} />
                   <button
                     onClick={onClose}
