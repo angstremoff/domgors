@@ -25,8 +25,8 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
   }
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isFullScreenOpen, setIsFullScreenOpen] = useState(false)
 
-  // Функции для навигации по изображениям
   const nextImage = () => {
     if (property.images && property.images.length > 0) {
       setCurrentImageIndex((prev) => (prev + 1) % property.images.length)
@@ -87,9 +87,10 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                               src={property.images[currentImageIndex]}
                               alt={property.title}
                               className={[
-                                'absolute inset-0 w-full h-full object-cover',
+                                'absolute inset-0 w-full h-full object-cover cursor-pointer',
                                 property.status === 'sold' ? 'grayscale' : ''
                               ].join(' ')}
+                              onClick={() => setIsFullScreenOpen(true)}
                             />
                             {property.images.length > 1 && (
                               <>
@@ -317,6 +318,87 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
           </Transition.Child>
         </div>
       </Dialog>
+      
+      {/* Full Screen Image Viewer */}
+      <Transition show={isFullScreenOpen} as={Fragment}>
+        <Dialog as="div" className="fixed inset-0 z-50 overflow-hidden" onClose={() => setIsFullScreenOpen(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-90" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <Dialog.Panel className="relative w-full h-full flex items-center justify-center">
+                {/* Close button */}
+                <button
+                  onClick={() => setIsFullScreenOpen(false)}
+                  className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                
+                {/* Image */}
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {property.images && property.images.length > 0 && (
+                    <img
+                      src={property.images[currentImageIndex]}
+                      alt={property.title}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  )}
+                </div>
+                
+                {/* Navigation buttons */}
+                {property.images && property.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
+                    >
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
+                    >
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+                
+                {/* Image counter */}
+                {property.images && property.images.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/50 text-white rounded-full text-sm">
+                    {currentImageIndex + 1} / {property.images.length}
+                  </div>
+                )}
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </Dialog>
+      </Transition>
     </Transition.Root>
   )
 }
