@@ -54,7 +54,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Dialog.Panel className="w-[95%] sm:w-[85%] bg-white rounded-xl shadow-lg max-h-[91vh] overflow-y-auto relative">
+            <Dialog.Panel className="w-[95%] md:w-[90%] lg:w-[85%] max-w-7xl bg-white rounded-xl shadow-lg max-h-[91vh] overflow-y-auto relative">
               <div className="sticky top-0 right-0 z-30 flex items-center gap-1 sm:gap-2 p-2 sm:p-3 justify-end bg-gradient-to-b from-black/50 to-transparent">
                 <FavoriteButton propertyId={property.id} />
                 <button
@@ -320,85 +320,80 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
       </Dialog>
       
       {/* Full Screen Image Viewer */}
-      <Transition show={isFullScreenOpen} as="div" className="transition-root">
-        <Dialog as="div" className="fixed inset-0 z-50 overflow-hidden" onClose={() => setIsFullScreenOpen(false)}>
-          <Transition.Child
-            as="div"
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black bg-opacity-90" />
-          </Transition.Child>
+      {isFullScreenOpen && (
+        <div className="fixed inset-0 z-[100] overflow-hidden" onClick={(e) => {
+          // Закрывать только если клик был на фоне, а не на изображении или кнопках
+          if (e.target === e.currentTarget) {
+            setIsFullScreenOpen(false);
+          }
+        }}>
+          <div className="fixed inset-0 bg-black bg-opacity-90" />
 
           <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Transition.Child
-              as="div"
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="relative w-full h-full flex items-center justify-center">
-                {/* Close button */}
-                <button
-                  onClick={() => setIsFullScreenOpen(false)}
-                  className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                
-                {/* Image */}
-                <div className="relative w-full h-full flex items-center justify-center">
-                  {property.images && property.images.length > 0 && (
-                    <img
-                      src={property.images[currentImageIndex]}
-                      alt={property.title}
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  )}
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* Close button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsFullScreenOpen(false);
+                }}
+                className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+              {/* Image */}
+              <div className="relative w-full h-full flex items-center justify-center">
+                {property.images && property.images.length > 0 && (
+                  <img
+                    src={property.images[currentImageIndex]}
+                    alt={property.title}
+                    className="max-h-[90vh] max-w-[90vw] object-contain"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
+              </div>
+              
+              {/* Navigation buttons */}
+              {property.images && property.images.length > 1 && (
+                <div className="navigation-controls">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prevImage();
+                    }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
+                  >
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      nextImage();
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
+                  >
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
-                
-                {/* Navigation buttons */}
-                {property.images && property.images.length > 1 && (
-                  <div className="navigation-controls">
-                    <button
-                      onClick={prevImage}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
-                    >
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={nextImage}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
-                    >
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
-                
-                {/* Image counter */}
-                {property.images && property.images.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/50 text-white rounded-full text-sm">
-                    {currentImageIndex + 1} / {property.images.length}
-                  </div>
-                )}
-              </Dialog.Panel>
-            </Transition.Child>
+              )}
+              
+              {/* Image counter */}
+              {property.images && property.images.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/50 text-white rounded-full text-sm">
+                  {currentImageIndex + 1} / {property.images.length}
+                </div>
+              )}
+            </div>
           </div>
-        </Dialog>
-      </Transition>
+        </div>
+      )}
     </Transition.Root>
   )
 }
