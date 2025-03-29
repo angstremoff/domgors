@@ -11,7 +11,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   register: (email: string, password: string, name: string, phone: string) => Promise<{user: User | null, needsEmailVerification: boolean}>
-  signInWithGoogle: () => Promise<void>
   isLoading: boolean
 }
 
@@ -114,26 +113,6 @@ function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const getRedirectURL = () => {
-    return window.location.origin
-  }
-
-  const signInWithGoogle = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getRedirectURL()
-        }
-      })
-
-      if (error) throw error
-    } catch (error) {
-      console.error('Error signing in with Google:', error)
-      throw error
-    }
-  }
-
   const register = async (email: string, password: string, name: string, phone: string) => {
     try {
       // Регистрация пользователя в системе аутентификации
@@ -227,7 +206,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, signInWithGoogle, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
       {children}
     </AuthContext.Provider>
   )
