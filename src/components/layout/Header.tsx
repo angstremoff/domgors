@@ -168,6 +168,14 @@ export default function Header() {
                   {t('common.addListing')}
                 </button>
               )}
+              <div className="flex items-center justify-between gap-2 mt-2">
+                <div className="rounded-md py-2 px-3 text-base font-medium text-white bg-white/10 backdrop-blur-sm border border-white/20 flex-1 flex items-center justify-center">
+                  <FavoriteIcon />
+                </div>
+                <div className="rounded-md py-2 px-3 text-base font-medium text-white bg-white/10 backdrop-blur-sm border border-white/20 flex-1 flex items-center justify-center">
+                  <LanguageSelector />
+                </div>
+              </div>
             </div>
             <div className="border-t border-white/20 pb-3 pt-4">
               <div className="space-y-1 px-4">
