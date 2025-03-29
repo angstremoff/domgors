@@ -45,11 +45,12 @@ export default function Footer() {
           <div className="w-full md:w-auto flex flex-col items-center md:items-start">
             <h3 className="text-base font-semibold text-gray-900 mb-4">{t('footer.developedBy')}</h3>
             <a 
-              href="mailto:angstremoff@ya.ru" 
+              href="https://angstremoff.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
               className="inline-flex items-center text-gray-600 hover:text-indigo-600 transition-colors text-sm font-medium"
             >
-              <MdEmail className="w-4 h-4 mr-2" />
-              Angstremoff
+              Разработано с ❤ от AngstremoFF
             </a>
           </div>
         </div>
