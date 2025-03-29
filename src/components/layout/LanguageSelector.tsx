@@ -25,7 +25,7 @@ export default function LanguageSelector() {
           <img
             src={currentLanguage?.flag}
             alt={currentLanguage?.label}
-            className="h-5 w-5 rounded-full object-cover"
+            className="h-6 w-6 rounded-full object-cover"
           />
         </Menu.Button>
       </div>
@@ -54,7 +54,7 @@ export default function LanguageSelector() {
                     <img
                       src={lang.flag}
                       alt={lang.code}
-                      className="h-5 w-5 rounded-full object-cover"
+                      className="h-6 w-6 rounded-full object-cover"
                     />
                     {lang.label}
                   </button>
