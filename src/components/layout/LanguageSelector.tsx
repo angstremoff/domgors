@@ -1,6 +1,5 @@
 import { Fragment } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { useLanguage } from '../../contexts/LanguageContext'
 import ruFlag from '../../assets/flags/ru.svg'
 import srFlag from '../../assets/flags/sr.svg'
@@ -40,7 +39,7 @@ export default function LanguageSelector() {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <Menu.Items className="absolute right-0 z-10 mt-2 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <Menu.Items className="absolute right-0 z-10 mb-2 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:mt-2 sm:mb-0 bottom-full sm:bottom-auto sm:top-auto">
           <div className="py-1">
             {languages.map((lang) => (
               <Menu.Item key={lang.code}>

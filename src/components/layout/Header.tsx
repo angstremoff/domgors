@@ -169,10 +169,10 @@ export default function Header() {
                 </button>
               )}
               <div className="flex items-center justify-between gap-2 mt-2">
-                <div className="rounded-md py-2 px-3 text-base font-medium text-white bg-white/10 backdrop-blur-sm border border-white/20 flex-1 flex items-center justify-center">
+                <Link to="/favorites" className="w-1/2 rounded-md py-2 px-3 text-base font-medium text-white bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
                   <FavoriteIcon />
-                </div>
-                <div className="rounded-md py-2 px-3 text-base font-medium text-white bg-white/10 backdrop-blur-sm border border-white/20 flex-1 flex items-center justify-center">
+                </Link>
+                <div className="w-1/2 rounded-md py-2 px-3 text-base font-medium text-white bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
                   <LanguageSelector />
                 </div>
               </div>
