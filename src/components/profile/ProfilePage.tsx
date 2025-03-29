@@ -277,7 +277,7 @@ export default function ProfilePage() {
                       <div className="p-4">
                         <h3 className="text-lg font-semibold">{property.title}</h3>
                         <p className="mt-1 text-sm text-gray-500">
-                          {property.price.toLocaleString()} ₽
+                          {property.price.toLocaleString()} €
                         </p>
                         
                         <div className="mt-4 flex flex-col sm:flex-row gap-2">
