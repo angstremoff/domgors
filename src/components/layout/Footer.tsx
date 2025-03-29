@@ -50,7 +50,7 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="inline-flex items-center text-gray-600 hover:text-indigo-600 transition-colors text-sm font-medium"
             >
-              Разработано с ❤ от AngstremoFF
+              с ❤ от AngstremoFF
             </a>
           </div>
         </div>
