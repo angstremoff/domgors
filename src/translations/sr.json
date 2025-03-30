@@ -35,29 +35,13 @@
     "notFoundDescription": "Žao nam je, stranica koju tražite ne postoji ili je premeštena.",
     "pageNotFound": "Stranica nije pronađena",
     "notFoundMessage": "Žao nam je, nismo mogli da pronađemo stranicu koju tražite. Možda je premeštena ili obrisana.",
-    "backToHome": "Nazad na početnu",
-    "search": "Pretraga",
-    "clearFilter": "Očisti filtere",
-    "apply": "Primeni",
-    "close": "Zatvori",
-    "noResults": "Nema rezultata",
-    "noDescription": "Bez opisa",
-    "noPhoneAvailable": "Broj telefona nije dostupan",
-    "error": "Greška",
-    "success": "Uspešno",
-    "rooms": "soba"
+    "backToHome": "Nazad na početnu"
   },
   "profile": {
-    "title": "Profil",
-    "editProfile": "Uredi profil",
-    "yourProperties": "Vaši oglasi",
-    "savedProperties": "Sačuvani oglasi",
-    "contacts": "Kontakti",
-    "settings": "Podešavanja",
-    "logout": "Odjavi se",
     "name": "Vaše ime",
     "phone": "Broj telefona",
-    "myProperties": "Moji oglasi"
+    "myProperties": "Moji oglasi",
+    "contacts": "Kontakti"
   },
   "footer": {
     "mobileApps": "Mobilne aplikacije",
