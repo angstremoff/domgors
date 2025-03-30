@@ -497,6 +497,42 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                 </select>
               </div>
 
+              {/* Особенности */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('addProperty.form.features')}
+                </label>
+                <div className="space-y-2">
+                  {['parking', 'balcony', 'elevator', 'furnished'].map(feature => (
+                    <label key={feature} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.features.includes(feature)}
+                        onChange={() => {
+                          setFormData(prev => {
+                            const features = [...prev.features]
+                            if (features.includes(feature)) {
+                              return { ...prev, features: features.filter(f => f !== feature) }
+                            } else {
+                              return { ...prev, features: [...features, feature] }
+                            }
+                          })
+                        }}
+                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        {{
+                          parking: t('addProperty.form.parking'),
+                          balcony: t('addProperty.form.balcony'),
+                          elevator: t('addProperty.form.elevator'),
+                          furnished: t('addProperty.form.furnished')
+                        }[feature]}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               {/* Карта */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('addProperty.form.mapLocation')}</label>
