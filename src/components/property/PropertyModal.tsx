@@ -202,30 +202,6 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           </div>
                         </div>
                       </div>
-                      
-                      {/* Карта для мобильной версии - сразу после фото*/}
-                      <div className="block lg:hidden mt-3 sm:mt-6 bg-gray-100">
-                        {property.coordinates && (
-                          <div className="mb-2">
-                            <h4 className="text-lg font-bold mb-2">{t('property.location')}</h4>
-                            <p className="text-sm sm:text-base text-gray-700 mb-2">
-                              {property.city?.name}, {property.location}
-                            </p>
-                            <div className="rounded-lg sm:rounded-xl overflow-hidden bg-gray-100">
-                              <div className="h-[200px] sm:h-[250px] rounded-lg sm:rounded-xl overflow-hidden">
-                                <PropertyMap
-                                  center={[property.coordinates.lng, property.coordinates.lat]}
-                                  zoom={14}
-                                  properties={[mapProperty]}
-                                  onMarkerPlace={() => {}}
-                                  allowMarkerPlacement={false}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
                     </div>
 
                     {/* Right column: Property Info */}
@@ -370,8 +346,8 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     </div>
                   </div>
                 
-                  {/* Карта для десктопной версии */}
-                  <div className="hidden lg:block bg-gray-100 mt-3 sm:mt-6">
+                  {/* Расположение на карте */}
+                  <div className="mt-3 sm:mt-6 bg-gray-100">
                     {property.coordinates && (
                       <div className="mb-2">
                         <h4 className="text-lg font-bold mb-2">{t('property.location')}</h4>
