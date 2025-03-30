@@ -141,7 +141,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
                           {property.status === 'sold' && (
                             <div className="absolute inset-0 flex items-center justify-center z-20">
-                              <div className="bg-black/80 text-white px-4 py-1.5 rounded-full text-base font-semibold backdrop-blur-sm">
+                              <div className="bg-black/80 text-white px-4 py-1.5 rounded-full text-base font-semibold">
                                 {property.type === 'sale' ? t('status.sold') : t('status.rented')}
                               </div>
                             </div>
@@ -182,21 +182,18 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                             <PlaceholderImage />
                           )}
                         </div>
-                        <div className="absolute top-3 left-3 z-10 flex gap-2 bg-gray-100">
+                        <div className="absolute top-3 left-3 z-10 flex gap-2">
                           <div className={[
-                            'px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-md text-white',
-                            property.type === 'sale' ? 'bg-emerald-500/90' : 'bg-blue-500/90'
+                            'px-2 py-0.5 rounded-full text-xs font-medium text-white',
+                            property.type === 'sale' ? 'bg-emerald-500' : 'bg-blue-500'
                           ].join(' ')}>
-                            {t(`transactionTypes.${property.type}`)}
+                            {t(`propertyTypes.${property.property_type}`)}
                           </div>
                           <div className={[
-                            'px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-md text-white',
-                            property.property_type === 'apartment' && 'bg-violet-600/90',
-                            property.property_type === 'house' && 'bg-orange-500/90',
-                            property.property_type === 'commercial' && 'bg-cyan-600/90',
-                            property.property_type === 'land' && 'bg-lime-600/90'
-                          ].filter(Boolean).join(' ')}>
-                            {t(`propertyTypes.${property.property_type}`)}
+                            'px-2 py-0.5 rounded-full text-xs font-medium text-white',
+                            property.type === 'sale' ? 'bg-emerald-500' : 'bg-blue-500'
+                          ].join(' ')}>
+                            {t(`transactionTypes.${property.type}`)}
                           </div>
                         </div>
                       </div>
@@ -241,7 +238,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         {property.rooms && (
                           <div className="flex items-center">
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M3 14h18M3 18h18M3 6l12 12" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
                             </svg>
                             <span className="text-sm sm:text-base text-gray-700">{property.rooms} {t('common.rooms')}</span>
                           </div>
@@ -287,22 +284,34 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         <div className="space-y-1 sm:space-y-2">
                           {property.user?.name && (
                             <div className="flex items-center">
-                              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                               </svg>
                               <span className="text-sm sm:text-base text-gray-700">{property.user.name}</span>
                             </div>
                           )}
+                          
                           {property.user?.phone && (
-                            <button
-                              onClick={() => setIsPhoneVisible(true)}
-                              className={`w-full py-3 ${isPhoneVisible ? 'bg-green-50 text-green-700 border-green-200' : 'bg-green-600 text-white hover:bg-green-500'} border rounded-lg sm:rounded-xl font-medium transition-colors flex items-center justify-center mb-3 sm:mb-4 max-w-xs mx-auto`}
-                            >
-                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                              </svg>
-                              {isPhoneVisible ? (property.user?.phone || t('common.noPhoneAvailable')) : t('property.showPhone')}
-                            </button>
+                            <div>
+                              {!isPhoneVisible ? (
+                                <button 
+                                  onClick={() => setIsPhoneVisible(true)}
+                                  className="bg-green-500 hover:bg-green-600 transition-colors text-white rounded-lg py-2.5 px-4 sm:px-5 font-medium flex items-center justify-center w-full"
+                                >
+                                  <svg className="w-5 h-5 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                  </svg>
+                                  {t('common.showPhone')}
+                                </button>
+                              ) : (
+                                <div className="flex items-center">
+                                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                  </svg>
+                                  <span className="text-sm sm:text-base text-gray-700">{property.user.phone}</span>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
