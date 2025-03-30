@@ -18,10 +18,11 @@ export async function compressImage(file: File, maxSizeMB: number = 1): Promise<
     // Настройки сжатия
     const options = {
       maxSizeMB: maxSizeMB,        // Максимальный размер в МБ
-      maxWidthOrHeight: 1920,      // Максимальная ширина/высота
+      maxWidthOrHeight: 1280,      // Максимальная ширина/высота
       useWebWorker: true,          // Использование веб-воркера для фоновой обработки
       preserveExif: false,         // Не сохраняем EXIF данные (меньше размер)
       fileType: file.type as any,  // Сохраняем тип файла
+      initialQuality: 0.7,         // Начальное качество сжатия
     };
 
     // Сжимаем изображение
