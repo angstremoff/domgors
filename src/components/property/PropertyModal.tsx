@@ -58,8 +58,6 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
         return `https://t.me/share/url?url=${encodeURIComponent(propertyUrl)}&text=${title}`
       case 'whatsapp':
         return `https://wa.me/?text=${encodeURIComponent(property.title + " " + propertyUrl)}`
-      case 'viber':
-        return `viber://forward?text=${encodeURIComponent(property.title + " " + propertyUrl)}`
       default:
         return '#'
     }
@@ -118,7 +116,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-[95%] max-w-6xl bg-gray-50 rounded-xl shadow-xl overflow-y-auto relative max-h-[90vh]">
+              <Dialog.Panel className="w-[95%] max-w-6xl bg-gray-100 rounded-xl shadow-xl overflow-y-auto relative max-h-[90vh]">
                 <div className="sticky top-4 sm:top-3 right-0 z-30 flex items-center gap-1 sm:gap-2 p-2 sm:p-3 justify-end bg-gradient-to-b from-black/50 to-transparent">
                   <FavoriteButton propertyId={property.id} />
                   <button
@@ -308,31 +306,23 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
                       {/* Share Section */}
                       <div className="mb-6 sm:mb-8">
-                        <h4 className="text-lg font-bold mb-2">{t('common.share')}</h4>
-                        <div className="flex gap-3 justify-center items-center">
+                        <p className="text-lg font-medium mb-4">{t('common.share')}</p>
+                        <div className="flex space-x-3 mt-2">
                           <button
                             onClick={handleCopyLink}
-                            className="p-2 sm:p-3 rounded-full bg-indigo-100 text-[#1E3A8A] hover:bg-indigo-200 transition-colors"
-                            title={t('common.copyLink')}
+                            className="flex items-center justify-center w-12 h-12 bg-blue-500 text-white rounded-full"
                             aria-label={t('common.copyLink')}
                           >
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
+                              <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              <path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            {isCopied && (
-                              <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-green-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </span>
-                            )}
                           </button>
                           <a
                             href={getShareUrl('telegram')}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-center w-12 h-12 bg-[#0088cc] text-white rounded-full"
-                            title={t('common.shareViaTelegram')}
                             aria-label={t('common.shareViaTelegram')}
                           >
                             <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor">
@@ -348,17 +338,6 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           >
                             <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                            </svg>
-                          </a>
-                          <a
-                            href={getShareUrl('viber')}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center w-12 h-12 bg-[#7360f2] text-white rounded-full"
-                            aria-label={t('common.shareViaViber')}
-                          >
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M11.398.002C9.473.028 5.331.344 3.014 3.015.846 5.29.043 8.32.013 12.352c-.03 4.015.649 8.023 3.887 10.105 0 0 .041 3.928 3.886 3.641l.244-.08c.009.004.018.004.027.006.253.043 1.498-.412 3.184-1.272 5.443-.044 9.609-1.293 10.791-3.203 1.338-2.137 1.707-7.893 1.765-11.038C23.869 7.402 23.014.03 11.398.002zm.138 2.045c9.616.023 10.361 5.45 10.283 10.494-.055 2.85-.393 8.092-1.486 9.86-.925 1.253-4.53 2.23-8.925 2.279-1.998 1.032-3.018 1.428-3.309 1.428-.291 0-1.163-.41-1.163-1.537 0-.596-.463-.731-.463-.731-2.687-1.729-3.14-5.012-3.114-8.586.027-3.539.679-6.148 2.503-8.055 1.248-1.307 2.998-2.853 10.174-3.152zM7.91 5.51c.366.031.648.312.648.312.22.219.186.342.169.533 0 0-.4.865-.741 1.603-.143.3-.52.158-.52.158l-.856-.424c-.254-.127-.356.166-.356.166-.157.309-.401 1.258.377 2.25.53.668 1.704 1.588 1.704 1.588.435.356 1.091.816 1.788 1.24.36.22.512.142.67-.065.257-.34.551-.72.668-.93.169-.307.295-.231.559-.121l1.685.701c.327.135.546.252.622.435.115.268.089.771-.09 1.125-.193.383-.624.777-1.073 1.004-.647.328-1.218.275-1.629.215 0 0-.505-.12-1.177-.416-1.088-.482-2.299-1.247-3.361-2.356-.809-.843-1.425-1.762-1.824-2.394-.398-.633-.544-.957-.544-.957-.382-.643-.53-1.415-.157-2.157.164-.326.509-.691.96-.941.193-.105.328-.145.328-.145.297-.114.602-.069.858.11.195.136.472.334.646.458zm1.166.814c-.09 0-.18.03-.239.09a.41.41 0 00-.084.119c-.031.064-.051.07-.051.186 0 .143.107.346.107.346.102.225.321.777.69 1.172.37.394 1.446 1.495 2.007 1.74.56.246.591.158.771.008.09-.076.196-.166.267-.301.072-.135.044-.18.032-.256-.013-.076-.015-.137-.135-.232-.118-.096-1.871-.91-2.063-.982-.191-.072-.321.069-.321.069-.494.42-.776-.077-.776-.077-.283-.287-.524-1.22-.77-1.514-.093-.161-.258-.276-.428-.268zm5.797.064c-.24-.004-.275 0-.365.023-.09.024-.367.115-.367.115-.44.142-.553.5-.408.697.145.196.246.177.426.13.181-.047.357-.165.357-.165.54-.268.726.06.726.06.082.124.008.364.008.413 0 .48-.173.582-.173.582-.173.168-.428.126-.662.057-.255-.076-.484-.165-.658-.254-.3-.15-.38-.125-.486-.01-.106.114-.212.325-.191.511.027.121.108.189.108.189.132.13.223.16.3.187.078.028.383.172.383.172.51.235 1.14.366 1.82.088.678-.277.907-.863.907-.863.223-.416.223-1.11.223-1.11-.024-.885-.565-1.082-.565-1.082-.28-.154-.698-.216-.997-.224-.075-.002-.133-.004-.178-.005zm-2.525 1.235c-.22.002-.408.112-.612.233-.204.12-.49.516-.592.772-.101.257-.082.45-.082.45.024.173.131.312.288.357.156.045.252.022.252.022.147.01.15-.075.15-.075.001-.174.011-.174.109-.361.097-.188.352-.435.493-.592.088-.098.117-.134.117-.228s-.118-.274-.259-.387c-.14-.114-.226-.192-.321-.193a.578.578 0 00-.044 0z"/>
                             </svg>
                           </a>
                         </div>
