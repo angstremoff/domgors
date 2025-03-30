@@ -149,7 +149,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
           }
 
           // Сжимаем изображение перед загрузкой
-          const compressedFile = await compressImage(file, 0.5) // Сжимаем до 0.5 МБ
+          const compressedFile = await compressImage(file, 0.3) // Сжимаем до 300 КБ
           
           const fileExt = compressedFile.name.split('.').pop()
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`

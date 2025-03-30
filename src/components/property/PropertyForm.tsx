@@ -164,7 +164,7 @@ export default function PropertyForm() {
       const imageUrls = await Promise.all(
         formData.images.map(async (file) => {
           // Сжимаем изображение перед загрузкой
-          const compressedFile = await compressImage(file, 0.5)
+          const compressedFile = await compressImage(file, 0.3) // Сжимаем до 300 КБ
           
           const fileExt = compressedFile.name.split('.').pop()
           const fileName = `${Math.random()}.${fileExt}`
