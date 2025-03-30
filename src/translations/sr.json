@@ -36,7 +36,14 @@
     "pageNotFound": "Stranica nije pronađena",
     "notFoundMessage": "Žao nam je, nismo mogli da pronađemo stranicu koju tražite. Možda je premeštena ili obrisana.",
     "backToHome": "Nazad na početnu",
-    "rooms": "sobe"
+    "rooms": "sobe",
+    "language": "Jezik",
+    "search": "Pretraga",
+    "show": "Prikaži",
+    "showPhone": "Prikaži telefon",
+    "showMap": "Prikaži mapu",
+    "hide": "Sakrij",
+    "hideMap": "Sakrij mapu"
   },
   "profile": {
     "name": "Vaše ime",
