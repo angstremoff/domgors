@@ -202,10 +202,8 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Расположение на карте */}
-                    <div className="mt-3 sm:mt-6 bg-gray-100">
+                      {/* Расположение на карте */}
                       {property.coordinates && (
                         <div className="mb-2">
                           <h4 className="text-lg font-bold mb-2">{t('property.location')}</h4>
