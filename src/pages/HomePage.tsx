@@ -54,6 +54,9 @@ export default function HomePage() {
       />
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-12">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4 sr-only">
+          {t('seo.homePageTitle')}
+        </h1>
         {/* Map section */}
         <div className="mb-8 sm:mb-24">
           <div className="mb-4 sm:mb-12">

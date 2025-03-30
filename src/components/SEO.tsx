@@ -35,6 +35,13 @@ const SEO = ({
   const currentURL = `${baseURL}${path}`
   const ruURL = `${currentURL}${currentURL.includes('?') ? '&' : '?'}lang=ru`
   const srURL = `${currentURL}${currentURL.includes('?') ? '&' : '?'}lang=sr`
+  
+  // Правильное форматирование канонической ссылки
+  const canonicalURL = path === '/' ? `${baseURL}/` : currentURL
+  
+  // Изображение по умолчанию, если не указано другое
+  const defaultImageUrl = `${baseURL}/property-preview.jpg`
+  const ogImageUrl = imageUrl || defaultImageUrl
 
   return (
     <Helmet>
@@ -48,9 +55,9 @@ const SEO = ({
       <meta property="og:description" content={pageDescription} />
       <meta property="og:type" content={type} />
       <meta property="og:url" content={currentURL} />
-      {imageUrl && <meta property="og:image" content={imageUrl} />}
+      <meta property="og:image" content={ogImageUrl} />
       
-      <link rel="canonical" href={currentURL} />
+      <link rel="canonical" href={canonicalURL} />
       <link rel="alternate" hrefLang="ru" href={ruURL} />
       <link rel="alternate" hrefLang="sr-Latn" href={srURL} />
       <link rel="alternate" hrefLang="x-default" href={baseURL} />
