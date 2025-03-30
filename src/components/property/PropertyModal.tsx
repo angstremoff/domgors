@@ -320,7 +320,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           )}
                           
                           {property.user?.phone && (
-                            <div className="flex items-center justify-center">
+                            <div className="flex">
                               {!isPhoneVisible ? (
                                 <button 
                                   onClick={() => setIsPhoneVisible(true)}
