@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import { compressImage } from '../../utils/imageCompression'
 
 interface PropertyFormData {
   title: string
@@ -162,13 +163,16 @@ export default function PropertyForm() {
       // Upload images
       const imageUrls = await Promise.all(
         formData.images.map(async (file) => {
-          const fileExt = file.name.split('.').pop()
+          // Сжимаем изображение перед загрузкой
+          const compressedFile = await compressImage(file, 0.5)
+          
+          const fileExt = compressedFile.name.split('.').pop()
           const fileName = `${Math.random()}.${fileExt}`
           const filePath = `properties/${fileName}`
 
           const { error: uploadError } = await supabase.storage
             .from('properties')
-            .upload(filePath, file)
+            .upload(filePath, compressedFile)
 
           if (uploadError) throw uploadError
 

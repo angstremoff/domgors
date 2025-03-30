@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabaseClient'
 import PropertyMap from '../property/PropertyMap'
 import { useTranslation } from 'react-i18next'
 import { propertyService } from '../../services/propertyService'
+import { compressImage } from '../../utils/imageCompression'
 
 interface AddPropertyModalProps {
   isOpen: boolean
@@ -265,13 +266,16 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
             throw new Error(t('addProperty.validation.onlyImages'))
           }
 
-          const fileExt = file.name.split('.').pop()
+          // Сжимаем изображение перед загрузкой
+          const compressedFile = await compressImage(file, 0.5) // Сжимаем до 0.5 МБ
+
+          const fileExt = compressedFile.name.split('.').pop()
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
           const filePath = `property-images/${fileName}`
 
           const { error: uploadError } = await supabase.storage
             .from('properties')
-            .upload(filePath, file, {
+            .upload(filePath, compressedFile, {
               cacheControl: '3600',
               upsert: false
             })

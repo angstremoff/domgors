@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { XMarkIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { supabase } from '../../lib/supabaseClient'
 import { useTranslation } from 'react-i18next'
+import { compressImage } from '../../utils/imageCompression'
 
 interface EditPropertyModalProps {
   isOpen: boolean
@@ -147,13 +148,16 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
             throw new Error(t('addProperty.form.fileTypeError'))
           }
 
-          const fileExt = file.name.split('.').pop()
+          // Сжимаем изображение перед загрузкой
+          const compressedFile = await compressImage(file, 0.5) // Сжимаем до 0.5 МБ
+          
+          const fileExt = compressedFile.name.split('.').pop()
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
           const filePath = `property-images/${fileName}`
 
           const { error: uploadError } = await supabase.storage
             .from('properties')
-            .upload(filePath, file, {
+            .upload(filePath, compressedFile, {
               cacheControl: '3600',
               upsert: false
             })
