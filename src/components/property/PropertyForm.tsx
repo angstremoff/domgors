@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -47,6 +47,10 @@ function LocationMarker({ position, setPosition }: {
 export default function PropertyForm() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [userData, setUserData] = useState({
+    name: '',
+    phone: ''
+  })
   const [formData, setFormData] = useState<PropertyFormData>({
     title: '',
     description: '',
@@ -61,6 +65,34 @@ export default function PropertyForm() {
     coordinates: null,
     city_id: null
   })
+
+  useEffect(() => {
+    // Загрузка данных пользователя при монтировании компонента
+    const fetchUserData = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('name, phone')
+            .eq('id', user.id)
+            .single();
+            
+          if (data) {
+            setUserData({
+              name: data.name || '',
+              phone: data.phone || ''
+            });
+          }
+          
+          if (error) throw error;
+        } catch (error) {
+          console.error('Ошибка при загрузке данных пользователя:', error);
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, [user]);
 
   const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -100,7 +132,33 @@ export default function PropertyForm() {
     e.preventDefault()
     if (!user) return
 
+    // Проверка обязательных полей пользователя
+    if (!userData.name.trim()) {
+      alert('Введите ваше имя')
+      return
+    }
+
+    if (!userData.phone.trim()) {
+      alert('Введите номер телефона')
+      return
+    }
+
     try {
+      // Обновляем профиль пользователя
+      const { error: profileError } = await supabase
+        .from('users')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          name: userData.name,
+          phone: userData.phone
+        }, { onConflict: 'id' })
+
+      if (profileError) {
+        console.error('Ошибка при обновлении профиля:', profileError)
+        throw profileError
+      }
+
       // Upload images
       const imageUrls = await Promise.all(
         formData.images.map(async (file) => {
@@ -137,6 +195,35 @@ export default function PropertyForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Контактная информация</label>
+        <div className="mt-1 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Ваше имя</label>
+            <input
+              type="text"
+              required
+              value={userData.name}
+              onChange={e => setUserData(prev => ({ ...prev, name: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              placeholder="Иван Иванов"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Ваш телефон</label>
+            <input
+              type="tel"
+              required
+              value={userData.phone}
+              onChange={e => setUserData(prev => ({ ...prev, phone: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              placeholder="+7 (999) 123-45-67"
+            />
+          </div>
+        </div>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700">Фотографии (до 10 шт.)</label>
         <input

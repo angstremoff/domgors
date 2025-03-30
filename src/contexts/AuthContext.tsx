@@ -10,7 +10,7 @@ interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  register: (email: string, password: string, name: string, phone: string) => Promise<{user: User | null, needsEmailVerification: boolean}>
+  register: (email: string, password: string) => Promise<{user: User | null, needsEmailVerification: boolean}>
   isLoading: boolean
 }
 
@@ -113,7 +113,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const register = async (email: string, password: string, name: string, phone: string) => {
+  const register = async (email: string, password: string) => {
     try {
       // Регистрация пользователя в системе аутентификации
       const { data, error } = await supabase.auth.signUp({
@@ -121,11 +121,6 @@ function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           emailRedirectTo: "https://domgors.onrender.com",
-          data: {
-            email: email,
-            name: name,
-            phone: phone
-          }
         }
       })
 
@@ -136,20 +131,6 @@ function AuthProvider({ children }: { children: ReactNode }) {
         const userData = {
           id: data.user.id,
           email: data.user.email!
-        }
-        
-        // Сохраняем дополнительные данные пользователя в таблицу users
-        const { error: profileError } = await supabase
-          .from('users')
-          .upsert({ 
-            id: data.user.id, 
-            email: email,
-            name: name,
-            phone: phone
-          }, { onConflict: 'id' })
-          
-        if (profileError) {
-          console.error('Error saving user profile:', profileError)
         }
         
         // Check if email confirmation is needed
