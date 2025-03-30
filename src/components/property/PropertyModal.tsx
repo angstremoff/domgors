@@ -113,7 +113,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
           </Transition.Child>
 
           <div className="fixed inset-0 z-10 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0 sm:items-center pt-14 sm:pt-0">
+            <div className="flex min-h-full items-center justify-center p-4 text-left sm:p-0 sm:items-center pt-14 sm:pt-0">
               <Transition.Child
                 as={Fragment}
                 enter="ease-out duration-300"
@@ -208,14 +208,14 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         {/* Расположение на карте */}
                         {property.coordinates && (
                           <div className="mb-2">
-                            <h4 className="text-lg font-bold mb-2">{t('property.location')}</h4>
-                            <p className="text-sm sm:text-base text-gray-700 mb-2">
+                            <h4 className="text-lg font-bold mb-2 text-left">{t('property.location')}</h4>
+                            <p className="text-sm sm:text-base text-gray-700 mb-2 text-left">
                               {property.city?.name}, {property.location}
                             </p>
                             
                             {/* Кнопка для мобильных устройств */}
                             <button 
-                              className="flex items-center justify-between w-full lg:hidden bg-white p-2 rounded-lg mb-2 shadow-sm" 
+                              className="flex items-center justify-between w-full lg:hidden bg-white p-2 rounded-lg mb-2 shadow-sm text-left" 
                               onClick={() => setIsMapExpanded(!isMapExpanded)}
                             >
                               <span>{isMapExpanded ? t('common.hide') : t('common.showMap')}</span>
@@ -248,8 +248,8 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       <div className="lg:w-[40%] bg-gray-100">
                         {/* Property Title and Price */}
                         <div className="mb-5 sm:mb-7 bg-gray-100">
-                          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{property.title}</h2>
-                          <p className="text-2xl sm:text-3xl text-gray-900 font-semibold flex items-baseline mt-1 sm:mt-2">
+                          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 text-left">{property.title}</h2>
+                          <p className="text-2xl sm:text-3xl text-gray-900 font-semibold flex items-baseline mt-1 sm:mt-2 text-left">
                             {property.price.toLocaleString()} €
                             {property.type === 'rent' && <span className="text-sm opacity-75 ml-1">{t('perMonth')}</span>}
                           </p>
@@ -277,8 +277,8 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
                         {/* Description Section */}
                         <div className="mb-6 sm:mb-8 bg-gray-100">
-                          <h4 className="text-lg font-bold mb-2">{t('addProperty.form.description')}</h4>
-                          <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
+                          <h4 className="text-lg font-bold mb-2 text-left">{t('addProperty.form.description')}</h4>
+                          <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line text-left">
                             {property.description || t('common.noDescription')}
                           </div>
                         </div>
@@ -286,7 +286,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         {/* Features Section */}
                         {property.features && property.features.length > 0 && (
                           <div className="mb-6 sm:mb-8 bg-gray-100">
-                            <h4 className="text-lg font-bold mb-2">{t('filters.features')}</h4>
+                            <h4 className="text-lg font-bold mb-2 text-left">{t('filters.features')}</h4>
                             <div className="grid grid-cols-2 gap-2 sm:gap-3">
                               {property.features.map((feature, index) => (
                                 <div key={index} className="flex items-center">
@@ -302,7 +302,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
                         {/* Contact Section */}
                         <div className="mb-6 sm:mb-8 bg-gray-100">
-                          <h4 className="text-lg font-bold mb-2">{t('profile.contacts')}</h4>
+                          <h4 className="text-lg font-bold mb-2 text-left">{t('profile.contacts')}</h4>
                           <div className="space-y-1 sm:space-y-2">
                             {property.user?.name && (
                               <div className="flex items-center">
@@ -318,7 +318,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                                 {!isPhoneVisible ? (
                                   <button 
                                     onClick={() => setIsPhoneVisible(true)}
-                                    className="bg-green-500 hover:bg-green-600 transition-colors text-white rounded-lg py-2.5 px-4 sm:px-5 font-medium flex items-center justify-center max-w-xs"
+                                    className="bg-green-500 hover:bg-green-600 transition-colors text-white rounded-lg py-2.5 px-4 sm:px-5 font-medium flex items-center justify-center max-w-xs text-left"
                                   >
                                     <svg className="w-5 h-5 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                       <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -340,7 +340,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
                         {/* Share Section */}
                         <div className="mb-6 sm:mb-8 bg-gray-100">
-                          <p className="text-lg font-medium mb-4">{t('common.share')}</p>
+                          <p className="text-lg font-medium mb-4 text-left">{t('common.share')}</p>
                           <div className="flex space-x-3 mt-2">
                             <button
                               onClick={handleCopyLink}
