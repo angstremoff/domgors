@@ -229,9 +229,9 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       {/* Property Title and Price */}
                       <div className="mb-5 sm:mb-7">
                         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{property.title}</h2>
-                        <p className="text-lg sm:text-xl text-indigo-700 font-semibold flex items-baseline mt-1 sm:mt-2">
+                        <p className="text-lg sm:text-xl text-gray-900 font-semibold flex items-baseline mt-1 sm:mt-2">
                           {property.price.toLocaleString()} €
-                          {property.type === 'rent' && <span className="text-sm opacity-75 ml-1">/мес</span>}
+                          {property.type === 'rent' && <span className="text-sm opacity-75 ml-1">{t('perMonth')}</span>}
                         </p>
                       </div>
 
@@ -239,17 +239,15 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       <div className="flex flex-wrap gap-2 sm:gap-4 mb-5 sm:mb-7">
                         {property.rooms && (
                           <div className="flex items-center">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
-                            <span className="text-sm sm:text-base text-gray-700">
-                              {property.rooms} {t('filters.rooms')}
-                            </span>
+                            <span className="text-sm sm:text-base text-gray-700">{property.rooms} {t('common.rooms')}</span>
                           </div>
                         )}
                         {property.area && (
                           <div className="flex items-center">
-                            <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4M4 16l5-5m11 5V20m0 0h-4m4 0l-5-5" />
                             </svg>
                             <span className="text-sm sm:text-base text-gray-700">{property.area} {t('squareMeters')}</span>
