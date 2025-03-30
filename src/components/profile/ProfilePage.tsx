@@ -10,7 +10,11 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 
-export default function ProfilePage() {
+interface ProfilePageProps {
+  activeTab?: 'personal' | 'listings';
+}
+
+export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const [name, setName] = useState('')
@@ -20,6 +24,7 @@ export default function ProfilePage() {
   const [isSaving, setIsSaving] = useState(false)
   const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [selectedTab, setSelectedTab] = useState(activeTab === 'listings' ? 1 : 0)
 
   // Загрузка данных пользователя и его объявлений
   useEffect(() => {
@@ -166,7 +171,7 @@ export default function ProfilePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-2xl font-bold mb-6">{t('common.profile')}</h1>
 
-        <Tab.Group>
+        <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
           <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 p-1 mb-6">
             <Tab
               className={({ selected }) =>

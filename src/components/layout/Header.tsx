@@ -59,12 +59,20 @@ export default function Header() {
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:items-center">
                 {user && (
+                  <>
                   <button
                     onClick={() => setIsAddPropertyModalOpen(true)}
                     className="text-white/80 hover:text-white inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-white/10 hover:bg-white/20 backdrop-blur-sm mr-3"
                   >
                     {t('common.addListing')}
                   </button>
+                  <Link
+                    to="/profile/listings"
+                    className="text-white/80 hover:text-white inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 bg-white/10 hover:bg-white/20 backdrop-blur-sm mr-3"
+                  >
+                    {t('profile.myProperties')}
+                  </Link>
+                  </>
                 )}
                 <div className="mr-3">
                   <FavoriteIcon />
@@ -161,12 +169,20 @@ export default function Header() {
                 </Link>
               ))}
               {user && (
+                <>
                 <button
                   onClick={() => setIsAddPropertyModalOpen(true)}
                   className="w-full text-left block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
                 >
                   {t('common.addListing')}
                 </button>
+                <Link
+                  to="/profile/listings"
+                  className="w-full text-left block rounded-md px-3 py-2 text-base font-medium text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20"
+                >
+                  {t('profile.myProperties')}
+                </Link>
+                </>
               )}
               <div className="flex items-center justify-between gap-2 mt-2">
                 <div className="w-1/2 flex justify-center">

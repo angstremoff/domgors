@@ -63,6 +63,7 @@ export default function App() {
                     <Route path="/buy" element={<SalePage />} />
                     <Route path="/favorites" element={<FavoritesPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/profile/listings" element={<ProfilePage activeTab="listings" />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                   </Routes>
                 </div>
