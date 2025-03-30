@@ -395,7 +395,27 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
       {/* Полноэкранный просмотр изображений, z-index специально выше модального окна */}
       <Transition.Root show={isFullScreenOpen} as={Fragment}>
-        <Dialog as="div" className="fixed inset-0 z-50 overflow-hidden" onClose={() => setIsFullScreenOpen(false)}>
+        <Dialog 
+          as="div" 
+          className="fixed inset-0 z-50 overflow-hidden" 
+          onClose={() => {
+            // Если мы в полноэкранном режиме, не закрываем основное модальное окно
+            if (isFullScreenOpen) {
+              setIsFullScreenOpen(false);
+              // Предотвращаем распространение события, чтобы не закрывать основное модальное окно
+              if (typeof window !== 'undefined') {
+                setTimeout(() => {
+                  const events = ['click', 'mousedown', 'mouseup', 'touchstart', 'touchend'];
+                  events.forEach(event => {
+                    window.addEventListener(event, (e) => {
+                      e.stopPropagation();
+                    }, { once: true, capture: true });
+                  });
+                }, 0);
+              }
+            }
+          }}
+        >
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -408,11 +428,18 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
             <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-95" onClick={(e) => e.stopPropagation()} />
           </Transition.Child>
 
-          <div className="fixed inset-0 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+          <div 
+            className="fixed inset-0 flex items-center justify-center p-4" 
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+          >
             {/* Кнопка закрытия */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 setIsFullScreenOpen(false);
               }}
               className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
@@ -423,13 +450,22 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
             </button>
 
             {/* Изображение */}
-            <div className="w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="w-full h-full flex items-center justify-center" 
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            >
               {property.images && property.images.length > 0 && (
                 <img
                   src={property.images[currentImageIndex]}
                   alt={property.title}
                   className="max-h-[85vh] max-w-[95vw] object-contain"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
                 />
               )}
             </div>
@@ -440,6 +476,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     prevImage(e);
                   }}
                   className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
@@ -451,6 +488,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     nextImage(e);
                   }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
