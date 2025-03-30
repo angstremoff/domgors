@@ -120,7 +120,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-[95%] max-w-6xl bg-gray-100 rounded-xl shadow-xl overflow-y-auto relative max-h-[90vh]">
-                <div className="sticky top-4 sm:top-3 right-0 z-30 flex items-center gap-1 sm:gap-2 p-2 sm:p-3 justify-end bg-gray-100">
+                <div className="sticky top-2 sm:top-2 right-0 z-30 flex items-center gap-1 sm:gap-2 p-2 sm:p-2 justify-end bg-gray-100">
                   <FavoriteButton propertyId={property.id} />
                   <button
                     onClick={onClose}
@@ -187,13 +187,16 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                             'px-2 py-0.5 rounded-full text-xs font-medium text-white',
                             property.type === 'sale' ? 'bg-emerald-500' : 'bg-blue-500'
                           ].join(' ')}>
-                            {t(`propertyTypes.${property.property_type}`)}
+                            {t(`transactionTypes.${property.type}`)}
                           </div>
                           <div className={[
                             'px-2 py-0.5 rounded-full text-xs font-medium text-white',
-                            property.type === 'sale' ? 'bg-emerald-500' : 'bg-blue-500'
-                          ].join(' ')}>
-                            {t(`transactionTypes.${property.type}`)}
+                            property.property_type === 'apartment' && 'bg-violet-600',
+                            property.property_type === 'house' && 'bg-orange-500',
+                            property.property_type === 'commercial' && 'bg-cyan-600',
+                            property.property_type === 'land' && 'bg-lime-600'
+                          ].filter(Boolean).join(' ')}>
+                            {t(`propertyTypes.${property.property_type}`)}
                           </div>
                         </div>
                       </div>
@@ -292,16 +295,16 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           )}
                           
                           {property.user?.phone && (
-                            <div>
+                            <div className="flex items-center justify-center">
                               {!isPhoneVisible ? (
                                 <button 
                                   onClick={() => setIsPhoneVisible(true)}
-                                  className="bg-green-500 hover:bg-green-600 transition-colors text-white rounded-lg py-2.5 px-4 sm:px-5 font-medium flex items-center justify-center w-full"
+                                  className="bg-green-500 hover:bg-green-600 transition-colors text-white rounded-lg py-2.5 px-4 sm:px-5 font-medium flex items-center justify-center max-w-xs"
                                 >
-                                  <svg className="w-5 h-5 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                  <svg className="w-5 h-5 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                   </svg>
-                                  {t('common.showPhone')}
+                                  {t('property.showPhone')}
                                 </button>
                               ) : (
                                 <div className="flex items-center">
