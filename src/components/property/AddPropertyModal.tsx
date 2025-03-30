@@ -322,28 +322,28 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
             <div className="space-y-6">
               {/* Контактные данные */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Контактная информация</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('addProperty.form.contactInfo')}</label>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Ваше имя</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('addProperty.form.name')}</label>
                     <input
                       type="text"
                       value={userData.name}
                       onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       required
-                      placeholder="Иван Иванов"
+                      placeholder={t('addProperty.form.namePlaceholder')}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Ваш телефон</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('addProperty.form.phone')}</label>
                     <input
                       type="tel"
                       value={userData.phone}
                       onChange={(e) => setUserData(prev => ({ ...prev, phone: e.target.value }))}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       required
-                      placeholder="+7 (999) 123-45-67"
+                      placeholder={t('addProperty.form.phonePlaceholder')}
                     />
                   </div>
                 </div>

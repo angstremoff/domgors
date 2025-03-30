@@ -180,7 +180,12 @@
       "selectedAddress": "Выбранный адрес",
       "selectFiles": "Выбрать файлы",
       "noFileSelected": "Файл не выбран",
-      "preview": "Предпросмотр"
+      "preview": "Предпросмотр",
+      "contactInfo": "Контактная информация",
+      "name": "Ваше имя",
+      "phone": "Ваш телефон",
+      "namePlaceholder": "Иван Иванов",
+      "phonePlaceholder": "Введите номер"
     },
     "validation": {
       "selectLocation": "Пожалуйста, выберите местоположение на карте",

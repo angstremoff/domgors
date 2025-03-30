@@ -162,7 +162,12 @@
       "updateSuccess": "Oglas uspešno ažuriran",
       "maxPhotos": "Maksimalno 10 fotografija",
       "fileSizeError": "Veličina fajla ne sme biti veća od 5MB",
-      "fileTypeError": "Dozvoljene su samo slike"
+      "fileTypeError": "Dozvoljene su samo slike",
+      "contactInfo": "Kontakt informacije",
+      "name": "Vaše ime",
+      "phone": "Vaš telefon",
+      "namePlaceholder": "Ivan Ivanović",
+      "phonePlaceholder": "Unesite broj telefona"
     },
     "validation": {
       "selectLocation": "Molimo izaberite lokaciju na mapi",
