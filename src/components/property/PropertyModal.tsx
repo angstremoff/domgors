@@ -47,6 +47,9 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
     const propertyUrl = `${window.location.origin}?propertyId=${property.id}`
     navigator.clipboard.writeText(propertyUrl)
     setIsCopied(true)
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 2000);
   }
 
   const getShareUrl = (platform: string) => {
@@ -117,7 +120,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-[95%] max-w-6xl bg-gray-100 rounded-xl shadow-xl overflow-y-auto relative max-h-[90vh]">
-                <div className="sticky top-4 sm:top-3 right-0 z-30 flex items-center gap-1 sm:gap-2 p-2 sm:p-3 justify-end bg-gradient-to-b from-black/50 to-transparent">
+                <div className="sticky top-4 sm:top-3 right-0 z-30 flex items-center gap-1 sm:gap-2 p-2 sm:p-3 justify-end bg-gray-100">
                   <FavoriteButton propertyId={property.id} />
                   <button
                     onClick={onClose}
@@ -128,14 +131,14 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     </svg>
                   </button>
                 </div>
-                <div className="p-3 sm:p-4">
+                <div className="p-3 sm:p-4 bg-gray-100">
                   {/* Two column layout */}
-                  <div className="flex flex-col lg:flex-row gap-3 sm:gap-6">
+                  <div className="flex flex-col lg:flex-row gap-3 sm:gap-6 bg-gray-100">
                     {/* Left column: Images */}
-                    <div className="lg:w-1/2 flex flex-col">
+                    <div className="lg:w-1/2 flex flex-col bg-gray-100">
                       {/* Property Images */}
-                      <div className="mb-3 sm:mb-6 relative rounded-lg sm:rounded-xl overflow-hidden">
-                        <div className="relative aspect-[4/3] overflow-hidden">
+                      <div className="mb-3 sm:mb-6 relative rounded-lg sm:rounded-xl overflow-hidden bg-gray-100">
+                        <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
                           {property.status === 'sold' && (
                             <div className="absolute inset-0 flex items-center justify-center z-20">
                               <div className="bg-black/80 text-white px-4 py-1.5 rounded-full text-base font-semibold backdrop-blur-sm">
@@ -144,7 +147,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                             </div>
                           )}
                           {property.images && property.images.length > 0 ? (
-                            <div className="image-container">
+                            <div className="image-container bg-gray-100">
                               <img
                                 src={property.images[currentImageIndex]}
                                 alt={property.title}
@@ -155,7 +158,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                                 onClick={() => setIsFullScreenOpen(true)}
                               />
                               {property.images.length > 1 && (
-                                <div className="image-navigation">
+                                <div className="image-navigation bg-gray-100">
                                   <button
                                     onClick={prevImage}
                                     className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-gray-800 hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -179,7 +182,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                             <PlaceholderImage />
                           )}
                         </div>
-                        <div className="absolute top-3 left-3 z-10 flex gap-2">
+                        <div className="absolute top-3 left-3 z-10 flex gap-2 bg-gray-100">
                           <div className={[
                             'px-2 py-0.5 rounded-full text-xs font-medium backdrop-blur-md text-white',
                             property.type === 'sale' ? 'bg-emerald-500/90' : 'bg-blue-500/90'
@@ -199,14 +202,14 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       </div>
                       
                       {/* Карта */}
-                      <div className="mb-3 sm:mb-6">
+                      <div className="mb-3 sm:mb-6 bg-gray-100">
                         {property.coordinates && (
                           <div>
                             <h4 className="text-lg font-bold mb-2">{t('property.location')}</h4>
                             <p className="text-sm sm:text-base text-gray-700 mb-2">
                               {property.city?.name}, {property.location}
                             </p>
-                            <div className="rounded-lg sm:rounded-xl overflow-hidden">
+                            <div className="rounded-lg sm:rounded-xl overflow-hidden bg-gray-100">
                               <div className="h-[250px] sm:h-[300px] rounded-lg sm:rounded-xl overflow-hidden">
                                 <PropertyMap
                                   center={[property.coordinates.lng, property.coordinates.lat]}
@@ -223,9 +226,9 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     </div>
 
                     {/* Right column: Property Info */}
-                    <div className="lg:w-1/2">
+                    <div className="lg:w-1/2 bg-gray-100">
                       {/* Property Title and Price */}
-                      <div className="mb-5 sm:mb-7">
+                      <div className="mb-5 sm:mb-7 bg-gray-100">
                         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{property.title}</h2>
                         <p className="text-2xl sm:text-3xl text-gray-900 font-semibold flex items-baseline mt-1 sm:mt-2">
                           {property.price.toLocaleString()} €
@@ -234,11 +237,11 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       </div>
 
                       {/* Property Quick Stats */}
-                      <div className="flex flex-wrap gap-2 sm:gap-4 mb-5 sm:mb-7">
+                      <div className="flex flex-wrap gap-2 sm:gap-4 mb-5 sm:mb-7 bg-gray-100">
                         {property.rooms && (
                           <div className="flex items-center">
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M3 14h18M3 18h18M3 6h18" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M3 14h18M3 18h18M3 6l12 12" />
                             </svg>
                             <span className="text-sm sm:text-base text-gray-700">{property.rooms} {t('common.rooms')}</span>
                           </div>
@@ -254,7 +257,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       </div>
 
                       {/* Description Section */}
-                      <div className="mb-6 sm:mb-8">
+                      <div className="mb-6 sm:mb-8 bg-gray-100">
                         <h4 className="text-lg font-bold mb-2">{t('addProperty.form.description')}</h4>
                         <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
                           {property.description || t('common.noDescription')}
@@ -263,7 +266,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
                       {/* Features Section */}
                       {property.features && property.features.length > 0 && (
-                        <div className="mb-6 sm:mb-8">
+                        <div className="mb-6 sm:mb-8 bg-gray-100">
                           <h4 className="text-lg font-bold mb-2">{t('filters.features')}</h4>
                           <div className="grid grid-cols-2 gap-2 sm:gap-3">
                             {property.features.map((feature, index) => (
@@ -279,7 +282,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       )}
 
                       {/* Contact Section */}
-                      <div className="mb-6 sm:mb-8">
+                      <div className="mb-6 sm:mb-8 bg-gray-100">
                         <h4 className="text-lg font-bold mb-2">{t('profile.contacts')}</h4>
                         <div className="space-y-1 sm:space-y-2">
                           {property.user?.name && (
@@ -293,7 +296,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           {property.user?.phone && (
                             <button
                               onClick={() => setIsPhoneVisible(true)}
-                              className={`w-full py-3 ${isPhoneVisible ? 'bg-green-50 text-green-700 border-green-200' : 'bg-green-600 text-white hover:bg-green-500'} border rounded-lg sm:rounded-xl font-medium transition-colors flex items-center justify-center mb-3 sm:mb-4`}
+                              className={`w-full py-3 ${isPhoneVisible ? 'bg-green-50 text-green-700 border-green-200' : 'bg-green-600 text-white hover:bg-green-500'} border rounded-lg sm:rounded-xl font-medium transition-colors flex items-center justify-center mb-3 sm:mb-4 max-w-xs mx-auto`}
                             >
                               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -305,18 +308,25 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       </div>
 
                       {/* Share Section */}
-                      <div className="mb-6 sm:mb-8">
+                      <div className="mb-6 sm:mb-8 bg-gray-100">
                         <p className="text-lg font-medium mb-4">{t('common.share')}</p>
                         <div className="flex space-x-3 mt-2">
                           <button
                             onClick={handleCopyLink}
-                            className="flex items-center justify-center w-12 h-12 bg-blue-500 text-white rounded-full"
+                            className="flex items-center justify-center w-12 h-12 bg-blue-500 text-white rounded-full relative"
                             aria-label={t('common.copyLink')}
                           >
                             <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor">
                               <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                               <path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
+                            {isCopied && (
+                              <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-green-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </span>
+                            )}
                           </button>
                           <a
                             href={getShareUrl('telegram')}
@@ -346,14 +356,14 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   </div>
                 
                   {/* Карта */}
-                  <div className="block lg:hidden mt-3 sm:mt-6">
+                  <div className="block lg:hidden mt-3 sm:mt-6 bg-gray-100">
                     {property.coordinates && (
                       <div className="mb-2">
                         <h4 className="text-lg font-bold mb-2">{t('property.location')}</h4>
                         <p className="text-sm sm:text-base text-gray-700 mb-2">
                           {property.city?.name}, {property.location}
                         </p>
-                        <div className="rounded-lg sm:rounded-xl overflow-hidden">
+                        <div className="rounded-lg sm:rounded-xl overflow-hidden bg-gray-100">
                           <div className="h-[200px] sm:h-[250px] rounded-lg sm:rounded-xl overflow-hidden">
                             <PropertyMap
                               center={[property.coordinates.lng, property.coordinates.lat]}
