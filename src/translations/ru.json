@@ -131,6 +131,12 @@
   },
   "perMonth": "/мес",
   "squareMeters": "м²",
+  "property": {
+    "showPhone": "Показать телефон",
+    "hideNumber": "Скрыть номер",
+    "contactOwner": "Связаться с владельцем",
+    "location": "Расположение на карте"
+  },
   "addProperty": {
     "title": "Добавить объявление",
     "editTitle": "Редактировать объявление",

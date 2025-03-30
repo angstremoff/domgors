@@ -124,6 +124,12 @@
     "rented": "Izdato"
   },
   "squareMeters": "m²",
+  "property": {
+    "showPhone": "Prikaži telefon",
+    "hideNumber": "Sakrij broj",
+    "contactOwner": "Kontaktiraj vlasnika",
+    "location": "Lokacija na mapi"
+  },
   "addProperty": {
     "title": "Dodaj oglas",
     "editTitle": "Uredi oglas",

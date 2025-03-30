@@ -200,13 +200,16 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                         </div>
                       </div>
                       
-                      {/* Карта - видна только на десктопе */}
-                      <div className="hidden lg:block">
+                      {/* Карта */}
+                      <div className="mb-3 sm:mb-6">
                         {property.coordinates && (
-                          <div className="mb-3 sm:mb-6">
-                            <h4 className="text-lg font-bold mb-2">{t('addProperty.form.mapLocation')}</h4>
-                            <div className="bg-white rounded-lg sm:rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-                              <div className="h-[250px] rounded-lg sm:rounded-xl overflow-hidden">
+                          <div>
+                            <h4 className="text-lg font-bold mb-2">{t('property.location')}</h4>
+                            <p className="text-sm sm:text-base text-gray-700 mb-2">
+                              {property.city?.name}, {property.location}
+                            </p>
+                            <div className="rounded-lg sm:rounded-xl overflow-hidden">
+                              <div className="h-[250px] sm:h-[300px] rounded-lg sm:rounded-xl overflow-hidden">
                                 <PropertyMap
                                   center={[property.coordinates.lng, property.coordinates.lat]}
                                   zoom={14}
@@ -235,7 +238,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       {/* Property Quick Stats */}
                       <div className="flex flex-wrap gap-2 sm:gap-4 mb-5 sm:mb-7">
                         {property.rooms && (
-                          <div className="flex items-center px-3 py-1 bg-indigo-50 rounded-full">
+                          <div className="flex items-center">
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
@@ -245,7 +248,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           </div>
                         )}
                         {property.area && (
-                          <div className="flex items-center px-3 py-1 bg-indigo-50 rounded-full">
+                          <div className="flex items-center">
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4M4 16l5-5m11 5V20m0 0h-4m4 0l-5-5" />
                             </svg>
@@ -257,10 +260,8 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       {/* Description Section */}
                       <div className="mb-6 sm:mb-8">
                         <h4 className="text-lg font-bold mb-2">{t('addProperty.form.description')}</h4>
-                        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
-                          <p className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
-                            {property.description || t('common.noDescription')}
-                          </p>
+                        <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
+                          {property.description || t('common.noDescription')}
                         </div>
                       </div>
 
@@ -268,30 +269,18 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                       {property.features && property.features.length > 0 && (
                         <div className="mb-6 sm:mb-8">
                           <h4 className="text-lg font-bold mb-2">{t('filters.features')}</h4>
-                          <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
-                            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                              {property.features.map((feature, index) => (
-                                <div key={index} className="flex items-center">
-                                  <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                  <span className="text-sm sm:text-base text-gray-700">{t(`features.${feature}`)}</span>
-                                </div>
-                              ))}
-                            </div>
+                          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                            {property.features.map((feature, index) => (
+                              <div key={index} className="flex items-center">
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span className="text-sm sm:text-base text-gray-700">{t(`features.${feature}`)}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
-
-                      {/* Location Section */}
-                      <div className="mb-6 sm:mb-8">
-                        <h4 className="text-lg font-bold mb-2">{t('addProperty.form.mapLocation')}</h4>
-                        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
-                          <p className="text-sm sm:text-base text-gray-700">
-                            {property.city?.name}, {property.location}
-                          </p>
-                        </div>
-                      </div>
 
                       {/* Contact Section */}
                       <div className="mb-6 sm:mb-8">
@@ -381,12 +370,15 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     </div>
                   </div>
                 
-                  {/* Карта - видна только на мобильных */}
+                  {/* Карта */}
                   <div className="block lg:hidden mt-3 sm:mt-6">
                     {property.coordinates && (
                       <div className="mb-2">
-                        <h4 className="text-lg font-bold mb-2">{t('addProperty.form.mapLocation')}</h4>
-                        <div className="bg-white rounded-lg sm:rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                        <h4 className="text-lg font-bold mb-2">{t('property.location')}</h4>
+                        <p className="text-sm sm:text-base text-gray-700 mb-2">
+                          {property.city?.name}, {property.location}
+                        </p>
+                        <div className="rounded-lg sm:rounded-xl overflow-hidden">
                           <div className="h-[200px] sm:h-[250px] rounded-lg sm:rounded-xl overflow-hidden">
                             <PropertyMap
                               center={[property.coordinates.lng, property.coordinates.lat]}
