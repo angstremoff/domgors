@@ -30,7 +30,12 @@
     "copied": "Kopirano!",
     "shareViaTelegram": "Telegram",
     "shareViaWhatsApp": "WhatsApp",
-    "shareViaViber": "Viber"
+    "shareViaViber": "Viber",
+    "notFound": "Stranica nije pronađena",
+    "notFoundDescription": "Žao nam je, stranica koju tražite ne postoji ili je premeštena.",
+    "pageNotFound": "Stranica nije pronađena",
+    "notFoundMessage": "Žao nam je, nismo mogli da pronađemo stranicu koju tražite. Možda je premeštena ili obrisana.",
+    "backToHome": "Nazad na početnu"
   },
   "profile": {
     "name": "Vaše ime",
@@ -206,12 +211,12 @@
     "phone": "Telefon"
   },
   "seo": {
-    "defaultTitle": "Nekretnine u Srbiji - prodaja i izdavanje",
-    "defaultDescription": "Najbolje ponude za kupovinu i izdavanje stanova, kuća i zemljišta u Srbiji. Veliki izbor objekata, aktuelne cene za strance i lokalne kupce.",
-    "defaultKeywords": "nekretnine u srbiji, stanovi na prodaju beograd, izdavanje stanova srbija, kuće na prodaju, komercijalne nekretnine srbija, placevi na prodaju, stanovi za strance, nekretnine za ruse u srbiji, luksuzne nekretnine beograd, zemljište na prodaju srbija, stanovi novi beograd, nekretnine golden visa srbija",
-    "homePageTitle": "DomGo - Nekretnine u Srbiji za prodaju i izdavanje",
-    "salePageTitle": "Kupiti nekretnine u Srbiji - stanovi, kuće, placevi",
-    "rentPageTitle": "Izdavanje nekretnina u Srbiji - stanovi i kuće",
-    "favoritesPageTitle": "Omiljene nekretnine"
+    "defaultTitle": "Nekretnine u Srbiji - izdavanje i prodaja stanova, kuća i placeva",
+    "defaultDescription": "Najbolje ponude za iznajmljivanje i prodaju stanova, kuća i placeva u Srbiji. Veliki izbor nekretnina u Beogradu i drugim gradovima, aktuelne cene, fotografije i opisi. Pomoć u odabiru i realizaciji poslova sa nekretninama u Srbiji.",
+    "defaultKeywords": "nekretnine srbija, kupiti stan u srbiji, iznajmljivanje stana u srbiji, nekretnine u beogradu, kuća u srbiji kupiti, iznajmiti stan u srbiji, nekretnine u srbiji cene 2025, kupiti nekretninu u srbiji, komercijalne nekretnine srbija, plac u srbiji kupiti, nekretnine u srbiji od investitora, stan u beogradu",
+    "homePageTitle": "DomGo - Nekretnine u Srbiji | Izdavanje i prodaja stanova i kuća",
+    "salePageTitle": "Kupiti nekretninu u Srbiji - stanovi, kuće, placevi | Cene 2025",
+    "rentPageTitle": "Izdavanje nekretnina u Srbiji - iznajmiti stan ili kuću | Najbolje ponude",
+    "favoritesPageTitle": "Omiljene nekretnine u Srbiji | DomGo"
   }
 }

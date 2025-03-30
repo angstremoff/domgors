@@ -12,6 +12,8 @@ import { FavoritesProvider } from './contexts/FavoritesContext'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { HelmetProvider } from 'react-helmet-async'
 import { useEffect } from 'react'
+import NotFoundPage from './pages/NotFoundPage'
+import Analytics from './components/Analytics'
 
 // Функция для перенаправления с domgors.onrender.com на domgo.rs
 const useRedirectToPrimaryDomain = () => {
@@ -55,8 +57,9 @@ export default function App() {
           <PropertyProvider>
             <FavoritesProvider>
               <Router>
-                <div className="min-h-screen bg-[#FAFAFA]">
+                <div className="flex flex-col min-h-screen bg-[#FAFAFA]">
                   <Header />
+                  <Analytics />
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/rent" element={<RentPage />} />
@@ -65,6 +68,7 @@ export default function App() {
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/profile/listings" element={<ProfilePage activeTab="listings" />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                 </div>
               </Router>
