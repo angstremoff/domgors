@@ -35,7 +35,8 @@
     "notFoundDescription": "Žao nam je, stranica koju tražite ne postoji ili je premeštena.",
     "pageNotFound": "Stranica nije pronađena",
     "notFoundMessage": "Žao nam je, nismo mogli da pronađemo stranicu koju tražite. Možda je premeštena ili obrisana.",
-    "backToHome": "Nazad na početnu"
+    "backToHome": "Nazad na početnu",
+    "rooms": "sobe"
   },
   "profile": {
     "name": "Vaše ime",
