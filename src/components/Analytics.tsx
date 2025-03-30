@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 // ID для аналитики - их нужно будет заменить на реальные
-const YANDEX_METRIKA_ID = '12345678' // Замените на ваш реальный ID Яндекс.Метрики
+const YANDEX_METRIKA_ID = '10081034' // Реальный ID Яндекс.Метрики
 const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX' // Замените на ваш реальный ID Google Analytics
 
 const Analytics = () => {
