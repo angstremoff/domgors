@@ -385,13 +385,16 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-95" />
+            <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-95" onClick={(e) => e.stopPropagation()} />
           </Transition.Child>
 
-          <div className="fixed inset-0 flex items-center justify-center p-4">
+          <div className="fixed inset-0 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
             {/* Кнопка закрытия */}
             <button
-              onClick={() => setIsFullScreenOpen(false)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFullScreenOpen(false);
+              }}
               className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 focus:outline-none"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,12 +403,13 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
             </button>
 
             {/* Изображение */}
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
               {property.images && property.images.length > 0 && (
                 <img
                   src={property.images[currentImageIndex]}
                   alt={property.title}
                   className="max-h-[85vh] max-w-[95vw] object-contain"
+                  onClick={(e) => e.stopPropagation()}
                 />
               )}
             </div>
