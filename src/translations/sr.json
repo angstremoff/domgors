@@ -34,7 +34,8 @@
   },
   "profile": {
     "name": "Vaše ime",
-    "phone": "Broj telefona"
+    "phone": "Broj telefona",
+    "myProperties": "Moji oglasi"
   },
   "footer": {
     "mobileApps": "Mobilne aplikacije",
