@@ -137,7 +137,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                   {/* Two column layout */}
                   <div className="flex flex-col lg:flex-row gap-3 sm:gap-6 bg-gray-100">
                     {/* Left column: Images and Map */}
-                    <div className="lg:w-1/2 flex flex-col bg-gray-100">
+                    <div className="lg:w-[60%] flex flex-col bg-gray-100">
                       {/* Property Images */}
                       <div className="mb-3 sm:mb-6 relative rounded-lg sm:rounded-xl overflow-hidden bg-gray-100">
                         <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
@@ -226,7 +226,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                     </div>
 
                     {/* Right column: Property Info */}
-                    <div className="lg:w-1/2 bg-gray-100">
+                    <div className="lg:w-[40%] bg-gray-100">
                       {/* Property Title and Price */}
                       <div className="mb-5 sm:mb-7 bg-gray-100">
                         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{property.title}</h2>
