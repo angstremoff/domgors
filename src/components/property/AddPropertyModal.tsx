@@ -51,7 +51,43 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     features: [] as string[],
   })
 
+  const [userData, setUserData] = useState({
+    name: '',
+    phone: ''
+  })
+
   const { addProperty } = useProperties()
+
+  // Загрузка данных пользователя
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (isOpen) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { data, error } = await supabase
+              .from('users')
+              .select('name, phone')
+              .eq('id', user.id)
+              .single();
+              
+            if (data) {
+              setUserData({
+                name: data.name || '',
+                phone: data.phone || ''
+              });
+            }
+            
+            if (error) throw error;
+          }
+        } catch (error) {
+          console.error('Ошибка при загрузке данных пользователя:', error);
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,6 +97,17 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         alert('Необходимо авторизоваться')
+        return
+      }
+      
+      // Проверка контактных данных
+      if (!userData.name.trim()) {
+        alert('Введите ваше имя')
+        return
+      }
+
+      if (!userData.phone.trim()) {
+        alert('Введите номер телефона')
         return
       }
       
@@ -106,38 +153,58 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         return
       }
 
-      const property = {
-        ...formData,
-        price: Number(formData.price),
-        area: Number(formData.area),
-        rooms: Number(formData.rooms),
-        city_id: Number(formData.city_id),
-        images: formData.images,
-        features: formData.features,
-        coordinates: selectedCoordinates,
-        location: formData.location.trim(),
-        status: 'active' as 'active' | 'sold',
-        user_id: null // Add the required user_id property
-      }
+      try {
+        // Сохраняем информацию о пользователе
+        const { error: profileError } = await supabase
+          .from('users')
+          .upsert({
+            id: user.id,
+            email: user.email,
+            name: userData.name,
+            phone: userData.phone
+          }, { onConflict: 'id' })
 
-      await addProperty(property)
-      onClose()
-      
-      // Очищаем форму
-      setFormData({
-        title: '',
-        description: '',
-        type: 'sale',
-        property_type: 'apartment',
-        price: '',
-        area: '',
-        rooms: '',
-        city_id: 0,
-        location: '',
-        images: [],
-        features: []
-      })
-      setSelectedCoordinates(null) // Сбрасываем выбранные координаты
+        if (profileError) {
+          console.error('Ошибка при обновлении профиля:', profileError)
+          throw profileError
+        }
+
+        const property = {
+          ...formData,
+          price: Number(formData.price),
+          area: Number(formData.area),
+          rooms: Number(formData.rooms),
+          city_id: Number(formData.city_id),
+          images: formData.images,
+          features: formData.features,
+          coordinates: selectedCoordinates,
+          location: formData.location.trim(),
+          status: 'active' as 'active' | 'sold',
+          user_id: user.id // Add the required user_id property
+        }
+
+        await addProperty(property)
+        onClose()
+        
+        // Очищаем форму
+        setFormData({
+          title: '',
+          description: '',
+          type: 'sale',
+          property_type: 'apartment',
+          price: '',
+          area: '',
+          rooms: '',
+          city_id: 0,
+          location: '',
+          images: [],
+          features: []
+        })
+        setSelectedCoordinates(null) // Сбрасываем выбранные координаты
+      } catch (error) {
+        console.error('Error adding property:', error)
+        alert(t('addProperty.validation.addError'))
+      }
     } catch (error) {
       console.error('Error adding property:', error)
       alert(t('addProperty.validation.addError'))
@@ -253,6 +320,35 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
 
           <form onSubmit={handleSubmit} className="p-6">
             <div className="space-y-6">
+              {/* Контактные данные */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Контактная информация</label>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Ваше имя</label>
+                    <input
+                      type="text"
+                      value={userData.name}
+                      onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      required
+                      placeholder="Иван Иванов"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Ваш телефон</label>
+                    <input
+                      type="tel"
+                      value={userData.phone}
+                      onChange={(e) => setUserData(prev => ({ ...prev, phone: e.target.value }))}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      required
+                      placeholder="+7 (999) 123-45-67"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Тип сделки */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
