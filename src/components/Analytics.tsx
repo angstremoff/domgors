@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 
 // ID для аналитики - их нужно будет заменить на реальные
 const YANDEX_METRIKA_ID = '10081034' // Реальный ID Яндекс.Метрики
-const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX' // Замените на ваш реальный ID Google Analytics
+const GA_MEASUREMENT_ID = 'G-R8XEMZEP7' // Реальный ID Google Analytics
 
 const Analytics = () => {
   const location = useLocation()
