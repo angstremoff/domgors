@@ -49,6 +49,10 @@
     "hide": "Sakrij",
     "hideMap": "Sakrij mapu"
   },
+  "status": {
+    "sold": "PRODANO",
+    "rented": "IZDATO"
+  },
   "profile": {
     "name": "Vaše ime",
     "phone": "Broj telefona",
@@ -131,11 +135,6 @@
       "60To100": "60-100 m²",
       "over100": "Preko 100 m²"
     }
-  },
-  "status": {
-    "sold": "Prodato",
-    "rented": "Izdato",
-    "deleted": "Obrisano"
   },
   "squareMeters": "m²",
   "property": {

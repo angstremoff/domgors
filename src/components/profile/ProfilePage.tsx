@@ -225,7 +225,7 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
             </Tab>
           </Tab.List>
 
-          <div className="w-full">
+          <div className="w-full min-h-[450px]">
             <Tab.Panels>
               <Tab.Panel>
                 <div className="w-full flex justify-start">
