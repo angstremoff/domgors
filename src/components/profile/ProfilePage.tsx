@@ -228,8 +228,8 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
           <div className="w-full">
             <Tab.Panels>
               <Tab.Panel>
-                <div className="w-full">
-                  <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md mx-0">
+                <div className="w-full flex justify-start">
+                  <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                         {t('profile.name')}
