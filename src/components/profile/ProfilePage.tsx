@@ -225,9 +225,9 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
             </Tab>
           </Tab.List>
 
-          <Tab.Panels>
-            <Tab.Panel>
-              <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md">
+          <Tab.Panels className="w-full">
+            <Tab.Panel className="w-full">
+              <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md mx-0">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                     {t('profile.name')}
@@ -275,7 +275,7 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
               </form>
             </Tab.Panel>
 
-            <Tab.Panel>
+            <Tab.Panel className="w-full">
               {isLoading ? (
                 <div>{t('common.loading')}</div>
               ) : (
@@ -283,7 +283,7 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
                   {userProperties.map((property) => (
                     <div
                       key={property.id}
-                      className="relative overflow-hidden rounded-lg border border-gray-200"
+                      className="relative overflow-hidden rounded-lg border border-gray-200 h-full flex flex-col"
                     >
                       <div className="relative aspect-[4/3]">
                         <img
@@ -303,13 +303,13 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
                         )}
                       </div>
 
-                      <div className="p-4">
+                      <div className="p-4 flex flex-col flex-grow">
                         <h3 className="text-lg font-semibold">{property.title}</h3>
                         <p className="mt-1 text-sm text-gray-500">
                           {property.price.toLocaleString()} €
                         </p>
                         
-                        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+                        <div className="mt-4 flex flex-col sm:flex-row gap-2 mt-auto">
                           {property.status !== 'sold' && (
                             <button
                               onClick={() => handleEditProperty(property.id)}
