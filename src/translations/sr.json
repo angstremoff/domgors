@@ -201,9 +201,9 @@
       "phonePlaceholder": "Unesite broj telefona"
     },
     "validation": {
-      "selectLocation": "Molimo izaberite lokaciju na mapi",
+      "selectLocation": "Molimo vas da označite lokaciju na mapi",
       "enterAddress": "Molimo unesite adresu",
-      "selectCity": "Molimo izaberite grad",
+      "selectCity": "Molimo vas da izaberete grad",
       "roomsRange": "Broj soba mora biti između 1 i 20",
       "areaRange": "Površina mora biti između 1 i 1000 m²",
       "priceRange": "Cena mora biti između 1 i 100000000",
@@ -213,7 +213,9 @@
       "uploadError": "Greška pri otpremanju datoteka",
       "addError": "Greška pri dodavanju oglasa",
       "maxPhotos": "Maksimalan broj fotografija je 10",
-      "maxPropertiesError": "Dostigli ste limit oglasa (20). Izbrišite stare oglase pre nego što dodate nove."
+      "maxPropertiesError": "Dostigli ste limit oglasa (20). Izbrišite stare oglase pre nego što dodate nove.",
+      "noPhotos": "Molimo vas da dodate bar jednu fotografiju",
+      "waitForPhotos": "Sačekajte da se fotografije otpreme"
     }
   },
   "auth": {

@@ -225,130 +225,134 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
             </Tab>
           </Tab.List>
 
-          <Tab.Panels className="w-full">
-            <Tab.Panel className="w-full">
-              <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md mx-0">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    {t('profile.name')}
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
-                             focus:border-secondary-600 focus:outline-none focus:ring-1 focus:ring-secondary-600
-                             sm:text-sm bg-white/50"
-                  />
-                </div>
+          <div className="w-full">
+            <Tab.Panels>
+              <Tab.Panel>
+                <div className="w-full">
+                  <form onSubmit={handleProfileUpdate} className="space-y-4 max-w-md mx-0">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                        {t('profile.name')}
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
+                                 focus:border-secondary-600 focus:outline-none focus:ring-1 focus:ring-secondary-600
+                                 sm:text-sm bg-white/50"
+                      />
+                    </div>
 
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                    {t('profile.phone')}
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
-                             focus:border-secondary-600 focus:outline-none focus:ring-1 focus:ring-secondary-600
-                             sm:text-sm bg-white/50"
-                  />
-                </div>
+                    <div>
+                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                        {t('profile.phone')}
+                      </label>
+                      <input
+                        type="tel"
+                        id="phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
+                                 focus:border-secondary-600 focus:outline-none focus:ring-1 focus:ring-secondary-600
+                                 sm:text-sm bg-white/50"
+                      />
+                    </div>
 
-                {error && (
-                  <div className="text-red-500 text-sm">{error}</div>
-                )}
+                    {error && (
+                      <div className="text-red-500 text-sm">{error}</div>
+                    )}
 
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="inline-flex justify-center rounded-md border border-transparent
-                           bg-gray-900 py-2 px-4 text-sm font-medium text-white shadow-sm
-                           hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500
-                           focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSaving ? t('common.saving') : t('common.save')}
-                </button>
-              </form>
-            </Tab.Panel>
-
-            <Tab.Panel className="w-full">
-              {isLoading ? (
-                <div>{t('common.loading')}</div>
-              ) : (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {userProperties.map((property) => (
-                    <div
-                      key={property.id}
-                      className="relative overflow-hidden rounded-lg border border-gray-200 h-full flex flex-col"
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="inline-flex justify-center rounded-md border border-transparent
+                               bg-gray-900 py-2 px-4 text-sm font-medium text-white shadow-sm
+                               hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500
+                               focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <div className="relative aspect-[4/3]">
-                        <img
-                          src={property.images[0] || '/placeholder.jpg'}
-                          alt={property.title}
-                          className={classNames(
-                            'h-full w-full object-cover',
-                            property.status === 'sold' ? 'grayscale' : ''
-                          )}
-                        />
-                        {property.status === 'sold' && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                            <span className="text-white text-xl font-bold">
-                              {property.type === 'sale' ? 'ПРОДАНО' : 'СДАНО'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                      {isSaving ? t('common.saving') : t('common.save')}
+                    </button>
+                  </form>
+                </div>
+              </Tab.Panel>
 
-                      <div className="p-4 flex flex-col flex-grow">
-                        <h3 className="text-lg font-semibold">{property.title}</h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {property.price.toLocaleString()} €
-                        </p>
-                        
-                        <div className="mt-4 flex flex-col sm:flex-row gap-2 mt-auto">
-                          {property.status !== 'sold' && (
-                            <button
-                              onClick={() => handleEditProperty(property.id)}
-                              className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2
-                                       text-sm font-medium text-white hover:bg-indigo-700"
-                            >
-                              {t('common.edit')}
-                            </button>
+              <Tab.Panel>
+                {isLoading ? (
+                  <div>{t('common.loading')}</div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {userProperties.map((property) => (
+                      <div
+                        key={property.id}
+                        className="relative overflow-hidden rounded-lg border border-gray-200 h-full flex flex-col"
+                      >
+                        <div className="relative aspect-[4/3]">
+                          <img
+                            src={property.images[0] || '/placeholder.jpg'}
+                            alt={property.title}
+                            className={classNames(
+                              'h-full w-full object-cover',
+                              property.status === 'sold' ? 'grayscale' : ''
+                            )}
+                          />
+                          {property.status === 'sold' && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                              <span className="text-white text-xl font-bold">
+                                {property.type === 'sale' ? 'ПРОДАНО' : 'СДАНО'}
+                              </span>
+                            </div>
                           )}
+                        </div>
+
+                        <div className="p-4 flex flex-col flex-grow">
+                          <h3 className="text-lg font-semibold">{property.title}</h3>
+                          <p className="mt-1 text-sm text-gray-500">
+                            {property.price.toLocaleString()} €
+                          </p>
                           
-                          <button
-                            onClick={() => handlePropertyStatusUpdate(property.id, property.status)}
-                            className="inline-flex items-center justify-center rounded-md px-3 py-2
-                                     text-sm font-medium text-white hover:opacity-90"
-                            style={{ 
-                              backgroundColor: property.status === 'sold' ? '#4caf50' : '#212121'
-                            }}
-                          >
-                            {property.status === 'sold' 
-                              ? (property.type === 'sale' ? t('common.markAsNotSold') : t('common.markAsNotRented'))
-                              : (property.type === 'sale' ? t('common.markAsSold') : t('common.markAsRented'))}
-                          </button>
-                          
-                          <button
-                            onClick={() => handleDeleteProperty(property.id)}
-                            disabled={isDeleting}
-                            className="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2
-                                     text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {t('common.delete')}
-                          </button>
+                          <div className="mt-4 flex flex-col sm:flex-row gap-2 mt-auto">
+                            {property.status !== 'sold' && (
+                              <button
+                                onClick={() => handleEditProperty(property.id)}
+                                className="inline-flex items-center justify-center rounded-md bg-indigo-600 px-3 py-2
+                                         text-sm font-medium text-white hover:bg-indigo-700"
+                              >
+                                {t('common.edit')}
+                              </button>
+                            )}
+                            
+                            <button
+                              onClick={() => handlePropertyStatusUpdate(property.id, property.status)}
+                              className="inline-flex items-center justify-center rounded-md px-3 py-2
+                                       text-sm font-medium text-white hover:opacity-90"
+                              style={{ 
+                                backgroundColor: property.status === 'sold' ? '#4caf50' : '#212121'
+                              }}
+                            >
+                              {property.status === 'sold' 
+                                ? (property.type === 'sale' ? t('common.markAsNotSold') : t('common.markAsNotRented'))
+                                : (property.type === 'sale' ? t('common.markAsSold') : t('common.markAsRented'))}
+                            </button>
+                            
+                            <button
+                              onClick={() => handleDeleteProperty(property.id)}
+                              disabled={isDeleting}
+                              className="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2
+                                       text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {t('common.delete')}
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Tab.Panel>
-          </Tab.Panels>
+                    ))}
+                  </div>
+                )}
+              </Tab.Panel>
+            </Tab.Panels>
+          </div>
         </Tab.Group>
       </div>
 
