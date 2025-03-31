@@ -16,6 +16,8 @@ interface AddPropertyModalProps {
 export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalProps) {
   const { t } = useTranslation()
   const [cities, setCities] = useState<{ id: number; name: string; coordinates?: { lng: number; lat: number } }[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   useEffect(() => {
     const fetchCities = async () => {
       try {
@@ -184,7 +186,9 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
           user_id: user.id // Add the required user_id property
         }
 
+        setIsLoading(true)
         await addProperty(property)
+        setIsLoading(false)
         onClose()
         
         // Очищаем форму
@@ -249,6 +253,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       try {
+        setIsUploading(true)
         const files = Array.from(e.target.files)
         if (files.length + formData.images.length > 10) {
           alert(t('addProperty.validation.maxPhotos'))
@@ -294,9 +299,11 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
           ...prev,
           images: [...prev.images, ...urls].slice(0, 10)
         }))
+        setIsUploading(false)
       } catch (error) {
         console.error('Error uploading files:', error)
         alert(t('addProperty.validation.uploadError'))
+        setIsUploading(false)
       }
     }
   }
@@ -590,7 +597,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                     file:text-sm file:font-semibold
                     file:bg-indigo-50 file:text-indigo-700
                     hover:file:bg-indigo-100"
-                  disabled={formData.images.length >= 10}
+                  disabled={formData.images.length >= 10 || isUploading}
                   title={t('addProperty.form.noFileSelected')}
                   data-browse={t('addProperty.form.selectFiles')}
                 />
@@ -620,9 +627,10 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
               </button>
               <button
                 type="submit"
+                disabled={isLoading}
                 className="rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               >
-                {t('common.publish')}
+                {isLoading ? t('common.publishing') : t('common.publish')}
               </button>
             </div>
           </form>
