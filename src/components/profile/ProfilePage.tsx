@@ -5,6 +5,7 @@ import { Tab } from '@headlessui/react'
 import { Property } from '../../contexts/PropertyContext'
 import EditPropertyModal from '../property/EditPropertyModal'
 import { useTranslation } from 'react-i18next'
+import { propertyService } from '../../services/propertyService'
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
@@ -22,6 +23,7 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
   const [userProperties, setUserProperties] = useState<Property[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [editingPropertyId, setEditingPropertyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState(activeTab === 'listings' ? 1 : 0)
@@ -164,6 +166,28 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
     }
   }
 
+  const handleDeleteProperty = async (propertyId: string) => {
+    // Запрашиваем подтверждение у пользователя
+    if (!window.confirm(t('property.deleteConfirmation'))) {
+      return
+    }
+
+    try {
+      setIsDeleting(true)
+      // Удаляем объявление вместе с фотографиями
+      await propertyService.deleteProperty(propertyId)
+      
+      // Обновляем список объявлений после удаления
+      setUserProperties(prev => prev.filter(prop => prop.id !== propertyId))
+      
+    } catch (error) {
+      console.error('Error deleting property:', error)
+      alert(t('property.deleteError'))
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   if (!user) return null
 
   return (
@@ -172,11 +196,11 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
         <h1 className="text-2xl font-bold mb-6">{t('common.profile')}</h1>
 
         <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
-          <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 p-1 mb-6">
+          <Tab.List className="flex rounded-xl bg-gray-100 p-1 mb-6 w-fit">
             <Tab
               className={({ selected }) =>
                 classNames(
-                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                  'rounded-lg py-2.5 px-4 text-sm font-medium leading-5',
                   'ring-white ring-opacity-60 ring-offset-2 focus:outline-none focus:ring-2',
                   selected
                     ? 'bg-white shadow text-gray-900'
@@ -189,7 +213,7 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
             <Tab
               className={({ selected }) =>
                 classNames(
-                  'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
+                  'rounded-lg py-2.5 px-4 text-sm font-medium leading-5', 
                   'ring-white ring-opacity-60 ring-offset-2 focus:outline-none focus:ring-2',
                   selected
                     ? 'bg-white shadow text-gray-900'
@@ -307,6 +331,15 @@ export default function ProfilePage({ activeTab = 'personal' }: ProfilePageProps
                             {property.status === 'sold' 
                               ? (property.type === 'sale' ? t('common.markAsNotSold') : t('common.markAsNotRented'))
                               : (property.type === 'sale' ? t('common.markAsSold') : t('common.markAsRented'))}
+                          </button>
+                          
+                          <button
+                            onClick={() => handleDeleteProperty(property.id)}
+                            disabled={isDeleting}
+                            className="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2
+                                     text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {t('common.delete')}
                           </button>
                         </div>
                       </div>

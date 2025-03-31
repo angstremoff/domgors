@@ -76,12 +76,50 @@ export const propertyService = {
   },
 
   async deleteProperty(id: string) {
-    const { error } = await supabase
-      .from('properties')
-      .delete()
-      .eq('id', id)
+    try {
+      // Сначала получаем данные об объявлении, включая фотографии
+      const { data: property, error: fetchError } = await supabase
+        .from('properties')
+        .select('images')
+        .eq('id', id)
+        .single()
 
-    if (error) throw error
+      if (fetchError) throw fetchError
+
+      // Если у объявления есть фотографии, удаляем их из хранилища
+      if (property && property.images && Array.isArray(property.images) && property.images.length > 0) {
+        // Извлекаем пути файлов из полных URL-адресов
+        const filePaths = property.images.map(url => {
+          // URL имеет вид https://.../storage/v1/object/public/properties/property-images/filename.jpg
+          const match = url.match(/\/properties\/(.+)$/)
+          return match ? match[1] : null
+        }).filter(Boolean)
+
+        // Удаляем файлы из хранилища
+        if (filePaths.length > 0) {
+          const { error: storageError } = await supabase.storage
+            .from('properties')
+            .remove(filePaths)
+
+          if (storageError) {
+            console.error('Error deleting property images:', storageError)
+          }
+        }
+      }
+
+      // Затем удаляем само объявление
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error deleting property:', error)
+      throw error
+    }
   },
 
   async toggleFavorite(propertyId: string) {

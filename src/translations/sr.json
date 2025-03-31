@@ -15,7 +15,10 @@
     "save": "Sačuvaj",
     "saving": "Čuvanje...",
     "loading": "Učitavanje...",
+    "uploading": "Otpremanje fotografija...",
     "edit": "Izmeni",
+    "delete": "Obriši",
+    "deleting": "Brisanje...",
     "markAsSold": "Označi kao prodato",
     "markAsRented": "Označi kao izdato",
     "markAsNotSold": "Nije prodato",
@@ -131,14 +134,20 @@
   },
   "status": {
     "sold": "Prodato",
-    "rented": "Izdato"
+    "rented": "Izdato",
+    "deleted": "Obrisano"
   },
   "squareMeters": "m²",
   "property": {
     "showPhone": "Prikaži telefon",
     "hideNumber": "Sakrij broj",
     "contactOwner": "Kontaktiraj vlasnika",
-    "location": "Lokacija na mapi"
+    "location": "Lokacija na mapi",
+    "create": "Dodaj oglas",
+    "edit": "Izmeni oglas",
+    "delete": "Obriši oglas",
+    "deleteConfirmation": "Da li ste sigurni da želite da obrišete ovaj oglas? Ova akcija se ne može poništiti.",
+    "deleteError": "Greška prilikom brisanja oglasa"
   },
   "addProperty": {
     "title": "Dodaj oglas",
