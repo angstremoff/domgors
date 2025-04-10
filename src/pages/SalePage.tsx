@@ -4,6 +4,7 @@ import PropertyList from '../components/property/PropertyList'
 import { useState, useEffect } from 'react'
 import { useProperties } from '../contexts/PropertyContext'
 import { useSearchParams } from 'react-router-dom'
+import { useCity } from '../contexts/CityContext'
 import Footer from '../components/layout/Footer'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import CitySelect from '../components/property/CitySelect'
@@ -12,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 export default function SalePage() {
   const { t } = useTranslation();
   const { properties, filteredProperties, setFilteredProperties } = useProperties()
+  const { selectedCity } = useCity() // Добавляем доступ к выбранному городу
   const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
   const [isMapExpanded, setIsMapExpanded] = useState(false)
@@ -27,13 +29,18 @@ export default function SalePage() {
       saleProperties = saleProperties.filter(p => p.property_type === propertyType)
     }
     
+    // Фильтруем по выбранному городу, если он есть
+    if (selectedCity) {
+      saleProperties = saleProperties.filter(p => p.city_id === selectedCity.id)
+    }
+    
     setFilteredProperties(saleProperties)
 
     // Cleanup function to reset filters when component unmounts
     return () => {
       setFilteredProperties(properties)
     }
-  }, [properties, setFilteredProperties, searchParams])
+  }, [properties, setFilteredProperties, searchParams, selectedCity])
 
   useEffect(() => {
     setLoading(false)

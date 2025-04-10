@@ -4,6 +4,7 @@ import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import FavoriteIcon from './FavoriteIcon'
 import LanguageSelector from './LanguageSelector'
+import CitySelector from './CitySelector'
 import { useTranslation } from 'react-i18next'
 
 const getNavigation = (pathname: string, t: (key: string) => string) => [
@@ -74,6 +75,9 @@ export default function Header() {
                   </Link>
                   </>
                 )}
+                <div className="mr-3">
+                  <CitySelector />
+                </div>
                 <div className="mr-3">
                   <FavoriteIcon />
                 </div>
@@ -185,12 +189,17 @@ export default function Header() {
                 </>
               )}
               <div className="flex items-center justify-between gap-2 mt-2">
-                <div className="w-1/2 flex justify-center">
+                <div className="w-1/3 flex justify-center">
+                  <div className="w-full h-12 rounded-md flex items-center justify-center text-white bg-white/10 backdrop-blur-sm border border-white/20">
+                    <CitySelector />
+                  </div>
+                </div>
+                <div className="w-1/3 flex justify-center">
                   <Link to="/favorites" className="w-full h-12 rounded-md flex items-center justify-center text-white bg-white/10 backdrop-blur-sm border border-white/20">
                     <FavoriteIcon />
                   </Link>
                 </div>
-                <div className="w-1/2 flex justify-center">
+                <div className="w-1/3 flex justify-center">
                   <div className="w-full h-12 rounded-md flex items-center justify-center text-white bg-white/10 backdrop-blur-sm border border-white/20">
                     <LanguageSelector />
                   </div>

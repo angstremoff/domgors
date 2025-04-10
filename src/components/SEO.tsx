@@ -8,6 +8,7 @@ interface SEOProps {
   imageUrl?: string
   type?: string
   noindex?: boolean
+  canonicalUrl?: string // Добавляем поддержку прямого указания канонического URL
 }
 
 const SEO = ({
@@ -16,7 +17,8 @@ const SEO = ({
   keywords,
   imageUrl,
   type = 'website',
-  noindex = false
+  noindex = false,
+  canonicalUrl
 }: SEOProps) => {
   const { t, i18n } = useTranslation()
   const currentLang = i18n.language
@@ -37,7 +39,7 @@ const SEO = ({
   const srURL = `${currentURL}${currentURL.includes('?') ? '&' : '?'}lang=sr`
   
   // Правильное форматирование канонической ссылки
-  const canonicalURL = path === '/' ? `${baseURL}/` : currentURL
+  const canonicalURL = canonicalUrl || (path === '/' ? `${baseURL}/` : currentURL)
   
   // Изображение по умолчанию, если не указано другое
   const defaultImageUrl = `${baseURL}/property-preview.jpg`

@@ -10,6 +10,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { PropertyProvider } from './contexts/PropertyContext'
 import { FavoritesProvider } from './contexts/FavoritesContext'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { CityProvider } from './contexts/CityContext'
 import { HelmetProvider } from 'react-helmet-async'
 import { useEffect } from 'react'
 import NotFoundPage from './pages/NotFoundPage'
@@ -54,8 +55,9 @@ export default function App() {
     <HelmetProvider>
       <LanguageProvider>
         <AuthProvider>
-          <PropertyProvider>
-            <FavoritesProvider>
+          <CityProvider>
+            <PropertyProvider>
+              <FavoritesProvider>
               <Router>
                 <div className="flex flex-col min-h-screen bg-[#FAFAFA]">
                   <Header />
@@ -72,8 +74,9 @@ export default function App() {
                   </Routes>
                 </div>
               </Router>
-            </FavoritesProvider>
-          </PropertyProvider>
+              </FavoritesProvider>
+            </PropertyProvider>
+          </CityProvider>
         </AuthProvider>
       </LanguageProvider>
     </HelmetProvider>

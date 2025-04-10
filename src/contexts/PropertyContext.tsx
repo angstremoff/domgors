@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 import { propertyService } from '../services/propertyService'
+import { useCity } from './CityContext'
 
 export type Property = {
   id: string
@@ -52,6 +53,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [filteredProperties, setFilteredProperties] = useState<Property[]>(properties)
+  const { selectedCity } = useCity()
 
   const togglePropertyStatus = async (propertyId: string) => {
     try {
@@ -89,14 +91,31 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   }
 
   const getPropertiesByType = (type: 'sale' | 'rent') => {
-    return properties.filter(property => property.type === type)
+    // Фильтрация по типу и городу, если город выбран
+    return properties.filter(property => {
+      // Фильтр по типу транзакции (продажа/аренда)
+      const typeMatch = property.type === type
+      
+      // Если город не выбран - показываем все объявления
+      if (!selectedCity) {
+        return typeMatch
+      }
+      
+      // Если город выбран - фильтруем по городу
+      return typeMatch && property.city_id === selectedCity.id
+    })
   }
 
   const loadProperties = async () => {
     try {
       const data = await propertyService.getProperties()
       setProperties(data)
-      setFilteredProperties(data)
+      // Применяем фильтрацию по городу при загрузке данных
+      if (selectedCity) {
+        setFilteredProperties(data.filter(property => property.city_id === selectedCity.id))
+      } else {
+        setFilteredProperties(data)
+      }
     } catch (error) {
       console.error('Error loading properties:', error)
     } finally {
@@ -107,6 +126,18 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     loadProperties()
   }, [])
+  
+  // Обновляем фильтрацию при изменении выбранного города
+  useEffect(() => {
+    // Если еще нет загруженных свойств - ничего не делаем
+    if (properties.length === 0) return
+    
+    if (selectedCity) {
+      setFilteredProperties(properties.filter(property => property.city_id === selectedCity.id))
+    } else {
+      setFilteredProperties(properties)
+    }
+  }, [selectedCity, properties])
 
   return (
     <PropertyContext.Provider value={{

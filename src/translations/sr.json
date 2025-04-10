@@ -26,6 +26,7 @@
     "personalInfo": "Lični podaci",
     "myListings": "Moji oglasi",
     "selectCity": "Izaberite grad",
+    "allCities": "Svi gradovi",
     "favorites": "Omiljeni oglasi",
     "roomsShort": "sobe",
     "perMonth": "/mes",
@@ -198,27 +199,14 @@
       "phone": "Vaš telefon",
       "namePlaceholder": "Ivan Ivanović",
       "phonePlaceholder": "Unesite broj telefona"
-    },
-    "validation": {
-      "selectLocation": "Molimo vas da označite lokaciju na mapi",
-      "enterAddress": "Molimo unesite adresu",
-      "selectCity": "Molimo vas da izaberete grad",
-      "roomsRange": "Broj soba mora biti između 1 i 20",
-      "areaRange": "Površina mora biti između 1 i 1000 m²",
-      "priceRange": "Cena mora biti između 1 i 100000000",
-      "cityNotFound": "Izabrani grad nije pronađen",
-      "maxFileSize": "Maksimalna veličina datoteke je 5MB",
-      "onlyImages": "Možete otpremiti samo slike",
-      "uploadError": "Greška pri otpremanju datoteka",
-      "addError": "Greška pri dodavanju oglasa",
-      "maxPhotos": "Maksimalan broj fotografija je 10",
-      "maxPropertiesError": "Dostigli ste limit oglasa (20). Izbrišite stare oglase pre nego što dodate nove.",
-      "noPhotos": "Molimo vas da dodate bar jednu fotografiju",
-      "waitForPhotos": "Sačekajte da se fotografije otpreme"
     }
   },
+  "map": {
+    "selectCityFirst": "Izaberite grad da vidite mapu",
+    "citySelectionHelp": "Da biste videli objekte na mapi, izaberite grad u gornjem meniju"
+  },
   "auth": {
-    "login": "Prijava",
+    "login": "Prijavi se",
     "signup": "Registracija",
     "logout": "Odjava",
     "email": "Email",
@@ -235,6 +223,20 @@
     "checkEmailVerification": "Poslali smo e-mail za potvrdu na vašu adresu. Molimo vas da proverite svoju e-poštu i kliknite na link za potvrdu.",
     "name": "Ime",
     "phone": "Telefon"
+  },
+  "validation": {
+    "selectLocation": "Molimo vas da označite lokaciju na mapi",
+    "enterAddress": "Molimo unesite adresu",
+    "selectCity": "Molimo vas da izaberete grad",
+    "roomsRange": "Broj soba mora biti između 1 i 20",
+    "areaRange": "Površina mora biti između 1 i 1000 m²",
+    "priceRange": "Cena mora biti između 1 i 100000000",
+    "cityNotFound": "Izabrani grad nije pronađen",
+    "maxFileSize": "Maksimalna veličina datoteke je 5MB",
+    "onlyImages": "Možete otpremiti samo slike",
+    "uploadError": "Greška pri otpremanju datoteka",
+    "addError": "Greška pri dodavanju oglasa",
+    "maxPhotos": "Maksimalan broj fotografija je 10"
   },
   "seo": {
     "defaultTitle": "Nekretnine u Srbiji - izdavanje i prodaja stanova, kuća i placeva",

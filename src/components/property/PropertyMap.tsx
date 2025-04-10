@@ -2,6 +2,8 @@ import { useRef, useEffect } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Property } from '../../contexts/PropertyContext'
+import { useCity } from '../../contexts/CityContext'
+import { useTranslation } from 'react-i18next'
 
 interface PropertyMapProps {
   properties?: Property[]
@@ -18,13 +20,34 @@ export default function PropertyMap({
   onMarkerPlace,
   allowMarkerPlacement = false
 }: PropertyMapProps) {
+  const { selectedCity } = useCity()
+  const { t } = useTranslation()
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const markers = useRef<maplibregl.Marker[]>([])
   const popups = useRef<maplibregl.Popup[]>([])
 
   useEffect(() => {
+    // Если контейнер не готов, прерываем
     if (!mapContainer.current) return
+    
+    // Если город не выбран и не в режиме размещения маркера и нет свойств
+    if (!selectedCity && !allowMarkerPlacement && properties.length === 0) return
+    
+    // Используем заданные координаты (для модального окна), если есть
+    // Если координаты не заданы явно, то используем координаты выбранного города (для списка объявлений)
+    let mapCenter: [number, number] = center
+    
+    // Если в модальном окне переданы явные координаты, используем их
+    if (!Array.isArray(center) || center.length !== 2) {
+      // Невалидный формат center, используем координаты города или умолчание
+      if (selectedCity && selectedCity.coordinates) {
+        mapCenter = [selectedCity.coordinates.lng, selectedCity.coordinates.lat] as [number, number]
+      }
+    } else {
+      // Центр явно задан, используем его
+      mapCenter = center
+    }
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -46,7 +69,7 @@ export default function PropertyMap({
           maxzoom: 19
         }]
       },
-      center: center,
+      center: mapCenter,
       zoom: zoom
     })
 
@@ -135,14 +158,18 @@ export default function PropertyMap({
     }
   }, [])
 
-  // Update map center, zoom, and markers when props change
-  // Update map center and zoom when props change
+  // Update map center, zoom, and markers when props change or selected city changes
   useEffect(() => {
     if (!map.current) return
+    
+    // Используем координаты выбранного города, если они есть
+    const mapCenter: [number, number] = selectedCity && selectedCity.coordinates 
+      ? [selectedCity.coordinates.lng, selectedCity.coordinates.lat] as [number, number]
+      : center
 
     // Update center and zoom
     map.current.flyTo({
-      center: center,
+      center: mapCenter,
       zoom: zoom,
       essential: true,
       duration: 0
@@ -240,5 +267,21 @@ export default function PropertyMap({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  return <div ref={mapContainer} className="w-full h-full" />
+  // Если город не выбран и не находимся в режиме размещения маркера, показываем сообщение вместо карты
+  if (!selectedCity && !allowMarkerPlacement) {
+    return (
+      <div className="w-full h-96 rounded-md overflow-hidden shadow-md flex flex-col items-center justify-center bg-gray-100">
+        <div className="text-center p-8">
+          <h3 className="text-lg font-medium text-gray-700 mb-2">{t('map.selectCityFirst')}</h3>
+          <p className="text-gray-500">{t('map.citySelectionHelp')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full h-96 rounded-md overflow-hidden shadow-md">
+      <div ref={mapContainer} className="w-full h-full"></div>
+    </div>
+  )
 }

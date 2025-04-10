@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Disclosure } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { useProperties, Property } from '../../contexts/PropertyContext'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 
 interface PropertyFiltersProps {
   type: 'sale' | 'rent'
   properties: Property[]
+  // Можно передать начальные значения фильтров
+  initialFilters?: Record<string, string[]>
 }
 
 // Removed static filters in favor of dynamic translation-based filters
@@ -124,10 +127,27 @@ const getRentFilters = (t: (key: string) => string) => [
 
 // Removed static filters in favor of dynamic translation-based filters
 
-export default function PropertyFilters({ type, properties }: PropertyFiltersProps) {
+export default function PropertyFilters({ type, properties, initialFilters }: PropertyFiltersProps) {
   const { setFilteredProperties } = useProperties()
-  const [localFilters, setLocalFilters] = useState<Record<string, string[]>>({})
+  const [localFilters, setLocalFilters] = useState<Record<string, string[]>>(initialFilters || {})
   const { t } = useTranslation()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Инициализация фильтров из URL-параметров при загрузке
+  useEffect(() => {
+    const propertyType = searchParams.get('propertyType')
+    if (propertyType) {
+      setLocalFilters(prev => ({
+        ...prev,
+        property_type: [propertyType]
+      }))
+    }
+  }, []) // Выполняется только при монтировании компонента
+
+  // Вызываем применение фильтров при их изменении
+  useEffect(() => {
+    applyFilters()
+  }, [localFilters])
 
   const applyFilters = () => {
     console.log('Applying filters:', localFilters)
@@ -221,6 +241,41 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
     setFilteredProperties(filtered)
   }
 
+  // Синхронизация URL-параметров с текущими фильтрами
+  const syncUrlWithFilters = (filters: Record<string, string[]>) => {
+    const newParams = new URLSearchParams(searchParams.toString())
+    
+    // Если есть фильтр по типу недвижимости, обновляем URL
+    if (filters.property_type && filters.property_type.length > 0) {
+      newParams.set('propertyType', filters.property_type[0])
+    } else {
+      newParams.delete('propertyType')
+    }
+    
+    // Обновляем URL без перезагрузки страницы
+    setSearchParams(newParams, { replace: true })
+  }
+  
+  // Проверяем, есть ли активные фильтры
+  const hasActiveFilters = () => {
+    return Object.keys(localFilters).length > 0 && 
+      Object.values(localFilters).some(values => values.length > 0)
+  }
+  
+  // Сброс всех фильтров
+  const resetFilters = () => {
+    // Сбрасываем все локальные фильтры
+    setLocalFilters({})
+    
+    // Удаляем параметр propertyType из URL
+    const newParams = new URLSearchParams(searchParams.toString())
+    newParams.delete('propertyType')
+    setSearchParams(newParams, { replace: true })
+    
+    // Применяем фильтры (в данном случае показываем все объявления текущего типа)
+    setFilteredProperties(properties.filter(p => p.type === type))
+  }
+
   const handleFilterChange = (sectionId: string, value: string, checked: boolean) => {
     console.log(`Filter change: ${sectionId}, value: ${value}, checked: ${checked}`)
     setLocalFilters(prev => {
@@ -228,6 +283,12 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
       const updated = checked
         ? { ...prev, [sectionId]: [...current, value] }
         : { ...prev, [sectionId]: current.filter(v => v !== value) }
+      
+      // Синхронизируем URL с фильтрами, если изменился тип недвижимости
+      if (sectionId === 'property_type') {
+        syncUrlWithFilters(updated)
+      }
+      
       console.log('Updated filters:', updated)
       return updated
     })
@@ -279,12 +340,28 @@ export default function PropertyFilters({ type, properties }: PropertyFiltersPro
           )}
         </Disclosure>
       ))}
-      <div className="pt-4">
+      <div className="pt-4 space-y-2">
         <button
-          onClick={applyFilters}
+          onClick={() => {
+            // Применяем фильтры и синхронизируем URL со всеми текущими фильтрами
+            applyFilters()
+            syncUrlWithFilters(localFilters)
+          }}
           className="w-full bg-[#1E3A8A] text-white py-3 px-4 rounded-xl hover:bg-[#1E3A8A]/90 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
         >
           {t('common.applyFilters')}
+        </button>
+        
+        {/* Кнопка Сбросить фильтры - активна, только если есть активные фильтры */}
+        <button
+          onClick={resetFilters}
+          disabled={!hasActiveFilters()}
+          className={`w-full py-2.5 px-4 rounded-xl font-medium transition-all duration-300 
+            ${hasActiveFilters() 
+              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300' 
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'}`}
+        >
+          {t('common.resetFilters')}
         </button>
       </div>
     </div>

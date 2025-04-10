@@ -3,6 +3,7 @@ import PropertyCard from '../components/property/PropertyCard'
 import PropertyMap from '../components/property/PropertyMap'
 import QuickFilters from '../components/property/QuickFilters'
 import { useProperties } from '../contexts/PropertyContext'
+import { useCity } from '../contexts/CityContext'
 import Footer from '../components/layout/Footer'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import CitySelect from '../components/property/CitySelect'
@@ -14,14 +15,20 @@ import { DatabaseProperty } from '../components/property/types'
 export default function HomePage() {
   const { t } = useTranslation()
   const { properties, filteredProperties, setFilteredProperties } = useProperties()
+  const { selectedCity } = useCity() // Добавляем доступ к выбранному городу
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
   const [selectedProperty, setSelectedProperty] = useState<DatabaseProperty | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
-    setFilteredProperties(properties)
-  }, [properties, setFilteredProperties])
+    // Фильтруем объявления по выбранному городу, если он есть
+    if (selectedCity) {
+      setFilteredProperties(properties.filter(p => p.city_id === selectedCity.id))
+    } else {
+      setFilteredProperties(properties)
+    }
+  }, [properties, setFilteredProperties, selectedCity])
 
   useEffect(() => {
     // Получаем параметр propertyId из URL

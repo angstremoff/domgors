@@ -7,14 +7,18 @@ import { useTranslation } from 'react-i18next'
 export default function FavoritesPage() {
   const { t } = useTranslation()
   const { properties, refreshProperties } = useProperties()
-  const { favorites, isLoading } = useFavorites()
+  const { getValidFavorites, isLoading } = useFavorites()
 
   useEffect(() => {
     refreshProperties()
   }, [])
 
+  // Используем новую функцию для получения только существующих избранных
+  const availablePropertyIds = properties.map(p => p.id)
+  const validFavoriteIds = getValidFavorites(availablePropertyIds)
+  
   const favoriteProperties = properties.filter(property => 
-    favorites.includes(property.id)
+    validFavoriteIds.includes(property.id)
   )
 
   return (

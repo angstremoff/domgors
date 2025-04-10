@@ -6,6 +6,8 @@ interface FavoritesContextType {
   toggleFavorite: (propertyId: string) => Promise<void>
   isFavorite: (propertyId: string) => boolean
   isLoading: boolean
+  // Добавляем метод для получения актуальных избранных объявлений
+  getValidFavorites: (availablePropertyIds: string[]) => string[]
 }
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined)
@@ -146,8 +148,20 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   const isFavorite = (propertyId: string) => favorites.includes(propertyId)
 
+  const getValidFavorites = (availablePropertyIds: string[]) => {
+    return favorites.filter(id => availablePropertyIds.includes(id))
+  }
+
+  const value = {
+    favorites,
+    toggleFavorite,
+    isFavorite,
+    isLoading,
+    getValidFavorites
+  }
+
   return (
-    <FavoritesContext.Provider value={{ favorites, toggleFavorite, isFavorite, isLoading }}>
+    <FavoritesContext.Provider value={value}>
       {children}
     </FavoritesContext.Provider>
   )

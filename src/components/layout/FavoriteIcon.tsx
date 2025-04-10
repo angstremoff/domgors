@@ -1,10 +1,16 @@
 import { HeartIcon } from '@heroicons/react/24/outline'
 import { Link } from 'react-router-dom'
 import { useFavorites } from '../../contexts/FavoritesContext'
+import { useProperties } from '../../contexts/PropertyContext'
 
 export default function FavoriteIcon() {
-  const { favorites } = useFavorites()
-  const count = favorites.length
+  const { properties } = useProperties()
+  const { getValidFavorites } = useFavorites()
+  
+  // Получаем только ID существующих объявлений
+  const availablePropertyIds = properties.map(p => p.id)
+  const validFavorites = getValidFavorites(availablePropertyIds)
+  const count = validFavorites.length
 
   return (
     <Link
