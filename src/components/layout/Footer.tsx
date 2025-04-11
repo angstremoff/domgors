@@ -20,12 +20,12 @@ export default function Footer() {
                 iOS
               </a>
               <a 
-                href="https://bffvfyuwbnjtkhxmjlqn.supabase.co/storage/v1/object/public/apk/latest.apk" 
+                href="https://github.com/angstremoff/domgomobile/releases/download/v0.6.2/DomGo.apk" 
                 download="DomGo.apk"
                 className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-[#1E3A8A] text-white rounded-lg hover:bg-[#1E3A8A]/90 transition-colors text-sm font-medium"
                 onClick={(e) => {
                   e.preventDefault();
-                  window.location.href = 'https://bffvfyuwbnjtkhxmjlqn.supabase.co/storage/v1/object/public/apk/latest.apk';
+                  window.location.href = 'https://github.com/angstremoff/domgomobile/releases/download/v0.6.2/DomGo.apk';
                 }}
               >
                 <FaGooglePlay className="w-4 h-4 mr-2" />
