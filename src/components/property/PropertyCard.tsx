@@ -92,7 +92,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 right-2 sm:right-4 z-10">
           <p className="text-base sm:text-lg font-semibold text-white">
             {price.toLocaleString()} €
-            {type === 'rent' && <span className="text-xs sm:text-sm font-normal opacity-90">/мес</span>}
+            {type === 'rent' && <span className="text-xs sm:text-sm font-normal opacity-90">{t('common.perMonth')}</span>}
           </p>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             {title}
           </h3>
           <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2 line-clamp-2">
-            {property.city?.name}, {location}
+            {property.city?.name ? t(`cities.${property.city.name}`, {defaultValue: property.city.name}) : ''}, {location}
           </p>
         </div>
 

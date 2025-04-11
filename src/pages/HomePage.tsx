@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import PropertyCard from '../components/property/PropertyCard'
+import CompactPropertyCard from '../components/property/CompactPropertyCard'
 import PropertyMap from '../components/property/PropertyMap'
 import QuickFilters from '../components/property/QuickFilters'
 import { useProperties } from '../contexts/PropertyContext'
@@ -11,18 +12,21 @@ import { useTranslation } from 'react-i18next'
 import SEO from '../components/SEO'
 import PropertyModal from '../components/property/PropertyModal'
 import { DatabaseProperty } from '../components/property/types'
+import ViewToggle from '../components/layout/ViewToggle'
+import { useViewMode } from '../contexts/ViewModeContext'
 
 export default function HomePage() {
   const { t } = useTranslation()
   const { properties, filteredProperties, setFilteredProperties } = useProperties()
-  const { selectedCity } = useCity() // Добавляем доступ к выбранному городу
+  const { selectedCity } = useCity() 
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
   const [selectedProperty, setSelectedProperty] = useState<DatabaseProperty | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  // Используем глобальный контекст для режима просмотра
+  const { viewMode, setViewMode } = useViewMode()
 
   useEffect(() => {
-    // Фильтруем объявления по выбранному городу, если он есть
     if (selectedCity) {
       setFilteredProperties(properties.filter(p => p.city_id === selectedCity.id))
     } else {
@@ -31,7 +35,6 @@ export default function HomePage() {
   }, [properties, setFilteredProperties, selectedCity])
 
   useEffect(() => {
-    // Получаем параметр propertyId из URL
     const searchParams = new URLSearchParams(window.location.search)
     const propertyId = searchParams.get('propertyId')
     
@@ -44,11 +47,9 @@ export default function HomePage() {
     }
   }, [properties])
 
-  // Закрытие модального окна и очистка URL
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedProperty(null)
-    // Очищаем параметр propertyId из URL без перезагрузки страницы
     const url = new URL(window.location.href)
     url.searchParams.delete('propertyId')
     window.history.replaceState({}, '', url)
@@ -59,12 +60,10 @@ export default function HomePage() {
       <SEO 
         title={t('seo.homePageTitle')}
       />
-      {/* Main content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-12">
         <h1 className="text-3xl font-bold text-gray-900 mb-4 sr-only">
           {t('seo.homePageTitle')}
         </h1>
-        {/* Map section */}
         <div className="mb-8 sm:mb-24">
           <div className="mb-4 sm:mb-12">
             <QuickFilters />
@@ -95,22 +94,30 @@ export default function HomePage() {
             )}
           </div>
         </div>
-
-        {/* Featured properties */}
-        <div className="mb-8 sm:mb-24">
-          <h3 className="text-lg sm:text-xl text-gray-900 mb-3 sm:mb-6">{t('common.newListings')}</h3>
-          <div className="grid grid-cols-1 gap-4 sm:gap-10 sm:grid-cols-2 lg:grid-cols-3">
-            {[...filteredProperties]
-              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-              .slice(0, 9)
-              .map((property) => (
-              <div key={property.id} className="group bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-200 overflow-hidden">
-                <PropertyCard
-                  property={property}
-                />
-              </div>
-            ))}
+        <div className="mb-8 sm:mb-16">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">{t('common.newListings')}</h2>
+            <ViewToggle view={viewMode} onChange={setViewMode} />
           </div>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[...filteredProperties]
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 9)
+                .map((property) => (
+                  <PropertyCard key={property.id} property={property} />
+                ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {[...filteredProperties]
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 9)
+                .map((property) => (
+                  <CompactPropertyCard key={property.id} property={property} />
+                ))}
+            </div>
+          )}
         </div>
       </div>
       <Footer />

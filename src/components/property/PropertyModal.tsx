@@ -210,7 +210,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                           <div className="mb-2">
                             <h4 className="text-lg font-bold mb-2 text-left">{t('property.location')}</h4>
                             <p className="text-sm sm:text-base text-gray-700 mb-2 text-left">
-                              {property.city?.name}, {property.location}
+                              {property.city?.name ? t(`cities.${property.city.name}`, {defaultValue: property.city.name}) : ''}, {property.location}
                             </p>
                             
                             {/* Кнопка для мобильных устройств */}

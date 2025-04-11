@@ -37,7 +37,7 @@ const CitySelector: React.FC = () => {
       >
         <MapPinIcon className="h-5 w-5 mr-1" />
         {selectedCity ? (
-          <span>{selectedCity.name}</span>
+          <span>{t(`cities.${selectedCity.name}`, {defaultValue: selectedCity.name})}</span>
         ) : (
           <span>{t('common.allCities')}</span>
         )}
@@ -107,7 +107,7 @@ const CitySelector: React.FC = () => {
                           className="w-full text-left py-2 px-4 hover:bg-gray-100 rounded-lg"
                           onClick={() => handleCitySelect(city)}
                         >
-                          {city.name}
+                          {t(`cities.${city.name}`, {defaultValue: city.name})}
                         </button>
                       ))
                     )}

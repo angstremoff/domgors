@@ -15,6 +15,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { useEffect } from 'react'
 import NotFoundPage from './pages/NotFoundPage'
 import Analytics from './components/Analytics'
+import { ViewModeProvider } from './contexts/ViewModeContext'
 
 // Функция для перенаправления с domgors.onrender.com на domgo.rs
 const useRedirectToPrimaryDomain = () => {
@@ -58,11 +59,12 @@ export default function App() {
           <CityProvider>
             <PropertyProvider>
               <FavoritesProvider>
-              <Router>
-                <div className="flex flex-col min-h-screen bg-[#FAFAFA]">
-                  <Header />
-                  <Analytics />
-                  <Routes>
+              <ViewModeProvider>
+                <Router>
+                  <div className="flex flex-col min-h-screen bg-[#FAFAFA]">
+                    <Header />
+                    <Analytics />
+                    <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/rent" element={<RentPage />} />
                     <Route path="/buy" element={<SalePage />} />
@@ -71,9 +73,10 @@ export default function App() {
                     <Route path="/profile/listings" element={<ProfilePage activeTab="listings" />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="*" element={<NotFoundPage />} />
-                  </Routes>
-                </div>
-              </Router>
+                    </Routes>
+                  </div>
+                </Router>
+              </ViewModeProvider>
               </FavoritesProvider>
             </PropertyProvider>
           </CityProvider>

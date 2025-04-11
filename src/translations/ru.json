@@ -49,7 +49,10 @@
     "showPhone": "Показать телефон",
     "showMap": "Показать карту",
     "hide": "Скрыть",
-    "hideNumber": "Скрыть номер",
+    "hideMap": "Скрыть карту",
+    "gridView": "Плитка",
+    "listView": "Список",
+    "viewMode": "Режим просмотра",
     "contactOwner": "Связаться с владельцем",
     "location": "Расположение на карте"
   },
@@ -104,7 +107,8 @@
     "parking": "Парковка",
     "balcony": "Балкон",
     "elevator": "Лифт",
-    "furnished": "С мебелью"
+    "furnished": "С мебелью",
+    "furniture": "Мебель"
   },
   "rooms": {
     "one": "1 комната",

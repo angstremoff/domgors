@@ -48,7 +48,10 @@
     "showPhone": "Prikaži telefon",
     "showMap": "Prikaži mapu",
     "hide": "Sakrij",
-    "hideMap": "Sakrij mapu"
+    "hideMap": "Sakrij mapu",
+    "gridView": "Pločice",
+    "listView": "Lista",
+    "viewMode": "Način prikaza"
   },
   "status": {
     "sold": "PRODANO",
@@ -78,6 +81,14 @@
     "sale": "Prodaja",
     "rent": "Izdavanje"
   },
+  "cities": {
+    "Белград": "Beograd",
+    "Нови-Сад": "Novi Sad",
+    "Ниш": "Niš",
+    "Суботица": "Subotica",
+    "Лозница": "Loznica",
+    "Крагуевац": "Kragujevac"
+  },
   "quickFilters": {
     "rentApartments": "Izdavanje stanova",
     "rentHouses": "Izdavanje kuća",
@@ -99,7 +110,8 @@
     "parking": "Parking",
     "balcony": "Terasa",
     "elevator": "Lift",
-    "furnished": "Namešten"
+    "furnished": "Namešten",
+    "furniture": "Nameštaj"
   },
   "rooms": {
     "one": "1 soba",
