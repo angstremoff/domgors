@@ -167,18 +167,61 @@ export class SecureStorage {
       const encryptedValue = localStorage.getItem(key);
       if (!encryptedValue) return null;
       
-      const decryptedValue = await this.encryptionService.decrypt(
-        encryptedValue, 
-        this.encryptionPassword
-      );
-      
-      return JSON.parse(decryptedValue) as T;
+      try {
+        // Пробуем новый алгоритм дешифрования
+        const decryptedValue = await this.encryptionService.decrypt(
+          encryptedValue, 
+          this.encryptionPassword
+        );
+        
+        return JSON.parse(decryptedValue) as T;
+      } catch (newMethodError) {
+        // Если новый метод не сработал, пробуем старый (для обратной совместимости)
+        console.log('Пробуем старый алгоритм дешифрования');
+        try {
+          const decryptedValue = this.legacyDecrypt(encryptedValue);
+          // Если удалось расшифровать старым методом, перешифровываем в новый формат
+          const value = JSON.parse(decryptedValue) as T;
+          
+          // Асинхронно перешифровываем в новый формат без блокировки
+          this.setItem(key, value).catch(e => console.error('Ошибка перешифрования:', e));
+          
+          return value;
+        } catch (legacyError) {
+          // Если и старый метод не сработал, выбрасываем ошибку
+          console.error('Ни один метод дешифрования не работает:', legacyError);
+          throw new Error('Невозможно расшифровать данные');
+        }
+      }
     } catch (error) {
       console.error('Error reading secure data:', error);
       // При ошибке удаляем проблемные данные
       localStorage.removeItem(key);
       return null;
     }
+  }
+  
+  /**
+   * Старый метод дешифрования для обратной совместимости
+   */
+  private legacyDecrypt(encryptedData: string): string {
+    try {
+      const key = this.getLegacyKey();
+      // Дешифруем с помощью XOR
+      return atob(encryptedData).split('').map((char, i) => 
+        String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+      ).join('');
+    } catch (e) {
+      console.error('Legacy decryption error:', e);
+      throw new Error('Не удалось расшифровать данные старым методом');
+    }
+  }
+  
+  /**
+   * Получаем старый ключ для совместимости
+   */
+  private getLegacyKey(): string {
+    return window.location.hostname || 'domgors';
   }
   
   /**

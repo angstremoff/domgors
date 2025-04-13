@@ -11,6 +11,7 @@ interface PropertyMapProps {
   zoom?: number
   onMarkerPlace?: (coordinates: { lng: number; lat: number }) => void
   allowMarkerPlacement?: boolean
+  className?: string
 }
 
 export default function PropertyMap({ 
@@ -18,7 +19,8 @@ export default function PropertyMap({
   center = [20.457273, 44.787197], // Белград по умолчанию
   zoom = 12,
   onMarkerPlace,
-  allowMarkerPlacement = false
+  allowMarkerPlacement = false,
+  className
 }: PropertyMapProps) {
   const { selectedCity } = useCity()
   const { t } = useTranslation()
@@ -281,7 +283,7 @@ export default function PropertyMap({
   }
 
   return (
-    <div className="w-full h-96 rounded-md overflow-hidden shadow-md">
+    <div className={className || "w-full h-96 rounded-md overflow-hidden shadow-md"}>
       <div ref={mapContainer} className="w-full h-full"></div>
     </div>
   )

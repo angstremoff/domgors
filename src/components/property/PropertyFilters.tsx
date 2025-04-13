@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, memo, useMemo } from 'react'
 import { Disclosure } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import { ChevronUpIcon, ChevronDownIcon as OutlineChevronDownIcon } from '@heroicons/react/24/outline'
 import { useProperties, Property } from '../../contexts/PropertyContext'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
@@ -132,6 +133,9 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
   const [searchParams, setSearchParams] = useSearchParams()
   const { t } = useTranslation()
   
+  // Состояние для отслеживания развернутости фильтров
+  const [isExpanded, setIsExpanded] = useState(false)
+  
   // Добавляем состояние для дебаунсинга
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null)
   const [localFilters, setLocalFilters] = useState<Record<string, string[]>>(initialFilters || {})
@@ -199,7 +203,13 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
           }
 
           case 'rooms':
-            const matchesRooms = values.includes(property.rooms?.toString())
+            let matchesRooms = values.includes(property.rooms?.toString())
+            
+            // Если выбран фильтр "4+" и у объекта 4 или больше комнат
+            if (!matchesRooms && values.includes('4+') && property.rooms >= 4) {
+              matchesRooms = true;
+            }
+            
             console.log(`Rooms check: ${property.rooms}, matches: ${matchesRooms}`)
             if (!matchesRooms) return false
             break
@@ -288,9 +298,10 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
         ? { ...prev, [sectionId]: [...current, value] }
         : { ...prev, [sectionId]: current.filter(v => v !== value) }
       
-      // Синхронизируем URL с фильтрами, если изменился тип недвижимости
+      // Синхронизуем URL с фильтрами, если изменился тип недвижимости, но безопасным способом
       if (sectionId === 'property_type') {
-        syncUrlWithFilters(updated)
+        // Используем setTimeout для предотвращения обновления состояния во время рендеринга
+        setTimeout(() => syncUrlWithFilters(updated), 0)
       }
       
       // Дебаунсинг применения фильтров
@@ -315,11 +326,40 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
   const currentFilters = useMemo(() => {
     return type === 'sale' ? getSaleFilters(t) : getRentFilters(t)
   }, [type, t])
+  
+  // Подсчитываем количество активных фильтров для отображения в заголовке
+  const activeFiltersCount = useMemo(() => {
+    return Object.values(localFilters).reduce((count, values) => count + values.length, 0);
+  }, [localFilters])
 
   return (
-    <div className="space-y-4">
-      {/* Отображаем текущие фильтры */}
-      {currentFilters.map((section) => (
+    <div className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 p-4 sm:p-6">
+      {/* Заголовок фильтров с возможностью скрыть/показать */}
+      <div 
+        className="flex items-center justify-between cursor-pointer" 
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center">
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 mr-2">
+            {t('common.filters')}
+          </h2>
+          {activeFiltersCount > 0 && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {activeFiltersCount}
+            </span>
+          )}
+        </div>
+        {isExpanded ? (
+          <ChevronUpIcon className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400" aria-hidden="true" />
+        ) : (
+          <OutlineChevronDownIcon className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400" aria-hidden="true" />
+        )}
+      </div>
+
+      {/* Скрываемые фильтры */}
+      {isExpanded && (
+        <div className="mt-3 space-y-4 pt-3 border-t border-gray-200">
+          {currentFilters.map((section) => (
         <Disclosure as="div" key={section.id} className="border-b border-gray-200 last:border-b-0">
           {({ open }) => (
             <>
@@ -388,7 +428,9 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
         >
           {t('common.resetFilters')}
         </button>
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

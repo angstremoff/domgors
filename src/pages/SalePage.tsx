@@ -7,7 +7,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useCity } from '../contexts/CityContext'
 import Footer from '../components/layout/Footer'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
-import CitySelect from '../components/property/CitySelect'
 import { useTranslation } from 'react-i18next';
 
 export default function SalePage() {
@@ -32,6 +31,12 @@ export default function SalePage() {
     // Фильтруем по выбранному городу, если он есть
     if (selectedCity) {
       saleProperties = saleProperties.filter(p => p.city_id === selectedCity.id)
+      
+      // Устанавливаем центр карты на выбранный город
+      if (selectedCity.coordinates) {
+        setMapCenter([selectedCity.coordinates.lng, selectedCity.coordinates.lat])
+        setMapZoom(12)
+      }
     }
     
     setFilteredProperties(saleProperties)
@@ -46,21 +51,7 @@ export default function SalePage() {
     setLoading(false)
   }, [])
 
-  const handleCitySelect = ({lat, lng}: {lat: number; lng: number}) => {
-    // Сначала обновляем состояние
-    setMapCenter([lng, lat])
-    setMapZoom(12)
-    
-    // Даем время для обновления состояния
-    setTimeout(() => {
-      // Принудительное обновление карты
-      const mapElement = document.querySelector('.maplibregl-map')
-      if (mapElement) {
-        const resizeEvent = new Event('resize')
-        window.dispatchEvent(resizeEvent)
-      }
-    }, 100)
-  }
+
 
   return (
     <div className="min-h-screen">
@@ -68,8 +59,7 @@ export default function SalePage() {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           <div className="lg:w-[30%]">
             <div className="sticky top-4 space-y-4 lg:space-y-8">
-              <div className="bg-white rounded-3xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-200 hover:shadow-xl transition-all duration-300">
-                <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-4 lg:mb-8">{t('common.filters')}</h2>
+              <div className="rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
                 <PropertyFilters type="sale" properties={properties} />
               </div>
               <div className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200">
@@ -87,13 +77,8 @@ export default function SalePage() {
                   </h2>
                 </div>
                 {isMapExpanded && (
-                  <div>
-                    <div className="px-4 sm:px-6 lg:px-8 pb-4">
-                      <CitySelect onCitySelect={handleCitySelect} />
-                    </div>
-                    <div className="h-[250px] sm:h-[300px] lg:h-[400px] relative z-0 rounded-b-3xl overflow-hidden">
-                      <PropertyMap properties={filteredProperties} center={mapCenter} zoom={mapZoom} />
-                    </div>
+                  <div className="h-[250px] sm:h-[300px] lg:h-[400px] relative z-0 rounded-b-3xl overflow-hidden">
+                    <PropertyMap properties={filteredProperties} center={mapCenter} zoom={mapZoom} />
                   </div>
                 )}
               </div>

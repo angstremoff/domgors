@@ -7,7 +7,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useCity } from '../contexts/CityContext'
 import Footer from '../components/layout/Footer'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
-import CitySelect from '../components/property/CitySelect'
 import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO'
 
@@ -26,6 +25,7 @@ export default function RentPage() {
   const [searchParams] = useSearchParams()
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
+  const [mapZoom, setMapZoom] = useState<number>(11)
   
   // Инициализируем фильтрованные свойства при загрузке
   useEffect(() => {
@@ -39,6 +39,12 @@ export default function RentPage() {
     // Фильтруем по выбранному городу, если он есть
     if (selectedCity) {
       rentProperties = rentProperties.filter(p => p.city_id === selectedCity.id)
+      
+      // Устанавливаем центр карты на выбранный город
+      if (selectedCity.coordinates) {
+        setMapCenter([selectedCity.coordinates.lng, selectedCity.coordinates.lat])
+        setMapZoom(12)
+      }
     }
     
     setFilteredProperties(rentProperties)
@@ -63,8 +69,7 @@ export default function RentPage() {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           <div className="lg:w-[30%]">
             <div className="sticky top-4 space-y-4 lg:space-y-8">
-              <div className="bg-white rounded-3xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-200 hover:shadow-xl transition-all duration-300">
-                <h2 className="text-xl lg:text-2xl font-semibold text-gray-900 mb-4 lg:mb-8">{t('common.filters')}</h2>
+              <div className="rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300">
                 <PropertyFilters type="rent" properties={properties} />
               </div>
               <div className="bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200">
@@ -82,13 +87,8 @@ export default function RentPage() {
                   </h2>
                 </div>
                 {isMapExpanded && (
-                  <div>
-                    <div className="px-4 sm:px-6 lg:px-8 pb-4">
-                      <CitySelect onCitySelect={({lng, lat}) => setMapCenter([lng, lat])} />
-                    </div>
-                    <div className="h-[250px] sm:h-[300px] lg:h-[400px] relative z-0 rounded-b-3xl overflow-hidden">
-                      <PropertyMap properties={filteredProperties} center={mapCenter} />
-                    </div>
+                  <div className="h-[250px] sm:h-[300px] lg:h-[400px] relative z-0 rounded-b-3xl overflow-hidden">
+                    <PropertyMap properties={filteredProperties} center={mapCenter} zoom={mapZoom} />
                   </div>
                 )}
               </div>
