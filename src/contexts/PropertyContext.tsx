@@ -40,10 +40,15 @@ interface PropertyContextType {
   properties: Property[]
   filteredProperties: Property[]
   loading: boolean
+  loadingMore: boolean
+  hasMore: boolean
+  currentPage: number
+  totalCount: number
   addProperty: (property: Omit<Property, 'id' | 'created_at'>) => Promise<Property>
   getPropertiesByType: (type: 'sale' | 'rent') => Property[]
   setFilteredProperties: (properties: Property[]) => void
-  refreshProperties: () => Promise<void>
+  refreshProperties: (forceRefresh?: boolean) => Promise<void>
+  loadMoreProperties: () => Promise<void>
   togglePropertyStatus: (propertyId: string) => Promise<void>
 }
 
@@ -52,6 +57,10 @@ const PropertyContext = createContext<PropertyContextType | undefined>(undefined
 export function PropertyProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
   const [filteredProperties, setFilteredProperties] = useState<Property[]>(properties)
   const { selectedCity } = useCity()
 
@@ -92,7 +101,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 
   const getPropertiesByType = (type: 'sale' | 'rent') => {
     // Фильтрация по типу и городу, если город выбран
-    return properties.filter(property => {
+    return properties.filter((property: Property) => {
       // Фильтр по типу транзакции (продажа/аренда)
       const typeMatch = property.type === type
       
@@ -106,20 +115,75 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const loadProperties = async () => {
+  // Загрузка свойств с учетом пагинации
+  const loadProperties = async (forceRefresh = false) => {
     try {
-      const data = await propertyService.getProperties()
+      setLoading(true)
+      
+      // Сбрасываем состояние пагинации при обновлении
+      setCurrentPage(1)
+      
+      // Получаем количество объектов
+      const count = await propertyService.getTotalCount(forceRefresh)
+      setTotalCount(count)
+      
+      // Загружаем первую страницу
+      const data = await propertyService.getProperties(1, 20, forceRefresh)
       setProperties(data)
+      
+      // Проверяем, есть ли еще данные для загрузки
+      // Если загружено меньше записей, чем всего доступно, то есть еще данные
+      setHasMore(data.length < count && data.length > 0)
+      
       // Применяем фильтрацию по городу при загрузке данных
       if (selectedCity) {
-        setFilteredProperties(data.filter(property => property.city_id === selectedCity.id))
+        setFilteredProperties(data.filter((property: Property) => property.city_id === selectedCity.id))
       } else {
         setFilteredProperties(data)
       }
     } catch (error) {
-      console.error('Error loading properties:', error)
+      console.error('Ошибка при загрузке объектов недвижимости:', error)
     } finally {
       setLoading(false)
+    }
+  }
+  
+  // Загрузка следующей страницы
+  const loadMoreProperties = async () => {
+    // Проверяем, есть ли еще данные для загрузки и не выполняется ли уже загрузка
+    if (loadingMore || !hasMore || properties.length >= totalCount) return
+    
+    try {
+      setLoadingMore(true)
+      
+      // Увеличиваем номер страницы
+      const nextPage = currentPage + 1
+      
+      // Загружаем следующую страницу
+      const newData = await propertyService.getProperties(nextPage, 20)
+      
+      // Обновляем состояние
+      setProperties(prev => [...prev, ...newData])
+      setCurrentPage(nextPage)
+      
+      // Проверяем, есть ли еще данные для загрузки
+      // Если новых данных нет или мы достигли общего количества, больше не загружаем
+      const newTotal = properties.length + newData.length;
+      setHasMore(newData.length > 0 && newTotal < totalCount)
+      
+      // Применяем фильтрацию
+      if (selectedCity) {
+        setFilteredProperties(prev => [
+          ...prev, 
+          ...newData.filter((property: Property) => property.city_id === selectedCity.id)
+        ])
+      } else {
+        setFilteredProperties(prev => [...prev, ...newData])
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке дополнительных объектов:', error)
+    } finally {
+      setLoadingMore(false)
     }
   }
 
@@ -133,7 +197,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     if (properties.length === 0) return
     
     if (selectedCity) {
-      setFilteredProperties(properties.filter(property => property.city_id === selectedCity.id))
+      setFilteredProperties(properties.filter((property: Property) => property.city_id === selectedCity.id))
     } else {
       setFilteredProperties(properties)
     }
@@ -144,10 +208,15 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       properties,
       filteredProperties,
       loading,
+      loadingMore,
+      hasMore,
+      currentPage,
+      totalCount,
       addProperty,
       getPropertiesByType,
       setFilteredProperties,
       refreshProperties: loadProperties,
+      loadMoreProperties,
       togglePropertyStatus
     }}>
       {children}

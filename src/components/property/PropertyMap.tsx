@@ -267,8 +267,9 @@ export default function PropertyMap({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Если город не выбран и не находимся в режиме размещения маркера, показываем сообщение вместо карты
-  if (!selectedCity && !allowMarkerPlacement) {
+  // Если город не выбран и не находимся в режиме размещения маркера И у нас нет объектов с координатами
+  // показываем сообщение вместо карты
+  if (!selectedCity && !allowMarkerPlacement && (!properties || properties.length === 0 || !properties.some(p => p.coordinates))) {
     return (
       <div className="w-full h-96 rounded-md overflow-hidden shadow-md flex flex-col items-center justify-center bg-gray-100">
         <div className="text-center p-8">

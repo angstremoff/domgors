@@ -1,11 +1,12 @@
 import { Fragment } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, MapPinIcon } from '@heroicons/react/24/outline'
 import FavoriteIcon from './FavoriteIcon'
 import LanguageSelector from './LanguageSelector'
-import CitySelector from './CitySelector'
+import CitySelector from './CitySelector';
 import { useTranslation } from 'react-i18next'
+import { useCity } from '../../contexts/CityContext'
 
 const getNavigation = (pathname: string, t: (key: string) => string) => [
   { name: t('transactionTypes.rent'), href: '/rent', current: pathname === '/rent' },
@@ -27,6 +28,7 @@ export default function Header() {
   const [isAddPropertyModalOpen, setIsAddPropertyModalOpen] = useState(false)
   const { pathname } = useLocation()
   const { t } = useTranslation()
+  const { setIsModalOpen, selectedCity } = useCity()
   const navigation = getNavigation(pathname, t)
   return (
     <>
@@ -190,13 +192,36 @@ export default function Header() {
               )}
               <div className="flex items-center justify-between gap-2 mt-2">
                 <div className="w-1/3 flex justify-center">
-                  <div className="w-full h-12 rounded-md flex items-center justify-center text-white bg-white/10 backdrop-blur-sm border border-white/20">
-                    <CitySelector />
+                  <div 
+                    className="w-full h-12 rounded-md flex items-center justify-center text-white bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm border border-white/20 cursor-pointer overflow-hidden"
+                    onClick={() => {
+                      // Закрываем мобильное меню
+                      try {
+                        const closeBtn = document.querySelector('[aria-label="Close mobile menu"]');
+                        if (closeBtn) {
+                          (closeBtn as HTMLElement).click();
+                        }
+                      } catch (e) {
+                        console.error('Error closing mobile menu');
+                      }
+                      
+                      // Открываем модальное окно выбора города через небольшую задержку
+                      setTimeout(() => {
+                        setIsModalOpen(true);
+                      }, 200);
+                    }}
+                  >
+                    <MapPinIcon className="h-5 w-5 mr-1" />
+                    {selectedCity ? (
+                      <span className="truncate">{t(`cities.${selectedCity.name}`, {defaultValue: selectedCity.name})}</span>
+                    ) : (
+                      <span className="truncate">{t('common.selectCity')}</span>
+                    )}
                   </div>
                 </div>
                 <div className="w-1/3 flex justify-center">
                   <Link to="/favorites" className="w-full h-12 rounded-md flex items-center justify-center text-white bg-white/10 backdrop-blur-sm border border-white/20">
-                    <FavoriteIcon />
+                    <FavoriteIcon noLink={true} />
                   </Link>
                 </div>
                 <div className="w-1/3 flex justify-center">

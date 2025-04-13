@@ -1,6 +1,74 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
+// Простой утилиты для безопасного хранения данных
+const secureStorage = {
+  // Ключ для шифрования и дешифрования (простая реализация)
+  getEncryptionKey: () => {
+    // Домен сайта как соль при шифровании (не идеально, но лучше чем без соли)
+    return window.location.hostname || 'domgors';
+  },
+  
+  // Простое шифрование для базовой защиты
+  encrypt: (data: string): string => {
+    try {
+      const key = secureStorage.getEncryptionKey();
+      // Используем XOR для простого шифрования
+      return btoa(Array.from(data).map((char, i) => 
+        String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+      ).join(''));
+    } catch (e) {
+      console.error('Encryption error:', e);
+      return '';
+    }
+  },
+  
+  // Дешифрование
+  decrypt: (encryptedData: string): string => {
+    try {
+      const key = secureStorage.getEncryptionKey();
+      // Расшифровываем данные
+      return atob(encryptedData).split('').map((char, i) => 
+        String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+      ).join('');
+    } catch (e) {
+      console.error('Decryption error:', e);
+      return '';
+    }
+  },
+  
+  // Сохранение с шифрованием
+  setItem: (key: string, value: any): void => {
+    try {
+      const encryptedValue = secureStorage.encrypt(JSON.stringify(value));
+      localStorage.setItem(key, encryptedValue);
+    } catch (e) {
+      console.error('Error saving secure data:', e);
+    }
+  },
+  
+  // Получение с дешифрованием
+  getItem: (key: string): any => {
+    try {
+      const encryptedValue = localStorage.getItem(key);
+      if (!encryptedValue) return null;
+      
+      const decryptedValue = secureStorage.decrypt(encryptedValue);
+      return JSON.parse(decryptedValue);
+    } catch (e) {
+      console.error('Error reading secure data:', e);
+      // При ошибке удаляем проблемные данные
+      localStorage.removeItem(key);
+      return null;
+    }
+  },
+  
+  // Удаление
+  removeItem: (key: string): void => {
+    localStorage.removeItem(key);
+  }
+};
+
 interface User {
   id: string
   email: string
@@ -26,8 +94,8 @@ function useAuth() {
 
 function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('user')
-    return savedUser ? JSON.parse(savedUser) : null
+    // Используем secureStorage для получения сохраненных данных пользователя
+    return secureStorage.getItem('user')
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -45,7 +113,8 @@ function AuthProvider({ children }: { children: ReactNode }) {
               email: session.user.email!
             }
             setUser(userData)
-            localStorage.setItem('user', JSON.stringify(userData))
+            // Сохраняем данные пользователя в безопасном хранилище
+            secureStorage.setItem('user', userData)
             
             // Получаем метаданные пользователя
             const metadata = session.user.user_metadata;
@@ -89,7 +158,8 @@ function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else {
           setUser(null)
-          localStorage.removeItem('user')
+          // Удаляем данные из безопасного хранилища
+          secureStorage.removeItem('user')
         }
       }
     )
@@ -173,7 +243,8 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     setUser(null)
-    localStorage.removeItem('user')
+    // Удаляем данные из безопасного хранилища
+    secureStorage.removeItem('user')
 
     try {
       const { data: { session } } = await supabase.auth.getSession()

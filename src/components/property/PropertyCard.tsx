@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, memo } from 'react'
 import PlaceholderImage from './PlaceholderImage'
 import FavoriteButton from './FavoriteButton'
 import PropertyModal from './PropertyModal'
@@ -12,10 +12,43 @@ interface PropertyCardProps {
 
 import { useTranslation } from 'react-i18next'
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+function PropertyCard({ property }: PropertyCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isImageLoaded, setIsImageLoaded] = useState(false)
+  const [isImageVisible, setIsImageVisible] = useState(false)
+  const imageRef = useRef<HTMLDivElement>(null)
   const { } = useProperties()
   const { t } = useTranslation()
+  
+  // Ленивая загрузка изображений
+  useEffect(() => {
+    // Создаем IntersectionObserver для отслеживания попадания элемента в область видимости
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Когда элемент становится видимым, загружаем изображение
+        if (entry.isIntersecting) {
+          setIsImageVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 } // Загружаем изображение, когда хотя бы 10% элемента видно
+    );
+
+    // Наблюдаем за элементом
+    if (imageRef.current) {
+      observer.observe(imageRef.current);
+    }
+
+    // Отключаем наблюдение при размонтировании компонента
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  
+  // Обработчик успешной загрузки изображения
+  const handleImageLoaded = () => {
+    setIsImageLoaded(true);
+  };
   const {
     id,
     title,
@@ -41,16 +74,39 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           </div>
         )}
         {/* Image container */}
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div ref={imageRef} className="relative aspect-[4/3] overflow-hidden">
         {images && images.length > 0 ? (
-          <img
-            src={images[0]}
-            alt={title}
-            className={[
-              'absolute inset-0 w-full h-full object-cover',
-              property.status === 'sold' ? 'grayscale' : ''
-            ].join(' ')}
-          />
+          isImageVisible ? (
+            <>
+              {/* Показываем прелоадер до загрузки изображения */}
+              {!isImageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                  <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate
+-spin"></div>
+                </div>
+              )}
+              <img
+                src={images[0]}
+                alt={title}
+                loading="lazy"
+                onLoad={handleImageLoaded}
+                className={[
+                  'absolute inset-0 w-full h-full object-cover transition-opacity duration-300',
+                  property.status === 'sold' ? 'grayscale' : '',
+                  isImageLoaded ? 'opacity-100' : 'opacity-0'
+                ].join(' ')}
+              />
+            </>
+          ) : (
+            // Показываем простой плейсхолдер, пока изображение не попало в область видимости
+            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+              <div className="w-12 h-12 text-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          )
         ) : (
           <div className="absolute inset-0">
             <PlaceholderImage />
@@ -139,3 +195,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
     </>
   )
 }
+
+// Используем React.memo для предотвращения ненужных ререндеров
+export default memo(PropertyCard, (prevProps, nextProps) => {
+  // Сравниваем только ID и status, так как это основные свойства, которые могут измениться
+  return (
+    prevProps.property.id === nextProps.property.id &&
+    prevProps.property.status === nextProps.property.status
+  )
+})

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, memo, useMemo } from 'react'
 import { Disclosure } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { useProperties, Property } from '../../contexts/PropertyContext'
@@ -127,11 +127,14 @@ const getRentFilters = (t: (key: string) => string) => [
 
 // Removed static filters in favor of dynamic translation-based filters
 
-export default function PropertyFilters({ type, properties, initialFilters }: PropertyFiltersProps) {
+function PropertyFiltersComponent({ type, properties, initialFilters }: PropertyFiltersProps) {
   const { setFilteredProperties } = useProperties()
-  const [localFilters, setLocalFilters] = useState<Record<string, string[]>>(initialFilters || {})
-  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { t } = useTranslation()
+  
+  // Добавляем состояние для дебаунсинга
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null)
+  const [localFilters, setLocalFilters] = useState<Record<string, string[]>>(initialFilters || {})
 
   // Инициализация фильтров из URL-параметров при загрузке
   useEffect(() => {
@@ -149,7 +152,7 @@ export default function PropertyFilters({ type, properties, initialFilters }: Pr
     applyFilters()
   }, [localFilters])
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     console.log('Applying filters:', localFilters)
     console.log('Total properties before filtering:', properties.length)
 
@@ -239,7 +242,7 @@ export default function PropertyFilters({ type, properties, initialFilters }: Pr
 
     console.log('Filtered properties:', filtered.length)
     setFilteredProperties(filtered)
-  }
+  }, [localFilters, properties, type, setFilteredProperties])
 
   // Синхронизация URL-параметров с текущими фильтрами
   const syncUrlWithFilters = (filters: Record<string, string[]>) => {
@@ -276,7 +279,8 @@ export default function PropertyFilters({ type, properties, initialFilters }: Pr
     setFilteredProperties(properties.filter(p => p.type === type))
   }
 
-  const handleFilterChange = (sectionId: string, value: string, checked: boolean) => {
+  // Обработчик изменения фильтров с дебаунсингом
+  const handleFilterChange = useCallback((sectionId: string, value: string, checked: boolean) => {
     console.log(`Filter change: ${sectionId}, value: ${value}, checked: ${checked}`)
     setLocalFilters(prev => {
       const current = prev[sectionId] || []
@@ -289,15 +293,32 @@ export default function PropertyFilters({ type, properties, initialFilters }: Pr
         syncUrlWithFilters(updated)
       }
       
+      // Дебаунсинг применения фильтров
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      
+      // Устанавливаем новый таймер для автоматического применения фильтров через 300 мс
+      const timer = setTimeout(() => {
+        // Автоматически применяем фильтры после задержки
+        applyFilters();
+      }, 300);
+      
+      setDebounceTimer(timer);
+      
       console.log('Updated filters:', updated)
       return updated
     })
-  }
+  }, [debounceTimer, applyFilters, syncUrlWithFilters])
 
-  const currentFilters = type === 'sale' ? getSaleFilters(t) : getRentFilters(t)
+  // Мемоизируем фильтры для предотвращения лишних вычислений
+  const currentFilters = useMemo(() => {
+    return type === 'sale' ? getSaleFilters(t) : getRentFilters(t)
+  }, [type, t])
 
   return (
     <div className="space-y-4">
+      {/* Отображаем текущие фильтры */}
       {currentFilters.map((section) => (
         <Disclosure as="div" key={section.id} className="border-b border-gray-200 last:border-b-0">
           {({ open }) => (
@@ -343,6 +364,10 @@ export default function PropertyFilters({ type, properties, initialFilters }: Pr
       <div className="pt-4 space-y-2">
         <button
           onClick={() => {
+            if (debounceTimer) {
+              clearTimeout(debounceTimer);
+              setDebounceTimer(null);
+            }
             // Применяем фильтры и синхронизируем URL со всеми текущими фильтрами
             applyFilters()
             syncUrlWithFilters(localFilters)
@@ -367,3 +392,9 @@ export default function PropertyFilters({ type, properties, initialFilters }: Pr
     </div>
   )
 }
+
+// Применяем мемоизацию компонента для предотвращения лишних перерисовок
+export default memo(PropertyFiltersComponent, (prevProps, nextProps) => {
+  // Если тип недвижимости не изменился, и количество объектов то же самое, не перерисовываем
+  return prevProps.type === nextProps.type && prevProps.properties.length === nextProps.properties.length;
+});

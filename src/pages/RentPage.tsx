@@ -13,7 +13,14 @@ import SEO from '../components/SEO'
 
 export default function RentPage() {
   const { t } = useTranslation();
-  const { properties, filteredProperties, setFilteredProperties } = useProperties()
+  const { 
+    properties, 
+    filteredProperties, 
+    setFilteredProperties, 
+    loadingMore, 
+    hasMore, 
+    loadMoreProperties 
+  } = useProperties()
   const { selectedCity } = useCity() // Добавляем доступ к выбранному городу
   const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
@@ -88,7 +95,13 @@ export default function RentPage() {
             </div>
           </div>
           <div className="lg:w-[70%]">
-            <PropertyList properties={filteredProperties} loading={loading} />
+            <PropertyList 
+              properties={filteredProperties} 
+              loading={loading} 
+              loadingMore={loadingMore}
+              hasMore={hasMore}
+              onLoadMore={loadMoreProperties}
+            />
           </div>
         </div>
       </div>

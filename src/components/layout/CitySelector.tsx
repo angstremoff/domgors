@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { useCity } from '../../contexts/CityContext';
@@ -7,10 +7,24 @@ import { useTranslation } from 'react-i18next';
 const CitySelector: React.FC = () => {
   const { cities, selectedCity, selectCity, isLoading, isModalOpen, setIsModalOpen } = useCity();
   const { t } = useTranslation();
+  const initialFocusRef = useRef<HTMLButtonElement>(null);
 
   // Открываем модальное окно для выбора города
   const openModal = () => {
-    setIsModalOpen(true);
+    // Исправление для мобильных браузеров: закрываем мобильное меню перед открытием модального окна
+    try {
+      const closeBtn = document.querySelector('[aria-label="Close mobile menu"]');
+      if (closeBtn) {
+        (closeBtn as HTMLElement).click();
+      }
+    } catch (e) {
+      console.error('Error closing mobile menu:', e);
+    }
+  
+    // Даем небольшую задержку, чтобы мобильное меню успело закрыться
+    setTimeout(() => {
+      setIsModalOpen(true);
+    }, 50);
   };
 
   // Закрываем модальное окно
@@ -21,11 +35,13 @@ const CitySelector: React.FC = () => {
   // Обработчик выбора города
   const handleCitySelect = (city: any) => {
     selectCity(city);
+    closeModal();
   };
 
   // Обработчик сброса выбора города
   const handleClearCity = () => {
     selectCity(null);
+    closeModal();
   };
 
   // Отображаем кнопку выбора города
@@ -33,19 +49,27 @@ const CitySelector: React.FC = () => {
     <>
       <button
         onClick={openModal}
-        className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium text-white hover:bg-white/20 transition-all duration-200 bg-white/10 backdrop-blur-sm"
+        className="inline-flex items-center justify-center w-full h-full px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium text-white hover:bg-white/20 active:bg-white/30 transition-all duration-200 bg-white/10 backdrop-blur-sm"
+        style={{ touchAction: 'manipulation' }}
+        ref={initialFocusRef}
       >
         <MapPinIcon className="h-5 w-5 mr-1" />
         {selectedCity ? (
-          <span>{t(`cities.${selectedCity.name}`, {defaultValue: selectedCity.name})}</span>
+          <span className="truncate">{t(`cities.${selectedCity.name}`, {defaultValue: selectedCity.name})}</span>
         ) : (
-          <span>{t('common.allCities')}</span>
+          <span className="truncate">{t('common.allCities')}</span>
         )}
       </button>
 
       {/* Модальное окно выбора города */}
       <Transition appear show={isModalOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-50" onClose={closeModal}>
+        <Dialog 
+          as="div" 
+          className="relative z-50" 
+          onClose={closeModal}
+          initialFocus={initialFocusRef}
+          static
+        >
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -58,8 +82,8 @@ const CitySelector: React.FC = () => {
             <div className="fixed inset-0 bg-black/25" />
           </Transition.Child>
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="fixed inset-0 overflow-y-auto" style={{ zIndex: 9999 }}>
+            <div className="flex min-h-full items-center justify-center p-4 text-center" tabIndex={0}>
               <Transition.Child
                 as={Fragment}
                 enter="ease-out duration-300"
@@ -81,6 +105,7 @@ const CitySelector: React.FC = () => {
                       type="button"
                       className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none"
                       onClick={closeModal}
+                      tabIndex={0}
                     >
                       <XMarkIcon className="h-6 w-6" />
                     </button>
@@ -88,8 +113,9 @@ const CitySelector: React.FC = () => {
 
                   {/* Кнопка "Все города" */}
                   <button
-                    className="w-full text-left py-2 px-4 hover:bg-gray-100 rounded-lg text-primary-600 font-medium mb-2"
+                    className="w-full text-left py-2 px-4 hover:bg-gray-100 active:bg-gray-200 rounded-lg text-primary-600 font-medium mb-2"
                     onClick={handleClearCity}
+                    tabIndex={0}
                   >
                     {t('common.allCities')}
                   </button>
@@ -104,8 +130,9 @@ const CitySelector: React.FC = () => {
                       cities.map((city) => (
                         <button
                           key={city.id}
-                          className="w-full text-left py-2 px-4 hover:bg-gray-100 rounded-lg"
+                          className="w-full text-left py-2 px-4 hover:bg-gray-100 active:bg-gray-200 rounded-lg"
                           onClick={() => handleCitySelect(city)}
+                          tabIndex={0}
                         >
                           {t(`cities.${city.name}`, {defaultValue: city.name})}
                         </button>

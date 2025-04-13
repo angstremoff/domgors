@@ -12,13 +12,13 @@ export default function Footer() {
           <div className="w-full md:w-auto flex flex-col items-center md:items-start">
             <h3 className="text-base font-semibold text-gray-900 mb-4">{t('footer.mobileApps')}</h3>
             <div className="flex gap-3 w-full max-w-xs">
-              <a 
-                href="#" 
-                className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-[#1E3A8A] text-white rounded-lg hover:bg-[#1E3A8A]/90 transition-colors text-sm font-medium"
+              <div 
+                className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gray-400 text-white rounded-lg cursor-not-allowed opacity-70 grayscale text-sm font-medium"
+                title={t('footer.iosAppComingSoon')}
               >
                 <FaApple className="w-4 h-4 mr-2" />
                 iOS
-              </a>
+              </div>
               <a 
                 href="https://github.com/angstremoff/domgomobile/releases/download/v0.6.2/DomGo.apk" 
                 download="DomGo.apk"
