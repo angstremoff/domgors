@@ -90,14 +90,20 @@ const Breadcrumbs = () => {
             <li className="flex items-center">
               {breadcrumb.isLast ? (
                 <span className="text-sm font-medium text-gray-500">
-                  {breadcrumb.label}
+                  {/* Вместо ключа показываем текст с переводом */}
+                  {breadcrumb.label.startsWith('common.') 
+                    ? t(breadcrumb.label) 
+                    : breadcrumb.label}
                 </span>
               ) : (
                 <Link 
                   to={breadcrumb.path} 
                   className="text-sm font-medium text-primary-600 hover:text-primary-800 hover:underline"
                 >
-                  {breadcrumb.label}
+                  {/* Вместо ключа показываем текст с переводом */}
+                  {breadcrumb.label.startsWith('common.') 
+                    ? t(breadcrumb.label) 
+                    : breadcrumb.label}
                 </Link>
               )}
             </li>
