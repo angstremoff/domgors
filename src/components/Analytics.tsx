@@ -26,30 +26,46 @@ const Analytics = () => {
   // Инициализация Яндекс.Метрики
   useEffect(() => {
     // Проверка, чтобы не инициализировать дважды
-    if (window.ym) return
+    if (document.getElementById('yandex-metrika-script')) return
 
-    // Код для загрузки Яндекс.Метрики
-    const scriptYm = document.createElement('script')
-    scriptYm.async = true
-    scriptYm.src = `https://mc.yandex.ru/metrika/tag.js`
-    document.head.appendChild(scriptYm)
+    // Создаем носкрипт элемент для тех, у кого отключен JavaScript
+    const noscript = document.createElement('noscript')
+    const img = document.createElement('img')
+    img.src = `https://mc.yandex.ru/watch/${YANDEX_METRIKA_ID}`
+    img.style.position = 'absolute'
+    img.style.left = '-9999px'
+    img.alt = ''
+    noscript.appendChild(img)
+    document.body.appendChild(noscript)
 
-    scriptYm.onload = () => {
-      window.ym = window.ym || function () {
-        (window.ym.a = window.ym.a || []).push(arguments)
-      }
-      window.ym.l = 1 * Date.now()
-      window.ym(YANDEX_METRIKA_ID, 'init', {
-        clickmap: true,
-        trackLinks: true,
-        accurateTrackBounce: true,
-        webvisor: true
-      })
-    }
+    // Правильная инициализация Яндекс.Метрики
+    const scriptInit = document.createElement('script')
+    scriptInit.id = 'yandex-metrika-init'
+    scriptInit.innerHTML = `
+      (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) return;}
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+      (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+      ym(${YANDEX_METRIKA_ID}, "init", {
+         clickmap:true,
+         trackLinks:true,
+         accurateTrackBounce:true,
+         webvisor:true
+      });
+    `
+    document.head.appendChild(scriptInit)
+
+    console.log('Яндекс.Метрика инициализирована с ID:', YANDEX_METRIKA_ID)
 
     return () => {
-      if (scriptYm && scriptYm.parentNode) {
-        scriptYm.parentNode.removeChild(scriptYm)
+      const script = document.getElementById('yandex-metrika-init')
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script)
+      }
+      if (noscript && noscript.parentNode) {
+        noscript.parentNode.removeChild(noscript)
       }
     }
   }, [])
