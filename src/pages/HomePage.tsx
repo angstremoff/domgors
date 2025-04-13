@@ -13,6 +13,7 @@ import PropertyModal from '../components/property/PropertyModal'
 import { DatabaseProperty } from '../components/property/types'
 import ViewToggle from '../components/layout/ViewToggle'
 import { useViewMode } from '../contexts/ViewModeContext'
+import SchemaMarkup from '../components/SchemaMarkup'
 
 export default function HomePage() {
   const { t } = useTranslation()
@@ -66,6 +67,7 @@ export default function HomePage() {
       <SEO 
         title={t('seo.homePageTitle')}
       />
+      <SchemaMarkup isHomePage={true} />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-12">
         <h1 className="text-3xl font-bold text-gray-900 mb-4 sr-only">
           {t('seo.homePageTitle')}

@@ -59,6 +59,12 @@ const SEO = ({
       <meta property="og:url" content={currentURL} />
       <meta property="og:image" content={ogImageUrl} />
       
+      {/* Twitter Card меты */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={pageTitle} />
+      <meta name="twitter:description" content={pageDescription} />
+      <meta name="twitter:image" content={ogImageUrl} />
+      
       <link rel="canonical" href={canonicalURL} />
       <link rel="alternate" hrefLang="ru" href={ruURL} />
       <link rel="alternate" hrefLang="sr-Latn" href={srURL} />

@@ -9,6 +9,7 @@ import Footer from '../components/layout/Footer'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next';
 import SEO from '../components/SEO'
+import Breadcrumbs from '../components/Breadcrumbs'
 
 export default function RentPage() {
   const { t } = useTranslation();
@@ -66,6 +67,9 @@ export default function RentPage() {
         canonicalUrl="https://domgo.rs/rent"
       />
       <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-6 py-6 sm:py-8 lg:py-12">
+        <div className="mb-4">
+          <Breadcrumbs />
+        </div>
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
           <div className="lg:w-[30%]">
             <div className="sticky top-4 space-y-4 lg:space-y-8">
