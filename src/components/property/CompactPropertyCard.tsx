@@ -1,7 +1,7 @@
 import React, { useState, memo, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import FavoriteButton from './FavoriteButton';
-import PropertyModal from './PropertyModal';
+import LazyPropertyModal from './LazyPropertyModal';
 import PlaceholderImage from './PlaceholderImage';
 import { Property } from '../../contexts/PropertyContext';
 
@@ -160,7 +160,7 @@ const CompactPropertyCard: React.FC<CompactPropertyCardProps> = ({ property }) =
         </div>
       </div>
       
-      <PropertyModal
+      <LazyPropertyModal
         property={property}
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}

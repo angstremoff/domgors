@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, memo } from 'react'
 import PlaceholderImage from './PlaceholderImage'
 import FavoriteButton from './FavoriteButton'
-import PropertyModal from './PropertyModal'
+import LazyPropertyModal from './LazyPropertyModal'
 import { useProperties } from '../../contexts/PropertyContext'
 
 import type { Property } from '../../contexts/PropertyContext'
@@ -187,7 +187,7 @@ function PropertyCard({ property }: PropertyCardProps) {
       </div>
     </div>
 
-    <PropertyModal
+    <LazyPropertyModal
       property={property}
       open={isModalOpen}
       onClose={() => setIsModalOpen(false)}

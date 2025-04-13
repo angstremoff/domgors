@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient'
 import type { Database } from '../lib/database.types'
+import cacheService from './cacheService'
 
 // Ключ для кэша недвижимости
 const PROPERTIES_CACHE_KEY = 'domgo_properties_cache'
@@ -17,24 +18,38 @@ export const propertyService = {
    * @param forceRefresh Принудительное обновление кэша
    */
   async getProperties(page = 1, limit = 20, forceRefresh = false) {
-    // Если это первая страница и не требуется принудительное обновление, проверяем кэш
-    if (page === 1 && !forceRefresh) {
-      try {
-        const cachedData = localStorage.getItem(PROPERTIES_CACHE_KEY);
-        if (cachedData) {
-          const { data: properties, timestamp } = JSON.parse(cachedData);
-          const now = new Date().getTime();
-          
-          // Если кэш актуален, используем его
-          if (now - timestamp < PROPERTIES_CACHE_TTL) {
-            console.log('Загружаем объекты недвижимости из кэша');
-            return properties;
+    // Создаем уникальный ключ для кеширования, учитывая страницу и лимит
+    const memoryCacheKey = `properties_page_${page}_limit_${limit}`;
+
+    // Сначала проверяем in-memory кеш (он быстрее localStorage)
+    if (!forceRefresh) {
+      const memoryCachedData = cacheService.get<Property[]>(memoryCacheKey);
+      if (memoryCachedData) {
+        console.log('Загружаем объекты недвижимости из memory-кеша');
+        return memoryCachedData;
+      }
+
+      // Если это первая страница и не требуется принудительное обновление, проверяем localStorage
+      if (page === 1) {
+        try {
+          const cachedData = localStorage.getItem(PROPERTIES_CACHE_KEY);
+          if (cachedData) {
+            const { data: properties, timestamp } = JSON.parse(cachedData);
+            const now = new Date().getTime();
+            
+            // Если localStorage кеш актуален, используем его и сохраняем в memory-кеш
+            if (now - timestamp < PROPERTIES_CACHE_TTL) {
+              console.log('Загружаем объекты недвижимости из localStorage');
+              // Сохраняем в memory-кеш для будущих запросов
+              cacheService.set(memoryCacheKey, properties);
+              return properties;
+            }
           }
+        } catch (e) {
+          console.error('Ошибка при чтении кэша недвижимости:', e);
+          // При ошибке удаляем кэш
+          localStorage.removeItem(PROPERTIES_CACHE_KEY);
         }
-      } catch (e) {
-        console.error('Ошибка при чтении кэша недвижимости:', e);
-        // При ошибке удаляем кэш
-        localStorage.removeItem(PROPERTIES_CACHE_KEY);
       }
     }
     
@@ -77,7 +92,10 @@ export const propertyService = {
       
       const resultData = response.data || [];
             
-      // Сохраняем первую страницу в кэше
+      // Сохраняем данные в memory-кеш, независимо от страницы
+      cacheService.set(`properties_page_${page}_limit_${limit}`, resultData);
+      
+      // Сохраняем первую страницу в localStorage
       if (page === 1) {
         try {
           localStorage.setItem(PROPERTIES_CACHE_KEY, JSON.stringify({
@@ -86,7 +104,7 @@ export const propertyService = {
             totalCount: totalCount
           }));
         } catch (e) {
-          console.error('Ошибка при сохранении кэша недвижимости:', e);
+          console.error('Ошибка при сохранении кэша недвижимости в localStorage:', e);
         }
       }
       
@@ -104,19 +122,38 @@ export const propertyService = {
     }
   },
 
-  async getPropertyById(id: string) {
-    const { data, error } = await supabase
-      .from('properties')
-      .select(`
-        *,
-        user:users(name, phone),
-        city:cities(name)
-      `)
-      .eq('id', id)
-      .single()
+  async getProperty(id: string) {
+    try {
+      // Создаем ключ для memory-кеша
+      const cacheKey = `property_${id}`;
+      
+      // Проверяем memory-кеш
+      const cachedProperty = cacheService.get<Property>(cacheKey);
+      if (cachedProperty) {
+        console.log(`Загружаем объект недвижимости ${id} из memory-кеша`);
+        return cachedProperty;
+      }
+      
+      const { data, error } = await supabase
+        .from('properties')
+        .select(`
+          *,
+          user:users(name, phone),
+          city:cities(name)
+        `)
+        .eq('id', id)
+        .single()
 
-    if (error) throw error
-    return data
+      if (error) throw error
+      
+      // Сохраняем результат в memory-кеш
+      cacheService.set(cacheKey, data);
+      
+      return data
+    } catch (error) {
+      console.error(`Error fetching property ${id}:`, error)
+      throw error
+    }
   },
 
   async createProperty(property: PropertyInsert) {
@@ -151,23 +188,28 @@ export const propertyService = {
   },
 
   async updateProperty(id: string, updates: Partial<Property>) {
-    const { data, error } = await supabase
-      .from('properties')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) throw error
-    
-    // При обновлении объекта сбрасываем кэш
     try {
-      localStorage.removeItem(PROPERTIES_CACHE_KEY);
-    } catch (e) {
-      console.error('Ошибка при сбросе кэша:', e);
+      const { error } = await supabase
+        .from('properties')
+        .update(updates)
+        .eq('id', id)
+
+      if (error) throw error
+
+      // При обновлении объекта инвалидируем кеши для этого объекта
+      cacheService.remove(`property_${id}`);
+      // Инвалидируем кеши списков, так как объект мог измениться
+      try {
+        localStorage.removeItem(PROPERTIES_CACHE_KEY);
+      } catch (e) {
+        console.error('Ошибка при сбросе localStorage кеша:', e);
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error(`Error updating property ${id}:`, error)
+      throw error
     }
-    
-    return data
   },
 
   async deleteProperty(id: string) {
@@ -210,11 +252,15 @@ export const propertyService = {
 
       if (error) throw error
       
-      // При удалении объекта сбрасываем кэш
+      // При удалении объекта сбрасываем все кеши
       try {
+        // Очищаем memory-кеш
+        cacheService.clear();
+        // Очищаем localStorage
         localStorage.removeItem(PROPERTIES_CACHE_KEY);
+        console.log('Кеши очищены после удаления объекта');
       } catch (e) {
-        console.error('Ошибка при сбросе кэша:', e);
+        console.error('Ошибка при сбросе кешей:', e);
       }
 
       return { success: true }
@@ -278,16 +324,27 @@ export const propertyService = {
    * @param forceRefresh Принудительное обновление кэша
    */
   async getTotalCount(forceRefresh = false) {
-    // Проверяем кэш
+    const memoryCacheKey = 'properties_total_count';
+
+    // Сначала проверяем memory-кеш
     if (!forceRefresh) {
+      const memoryCachedCount = cacheService.get<number>(memoryCacheKey);
+      if (memoryCachedCount !== null) {
+        console.log('Загружаем количество объектов из memory-кеша');
+        return memoryCachedCount;
+      }
+      
+      // Затем проверяем localStorage
       try {
         const cachedData = localStorage.getItem(PROPERTIES_CACHE_KEY);
         if (cachedData) {
           const { totalCount, timestamp } = JSON.parse(cachedData);
           const now = new Date().getTime();
           
-          // Если кэш актуален, используем значение из него
+          // Если localStorage кеш актуален, используем значение из него
           if (now - timestamp < PROPERTIES_CACHE_TTL && totalCount !== undefined) {
+            // Сохраняем в memory-кеш для будущих запросов
+            cacheService.set(memoryCacheKey, totalCount);
             return totalCount;
           }
         }
@@ -306,6 +363,10 @@ export const propertyService = {
       throw error
     }
 
-    return count || 0
+    // Сохраняем результат в memory-кеш
+    const totalCount = count || 0;
+    cacheService.set('properties_total_count', totalCount);
+
+    return totalCount
   }
 }
