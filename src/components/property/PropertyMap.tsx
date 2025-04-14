@@ -36,18 +36,28 @@ export default function PropertyMap({
     // Если город не выбран и не в режиме размещения маркера и нет свойств
     if (!selectedCity && !allowMarkerPlacement && properties.length === 0) return
     
-    // Начинаем с явно заданных координат в компоненте PropertyModal (для карты в модальном окне)
-    let mapCenter: [number, number] = [20.457273, 44.787197] // Белград по умолчанию
+    // ВАЖНО: настройка центра карты
+    // Белград по умолчанию, если ничего не задано
+    let mapCenter: [number, number] = [20.457273, 44.787197] 
     
-    // Если в модальном окне переданы явные координаты, используем их В ПЕРВУЮ ОЧЕРЕДЬ
-    if (Array.isArray(center) && center.length === 2) {
-      // Центр явно задан (например, координаты объявления в модальном окне), используем его
-      mapCenter = center
+    // Проверяем и дебажим входящие данные
+    console.log('PropertyMap center prop:', center);
+    
+    // ЕСЛИ ЕСТЬ ХОТЯ БЫ ОДНО ОБЪЯВЛЕНИЕ С КООРДИНАТАМИ - ИСПОЛЬЗУЕМ ЕГО КООРДИНАТЫ
+    if (properties && properties.length > 0 && properties[0].coordinates) {
+      console.log('Using property coordinates:', properties[0].coordinates);
+      mapCenter = [properties[0].coordinates.lng, properties[0].coordinates.lat];
+      console.log('Map center set to property coordinates:', mapCenter);
     }
-    // Если центр не задан явно и есть выбранный город, то используем координаты города
+    // Иначе, если передан центр в пропсах
+    else if (Array.isArray(center) && center.length === 2) {
+      console.log('Using explicit center prop:', center);
+      mapCenter = center;
+    } 
+    // Используем координаты города только если нет ни объявлений, ни явных координат
     else if (selectedCity && selectedCity.coordinates) {
-      // Используем координаты города только если нет явных координат из пропсов
-      mapCenter = [selectedCity.coordinates.lng, selectedCity.coordinates.lat] as [number, number]
+      console.log('Using city coordinates as fallback:', selectedCity.coordinates);
+      mapCenter = [selectedCity.coordinates.lng, selectedCity.coordinates.lat] as [number, number];
     }
 
     map.current = new maplibregl.Map({
