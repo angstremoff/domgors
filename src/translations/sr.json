@@ -51,7 +51,13 @@
     "hideMap": "Sakrij mapu",
     "gridView": "Pločice",
     "listView": "Lista",
-    "viewMode": "Način prikaza"
+    "viewMode": "Način prikaza",
+    "home": "Početna",
+    "rent": "Izdavanje",
+    "buy": "Prodaja",
+    "resetFilters": "Resetuj filtere",
+    "contactOwner": "Kontaktiraj vlasnika",
+    "location": "Lokacija na mapi"
   },
   "status": {
     "sold": "PRODANO",

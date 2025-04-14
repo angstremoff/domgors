@@ -151,9 +151,19 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
     }
   }, []) // Выполняется только при монтировании компонента
 
-  // Вызываем применение фильтров при их изменении
+  // Для фильтра города и типа недвижимости мы сохраняем автоматическое применение
+  // все остальные фильтры будут применяться только по кнопке
   useEffect(() => {
-    applyFilters()
+    const autoAppliedFilters = ['city', 'property_type'];
+    
+    // Проверяем, изменились ли автоматически применяемые фильтры
+    for (const filterId of autoAppliedFilters) {
+      if (localFilters[filterId] !== undefined) {
+        // Если изменился город или тип недвижимости, применяем фильтры автоматически
+        applyFilters();
+        break;
+      }
+    }
   }, [localFilters])
 
   const applyFilters = useCallback(() => {
@@ -289,7 +299,7 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
     setFilteredProperties(properties.filter(p => p.type === type))
   }
 
-  // Обработчик изменения фильтров с дебаунсингом
+  // Обработчик изменения фильтров без автоматического применения
   const handleFilterChange = useCallback((sectionId: string, value: string, checked: boolean) => {
     console.log(`Filter change: ${sectionId}, value: ${value}, checked: ${checked}`)
     setLocalFilters(prev => {
@@ -298,24 +308,22 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
         ? { ...prev, [sectionId]: [...current, value] }
         : { ...prev, [sectionId]: current.filter(v => v !== value) }
       
-      // Синхронизуем URL с фильтрами, если изменился тип недвижимости, но безопасным способом
-      if (sectionId === 'property_type') {
+      // Автоматически применяем только фильтры города и типа недвижимости
+      const autoAppliedFilters = ['city', 'property_type'];
+      if (autoAppliedFilters.includes(sectionId)) {
         // Используем setTimeout для предотвращения обновления состояния во время рендеринга
-        setTimeout(() => syncUrlWithFilters(updated), 0)
+        setTimeout(() => {
+          syncUrlWithFilters(updated);
+          // Применяем фильтры сразу для фильтра типа недвижимости или города
+          applyFilters();
+        }, 0);
+      } else {
+        // Для других фильтров просто обновляем состояние, но фильтры не применяем
+        // Они будут применены только по кнопке "Применить фильтры"
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
+        }
       }
-      
-      // Дебаунсинг применения фильтров
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-      
-      // Устанавливаем новый таймер для автоматического применения фильтров через 300 мс
-      const timer = setTimeout(() => {
-        // Автоматически применяем фильтры после задержки
-        applyFilters();
-      }, 300);
-      
-      setDebounceTimer(timer);
       
       console.log('Updated filters:', updated)
       return updated
