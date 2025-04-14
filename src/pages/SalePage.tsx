@@ -13,7 +13,7 @@ import Breadcrumbs from '../components/Breadcrumbs'
 
 export default function SalePage() {
   const { t } = useTranslation();
-  const { properties, filteredProperties, setFilteredProperties } = useProperties()
+  const { properties, filteredProperties, setFilteredProperties, setActiveSection } = useProperties()
   const { selectedCity } = useCity() // Добавляем доступ к выбранному городу
   const [loading, setLoading] = useState(true)
   const [searchParams] = useSearchParams()
@@ -21,33 +21,31 @@ export default function SalePage() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
   const [mapZoom, setMapZoom] = useState<number>(11)
   
-  // Инициализируем фильтрованные свойства при загрузке
+  // Устанавливаем активный раздел при загрузке страницы
+  useEffect(() => {
+    // Устанавливаем активный раздел 'sale' для страницы продажи
+    console.log('Устанавливаем раздел "sale"');
+    setActiveSection('sale');
+  }, [setActiveSection])
+  
+  // Инициализируем карту при изменении города
+  useEffect(() => {
+    if (selectedCity && selectedCity.coordinates) {
+      // Устанавливаем центр карты на выбранный город
+      setMapCenter([selectedCity.coordinates.lng, selectedCity.coordinates.lat])
+      setMapZoom(12)
+    }
+  }, [selectedCity])
+  
+  // Применяем дополнительные фильтры из URL-параметров
   useEffect(() => {
     const propertyType = searchParams.get('propertyType')
-    let saleProperties = properties.filter(p => p.type === 'sale')
-    
     if (propertyType) {
-      saleProperties = saleProperties.filter(p => p.property_type === propertyType)
+      // Фильтруем по типу недвижимости из URL
+      const filtered = filteredProperties.filter(p => p.property_type === propertyType);
+      setFilteredProperties(filtered);
     }
-    
-    // Фильтруем по выбранному городу, если он есть
-    if (selectedCity) {
-      saleProperties = saleProperties.filter(p => p.city_id === selectedCity.id)
-      
-      // Устанавливаем центр карты на выбранный город
-      if (selectedCity.coordinates) {
-        setMapCenter([selectedCity.coordinates.lng, selectedCity.coordinates.lat])
-        setMapZoom(12)
-      }
-    }
-    
-    setFilteredProperties(saleProperties)
-
-    // Cleanup function to reset filters when component unmounts
-    return () => {
-      setFilteredProperties(properties)
-    }
-  }, [properties, setFilteredProperties, searchParams, selectedCity])
+  }, [searchParams, filteredProperties, setFilteredProperties])
 
   useEffect(() => {
     setLoading(false)

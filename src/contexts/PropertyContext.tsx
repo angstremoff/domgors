@@ -50,6 +50,8 @@ interface PropertyContextType {
   refreshProperties: (forceRefresh?: boolean) => Promise<void>
   loadMoreProperties: () => Promise<void>
   togglePropertyStatus: (propertyId: string) => Promise<void>
+  activeSection: 'sale' | 'rent' | null
+  setActiveSection: (section: 'sale' | 'rent' | null) => void
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined)
@@ -115,6 +117,10 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  // Добавляем состояние для текущего активного раздела
+  // Это позволит сохранять тип фильтрации при обновлении страницы
+  const [activeSection, setActiveSection] = useState<'sale' | 'rent' | null>(null)
+
   // Загрузка свойств с учетом пагинации
   const loadProperties = async (forceRefresh = false) => {
     try {
@@ -135,12 +141,24 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       // Если загружено меньше записей, чем всего доступно, то есть еще данные
       setHasMore(data.length < count && data.length > 0)
       
-      // Применяем фильтрацию по городу при загрузке данных
-      if (selectedCity) {
-        setFilteredProperties(data.filter((property: Property) => property.city_id === selectedCity.id))
-      } else {
-        setFilteredProperties(data)
+      // Фильтруем данные по типу и городу
+      let filteredData = data;
+      
+      // Если есть активный раздел, фильтруем по типу
+      if (activeSection) {
+        console.log(`Фильтруем по типу: ${activeSection}`);
+        filteredData = filteredData.filter((property: Property) => property.type === activeSection);
       }
+      
+      // Если есть выбранный город, дополнительно фильтруем по городу
+      if (selectedCity) {
+        console.log(`Фильтруем по городу: ${selectedCity.name}`);
+        filteredData = filteredData.filter((property: Property) => property.city_id === selectedCity.id);
+      }
+      
+      // Устанавливаем отфильтрованные данные
+      console.log(`Отфильтрованные объявления: ${filteredData.length}`);
+      setFilteredProperties(filteredData);
     } catch (error) {
       console.error('Ошибка при загрузке объектов недвижимости:', error)
     } finally {
@@ -212,12 +230,14 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       hasMore,
       currentPage,
       totalCount,
+      setFilteredProperties,
       addProperty,
       getPropertiesByType,
-      setFilteredProperties,
       refreshProperties: loadProperties,
       loadMoreProperties,
-      togglePropertyStatus
+      togglePropertyStatus,
+      activeSection,
+      setActiveSection
     }}>
       {children}
     </PropertyContext.Provider>

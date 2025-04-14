@@ -17,6 +17,7 @@ export default function RentPage() {
     properties, 
     filteredProperties, 
     setFilteredProperties, 
+    setActiveSection, 
     loadingMore, 
     hasMore, 
     loadMoreProperties 
@@ -28,33 +29,31 @@ export default function RentPage() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
   const [mapZoom, setMapZoom] = useState<number>(11)
   
-  // Инициализируем фильтрованные свойства при загрузке
+  // Устанавливаем активный раздел при загрузке страницы
+  useEffect(() => {
+    // Устанавливаем активный раздел 'rent' для страницы аренды
+    console.log('Устанавливаем раздел "rent"');
+    setActiveSection('rent');
+  }, [setActiveSection])
+  
+  // Инициализируем карту при изменении города
+  useEffect(() => {
+    if (selectedCity && selectedCity.coordinates) {
+      // Устанавливаем центр карты на выбранный город
+      setMapCenter([selectedCity.coordinates.lng, selectedCity.coordinates.lat])
+      setMapZoom(12)
+    }
+  }, [selectedCity])
+  
+  // Применяем дополнительные фильтры из URL-параметров
   useEffect(() => {
     const propertyType = searchParams.get('propertyType')
-    let rentProperties = properties.filter(p => p.type === 'rent')
-    
     if (propertyType) {
-      rentProperties = rentProperties.filter(p => p.property_type === propertyType)
+      // Фильтруем по типу недвижимости из URL
+      const filtered = filteredProperties.filter(p => p.property_type === propertyType);
+      setFilteredProperties(filtered);
     }
-    
-    // Фильтруем по выбранному городу, если он есть
-    if (selectedCity) {
-      rentProperties = rentProperties.filter(p => p.city_id === selectedCity.id)
-      
-      // Устанавливаем центр карты на выбранный город
-      if (selectedCity.coordinates) {
-        setMapCenter([selectedCity.coordinates.lng, selectedCity.coordinates.lat])
-        setMapZoom(12)
-      }
-    }
-    
-    setFilteredProperties(rentProperties)
-
-    // Cleanup function to reset filters when component unmounts
-    return () => {
-      setFilteredProperties(properties)
-    }
-  }, [properties, setFilteredProperties, searchParams, selectedCity])
+  }, [searchParams, filteredProperties, setFilteredProperties])
 
   useEffect(() => {
     setLoading(false)
