@@ -118,8 +118,63 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   }
 
   // Добавляем состояние для текущего активного раздела
-  // Это позволит сохранять тип фильтрации при обновлении страницы
-  const [activeSection, setActiveSection] = useState<'sale' | 'rent' | null>(null)
+  // Используем localStorage для сохранения типа фильтрации между сессиями
+  const [activeSection, setActiveSection] = useState<'sale' | 'rent' | null>(() => {
+    // Попытка восстановить раздел из localStorage
+    try {
+      const savedSection = localStorage.getItem('domgo_active_section');
+      console.log('Загружен раздел из localStorage:', savedSection);
+      return (savedSection === 'sale' || savedSection === 'rent') ? savedSection : null;
+    } catch (e) {
+      console.error('Ошибка при чтении из localStorage:', e);
+      return null;
+    }
+  })
+
+  // Используем обертку для setActiveSection, чтобы также сохранять в localStorage
+  const updateActiveSection = (section: 'sale' | 'rent' | null) => {
+    try {
+      if (section) {
+        localStorage.setItem('domgo_active_section', section);
+        console.log('Сохранен раздел в localStorage:', section);
+      } else {
+        localStorage.removeItem('domgo_active_section');
+        console.log('Удален раздел из localStorage');
+      }
+      setActiveSection(section);
+      
+      // Немедленно применяем фильтры при изменении раздела
+      if (properties.length > 0) {
+        applyFilters();
+      }
+    } catch (e) {
+      console.error('Ошибка при записи в localStorage:', e);
+      setActiveSection(section);
+    }
+  };
+  
+  // Функция для применения фильтров на основе текущего состояния
+  const applyFilters = () => {
+    console.log('Применяем фильтры, активный раздел:', activeSection);
+    
+    let filteredData = [...properties];
+    
+    // Фильтруем по типу, если задан активный раздел
+    if (activeSection) {
+      console.log(`Фильтруем по типу: ${activeSection}, всего объектов до фильтрации: ${filteredData.length}`);
+      filteredData = filteredData.filter((property: Property) => property.type === activeSection);
+      console.log(`После фильтрации по типу: ${filteredData.length}`);
+    }
+    
+    // Фильтруем по городу, если выбран город
+    if (selectedCity) {
+      console.log(`Фильтруем по городу: ${selectedCity.name}`);
+      filteredData = filteredData.filter((property: Property) => property.city_id === selectedCity.id);
+    }
+    
+    console.log(`Итогово отфильтровано объявлений: ${filteredData.length}`);
+    setFilteredProperties(filteredData);
+  };
 
   // Загрузка свойств с учетом пагинации
   const loadProperties = async (forceRefresh = false) => {
@@ -141,24 +196,9 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       // Если загружено меньше записей, чем всего доступно, то есть еще данные
       setHasMore(data.length < count && data.length > 0)
       
-      // Фильтруем данные по типу и городу
-      let filteredData = data;
-      
-      // Если есть активный раздел, фильтруем по типу
-      if (activeSection) {
-        console.log(`Фильтруем по типу: ${activeSection}`);
-        filteredData = filteredData.filter((property: Property) => property.type === activeSection);
-      }
-      
-      // Если есть выбранный город, дополнительно фильтруем по городу
-      if (selectedCity) {
-        console.log(`Фильтруем по городу: ${selectedCity.name}`);
-        filteredData = filteredData.filter((property: Property) => property.city_id === selectedCity.id);
-      }
-      
-      // Устанавливаем отфильтрованные данные
-      console.log(`Отфильтрованные объявления: ${filteredData.length}`);
-      setFilteredProperties(filteredData);
+      // Применяем фильтры после загрузки данных
+      console.log('Данные загружены, применяем фильтры');
+      applyFilters();
     } catch (error) {
       console.error('Ошибка при загрузке объектов недвижимости:', error)
     } finally {
@@ -221,6 +261,20 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedCity, properties])
 
+  // Применяем фильтры при изменении выбранного города
+  useEffect(() => {
+    if (properties.length > 0) {
+      applyFilters();
+    }
+  }, [selectedCity]);
+
+  // Применяем фильтры при изменении активного раздела
+  useEffect(() => {
+    if (properties.length > 0) {
+      applyFilters();
+    }
+  }, [activeSection, properties.length]);
+
   return (
     <PropertyContext.Provider value={{
       properties,
@@ -237,7 +291,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       loadMoreProperties,
       togglePropertyStatus,
       activeSection,
-      setActiveSection
+      setActiveSection: updateActiveSection // Используем обертку для сохранения в localStorage
     }}>
       {children}
     </PropertyContext.Provider>
