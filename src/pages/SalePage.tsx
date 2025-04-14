@@ -1,7 +1,7 @@
 import PropertyMap from '../components/property/PropertyMap'
 import PropertyFilters from '../components/property/PropertyFilters'
 import PropertyList from '../components/property/PropertyList'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useProperties } from '../contexts/PropertyContext'
 import { useSearchParams } from 'react-router-dom'
 import { useCity } from '../contexts/CityContext'
@@ -23,10 +23,16 @@ export default function SalePage() {
   
   // Устанавливаем активный раздел при загрузке страницы
   useEffect(() => {
-    // Устанавливаем активный раздел 'sale' для страницы продажи
-    console.log('Устанавливаем раздел "sale"');
-    setActiveSection('sale');
-  }, [setActiveSection])
+    // Устанавливаем активный раздел 'sale' для страницы продажи только один раз
+    // Используем реф, чтобы отслеживать, было ли уже выполнено
+    const hasSetSection = useRef(false);
+    
+    if (!hasSetSection.current) {
+      console.log('Устанавливаем раздел "sale"');
+      setActiveSection('sale');
+      hasSetSection.current = true;
+    }
+  }, [])
   
   // Инициализируем карту при изменении города
   useEffect(() => {
