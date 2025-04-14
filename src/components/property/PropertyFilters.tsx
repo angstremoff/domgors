@@ -151,21 +151,9 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
     }
   }, []) // Выполняется только при монтировании компонента
 
-  // Только для фильтра города мы сохраняем автоматическое применение
-  // фильтр типа недвижимости и все остальные фильтры будут применяться только по кнопке
-  useEffect(() => {
-    // Теперь автоматически применяем только фильтр города
-    const autoAppliedFilters = ['city'];
-    
-    // Проверяем, изменился ли автоматически применяемый фильтр города
-    for (const filterId of autoAppliedFilters) {
-      if (localFilters[filterId] !== undefined) {
-        // Если изменился город, применяем фильтры автоматически
-        applyFilters();
-        break;
-      }
-    }
-  }, [localFilters])
+  // Вообще не используем автоматическое применение фильтров
+  // Все фильтры, включая город и тип недвижимости будут применяться только по кнопке
+  // При первичной загрузке и при обновлении URL мы инициализируем фильтры, но не применяем их автоматически
 
   const applyFilters = useCallback(() => {
     console.log('Applying filters:', localFilters)
@@ -311,26 +299,16 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
         ? { ...prev, [sectionId]: [...current, value] }
         : { ...prev, [sectionId]: current.filter(v => v !== value) }
       
-      // Теперь автоматически применяем только фильтр города 
-      const autoAppliedFilters = ['city'];
-      if (autoAppliedFilters.includes(sectionId)) {
-        // Используем setTimeout для предотвращения обновления состояния во время рендеринга
-        setTimeout(() => {
-          syncUrlWithFilters(updated);
-          // Применяем фильтры сразу только для фильтра города
-          applyFilters();
-        }, 0);
-      } else {
-        // Для других фильтров, включая тип недвижимости,
-        // просто обновляем состояние, но фильтры не применяем
-        // Они будут применены только по кнопке "Применить фильтры"
-        if (debounceTimer) {
-          clearTimeout(debounceTimer);
-        }
-        
-        // Синхронизируем URL, но не применяем фильтры
-        syncUrlWithFilters(updated);
+      // Не применяем фильтры автоматически, только обновляем состояние
+      // Фильтры будут применены только по кнопке "Применить фильтры"
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
       }
+      
+      // Синхронизируем только URL, но не применяем фильтры
+      setTimeout(() => {
+        syncUrlWithFilters(updated);
+      }, 0);
       
       console.log('Updated filters:', updated)
       return updated
