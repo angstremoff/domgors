@@ -626,12 +626,72 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                 {formData.images.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {formData.images.map((url, index) => (
-                      <div key={index} className="relative w-24 h-24">
+                      <div key={index} className="relative w-24 h-24 group">
                         <img
                           src={url}
                           alt={`${t('addProperty.form.preview')} ${index + 1}`}
                           className="w-full h-full object-cover rounded"
                         />
+                        
+                        {/* Кнопка удаления фотографии */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Удаляем фотографию по индексу
+                            setFormData(prev => ({
+                              ...prev,
+                              images: prev.images.filter((_, i) => i !== index)
+                            }));
+                          }}
+                          className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Удалить"
+                        >
+                          ✕
+                        </button>
+                        
+                        {/* Кнопки перемещения фотографии */}
+                        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Кнопка вверх */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (index === 0) return; // Не двигаем вверх, если это первый элемент
+                              const newImages = [...formData.images];
+                              const temp = newImages[index];
+                              newImages[index] = newImages[index - 1];
+                              newImages[index - 1] = temp;
+                              setFormData(prev => ({ ...prev, images: newImages }));
+                            }}
+                            disabled={index === 0}
+                            className={`bg-blue-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            aria-label="Переместить вверх"
+                          >
+                            ↑
+                          </button>
+                          
+                          {/* Кнопка вниз */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (index === formData.images.length - 1) return; // Не двигаем вниз, если это последний элемент
+                              const newImages = [...formData.images];
+                              const temp = newImages[index];
+                              newImages[index] = newImages[index + 1];
+                              newImages[index + 1] = temp;
+                              setFormData(prev => ({ ...prev, images: newImages }));
+                            }}
+                            disabled={index === formData.images.length - 1}
+                            className={`bg-blue-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md ${index === formData.images.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            aria-label="Переместить вниз"
+                          >
+                            ↓
+                          </button>
+                        </div>
+                        
+                        {/* Номер фотографии */}
+                        <div className="absolute bottom-0 left-0 bg-black bg-opacity-50 text-white px-1 text-xs rounded-br rounded-tl">
+                          {index + 1}
+                        </div>
                       </div>
                     ))}
                   </div>

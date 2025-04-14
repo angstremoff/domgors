@@ -510,6 +510,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                             alt={t('addProperty.form.existingPhoto', { index: index + 1 })}
                             className="h-24 w-full object-cover rounded-lg"
                           />
+                          {/* Кнопка удаления фото */}
                           <button
                             type="button"
                             onClick={() => removeExistingImage(index)}
@@ -517,6 +518,56 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                           >
                             <TrashIcon className="h-4 w-4" />
                           </button>
+                          
+                          {/* Кнопки перемещения фотографии */}
+                          <div className="absolute left-1 top-1/2 transform -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {/* Кнопка вверх/влево */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (index === 0) return; // Не перемещаем, если это первый элемент
+                                // Создаем копию массива
+                                const newImages = [...existingImages];
+                                // Меняем местами текущий и предыдущий элементы
+                                const temp = newImages[index];
+                                newImages[index] = newImages[index - 1];
+                                newImages[index - 1] = temp;
+                                // Обновляем массив фотографий
+                                setExistingImages(newImages);
+                              }}
+                              disabled={index === 0}
+                              className={`bg-blue-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              aria-label="Переместить выше"
+                            >
+                              ↑
+                            </button>
+                            
+                            {/* Кнопка вниз/вправо */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (index === existingImages.length - 1) return; // Не перемещаем, если это последний элемент
+                                // Создаем копию массива
+                                const newImages = [...existingImages];
+                                // Меняем местами текущий и следующий элементы
+                                const temp = newImages[index];
+                                newImages[index] = newImages[index + 1];
+                                newImages[index + 1] = temp;
+                                // Обновляем массив фотографий
+                                setExistingImages(newImages);
+                              }}
+                              disabled={index === existingImages.length - 1}
+                              className={`bg-blue-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md ${index === existingImages.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              aria-label="Переместить ниже"
+                            >
+                              ↓
+                            </button>
+                          </div>
+                          
+                          {/* Номер фотографии */}
+                          <div className="absolute bottom-0 left-0 bg-black bg-opacity-50 text-white px-1 text-xs rounded-br rounded-tl">
+                            {index + 1}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -532,6 +583,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                             alt={t('addProperty.form.newPhoto', { index: index + 1 })}
                             className="h-24 w-full object-cover rounded-lg"
                           />
+                          {/* Кнопка удаления фото */}
                           <button
                             type="button"
                             onClick={() => removeNewImage(index)}
@@ -539,6 +591,56 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                           >
                             <TrashIcon className="h-4 w-4" />
                           </button>
+                          
+                          {/* Кнопки перемещения фотографии */}
+                          <div className="absolute left-1 top-1/2 transform -translate-y-1/2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {/* Кнопка вверх/влево */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (index === 0) return; // Не перемещаем, если это первый элемент
+                                // Создаем копию массива
+                                const newImages = [...formData.images];
+                                // Меняем местами текущий и предыдущий элементы
+                                const temp = newImages[index];
+                                newImages[index] = newImages[index - 1];
+                                newImages[index - 1] = temp;
+                                // Обновляем массив фотографий
+                                setFormData(prev => ({ ...prev, images: newImages }));
+                              }}
+                              disabled={index === 0}
+                              className={`bg-blue-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              aria-label="Переместить выше"
+                            >
+                              ↑
+                            </button>
+                            
+                            {/* Кнопка вниз/вправо */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (index === formData.images.length - 1) return; // Не перемещаем, если это последний элемент
+                                // Создаем копию массива
+                                const newImages = [...formData.images];
+                                // Меняем местами текущий и следующий элементы
+                                const temp = newImages[index];
+                                newImages[index] = newImages[index + 1];
+                                newImages[index + 1] = temp;
+                                // Обновляем массив фотографий
+                                setFormData(prev => ({ ...prev, images: newImages }));
+                              }}
+                              disabled={index === formData.images.length - 1}
+                              className={`bg-blue-500 text-white p-1 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md ${index === formData.images.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              aria-label="Переместить ниже"
+                            >
+                              ↓
+                            </button>
+                          </div>
+                          
+                          {/* Номер фотографии */}
+                          <div className="absolute bottom-0 left-0 bg-black bg-opacity-50 text-white px-1 text-xs rounded-br rounded-tl">
+                            {index + 1}
+                          </div>
                         </div>
                       ))}
                     </div>
