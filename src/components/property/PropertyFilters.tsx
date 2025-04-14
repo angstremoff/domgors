@@ -151,15 +151,16 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
     }
   }, []) // Выполняется только при монтировании компонента
 
-  // Для фильтра города и типа недвижимости мы сохраняем автоматическое применение
-  // все остальные фильтры будут применяться только по кнопке
+  // Только для фильтра города мы сохраняем автоматическое применение
+  // фильтр типа недвижимости и все остальные фильтры будут применяться только по кнопке
   useEffect(() => {
-    const autoAppliedFilters = ['city', 'property_type'];
+    // Теперь автоматически применяем только фильтр города
+    const autoAppliedFilters = ['city'];
     
-    // Проверяем, изменились ли автоматически применяемые фильтры
+    // Проверяем, изменился ли автоматически применяемый фильтр города
     for (const filterId of autoAppliedFilters) {
       if (localFilters[filterId] !== undefined) {
-        // Если изменился город или тип недвижимости, применяем фильтры автоматически
+        // Если изменился город, применяем фильтры автоматически
         applyFilters();
         break;
       }
@@ -170,11 +171,13 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
     console.log('Applying filters:', localFilters)
     console.log('Total properties before filtering:', properties.length)
 
-    const filtered = properties.filter(property => {
-      // First check if the property matches the transaction type (sale/rent)
-      if (property.type !== type) return false;
+    // Сначала отфильтруем только объявления нужного типа (sale/rent)
+    // Это ключевой момент - мы сначала берем только объявления нужного типа
+    const typeFilteredProperties = properties.filter(property => property.type === type);
+    console.log(`Properties of type ${type}:`, typeFilteredProperties.length);
 
-      // Then check other filters
+    const filtered = typeFilteredProperties.filter(property => {
+      // Проверяем другие фильтры (НО УЖЕ только для объявлений нужного типа)
       for (const [filterId, values] of Object.entries(localFilters)) {
         if (!values || values.length === 0) continue;
 
@@ -308,21 +311,25 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
         ? { ...prev, [sectionId]: [...current, value] }
         : { ...prev, [sectionId]: current.filter(v => v !== value) }
       
-      // Автоматически применяем только фильтры города и типа недвижимости
-      const autoAppliedFilters = ['city', 'property_type'];
+      // Теперь автоматически применяем только фильтр города 
+      const autoAppliedFilters = ['city'];
       if (autoAppliedFilters.includes(sectionId)) {
         // Используем setTimeout для предотвращения обновления состояния во время рендеринга
         setTimeout(() => {
           syncUrlWithFilters(updated);
-          // Применяем фильтры сразу для фильтра типа недвижимости или города
+          // Применяем фильтры сразу только для фильтра города
           applyFilters();
         }, 0);
       } else {
-        // Для других фильтров просто обновляем состояние, но фильтры не применяем
+        // Для других фильтров, включая тип недвижимости,
+        // просто обновляем состояние, но фильтры не применяем
         // Они будут применены только по кнопке "Применить фильтры"
         if (debounceTimer) {
           clearTimeout(debounceTimer);
         }
+        
+        // Синхронизируем URL, но не применяем фильтры
+        syncUrlWithFilters(updated);
       }
       
       console.log('Updated filters:', updated)
