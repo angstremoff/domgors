@@ -1,7 +1,7 @@
 import PropertyMap from '../components/property/PropertyMap'
 import PropertyFilters from '../components/property/PropertyFilters'
 import PropertyList from '../components/property/PropertyList'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useProperties } from '../contexts/PropertyContext'
 import { useSearchParams } from 'react-router-dom'
 import { useCity } from '../contexts/CityContext'
@@ -31,15 +31,9 @@ export default function RentPage() {
   
   // Устанавливаем активный раздел при загрузке страницы
   useEffect(() => {
-    // Устанавливаем активный раздел 'rent' для страницы аренды только один раз
-    // Используем реф, чтобы отслеживать, было ли уже выполнено
-    const hasSetSection = useRef(false);
-    
-    if (!hasSetSection.current) {
-      console.log('Устанавливаем раздел "rent"');
-      setActiveSection('rent');
-      hasSetSection.current = true;
-    }
+    // Устанавливаем активный раздел 'rent' для страницы аренды
+    console.log('Устанавливаем раздел "rent"');
+    setActiveSection('rent');
   }, [])
   
   // Инициализируем карту при изменении города

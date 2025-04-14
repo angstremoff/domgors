@@ -17,7 +17,7 @@ import SchemaMarkup from '../components/SchemaMarkup'
 
 export default function HomePage() {
   const { t } = useTranslation()
-  const { properties, filteredProperties, setFilteredProperties } = useProperties()
+  const { properties, filteredProperties, setFilteredProperties, setActiveSection } = useProperties()
   const { selectedCity } = useCity() 
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
@@ -27,8 +27,16 @@ export default function HomePage() {
   // Используем глобальный контекст для режима просмотра
   const { viewMode, setViewMode } = useViewMode()
 
+  // Сбрасываем активный раздел на главной странице - показываем все объявления
+  useEffect(() => {
+    // На главной странице нет разделения по типу, поэтому сбрасываем фильтр типа
+    console.log('Главная страница: сбрасываем фильтр по типу объявлений');
+    setActiveSection(null);
+  }, [])
+
   useEffect(() => {
     if (selectedCity) {
+      // На главной странице фильтруем только по городу, игнорируя тип объявления
       setFilteredProperties(properties.filter(p => p.city_id === selectedCity.id))
       
       // Устанавливаем центр карты на выбранный город
@@ -37,6 +45,7 @@ export default function HomePage() {
         setMapZoom(12)
       }
     } else {
+      // Если город не выбран, показываем все объявления
       setFilteredProperties(properties)
     }
   }, [properties, setFilteredProperties, selectedCity])
