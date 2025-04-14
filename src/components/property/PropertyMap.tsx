@@ -36,19 +36,18 @@ export default function PropertyMap({
     // Если город не выбран и не в режиме размещения маркера и нет свойств
     if (!selectedCity && !allowMarkerPlacement && properties.length === 0) return
     
-    // Используем заданные координаты (для модального окна), если есть
-    // Если координаты не заданы явно, то используем координаты выбранного города (для списка объявлений)
-    let mapCenter: [number, number] = center
+    // Начинаем с явно заданных координат в компоненте PropertyModal (для карты в модальном окне)
+    let mapCenter: [number, number] = [20.457273, 44.787197] // Белград по умолчанию
     
-    // Если в модальном окне переданы явные координаты, используем их
-    if (!Array.isArray(center) || center.length !== 2) {
-      // Невалидный формат center, используем координаты города или умолчание
-      if (selectedCity && selectedCity.coordinates) {
-        mapCenter = [selectedCity.coordinates.lng, selectedCity.coordinates.lat] as [number, number]
-      }
-    } else {
-      // Центр явно задан, используем его
+    // Если в модальном окне переданы явные координаты, используем их В ПЕРВУЮ ОЧЕРЕДЬ
+    if (Array.isArray(center) && center.length === 2) {
+      // Центр явно задан (например, координаты объявления в модальном окне), используем его
       mapCenter = center
+    }
+    // Если центр не задан явно и есть выбранный город, то используем координаты города
+    else if (selectedCity && selectedCity.coordinates) {
+      // Используем координаты города только если нет явных координат из пропсов
+      mapCenter = [selectedCity.coordinates.lng, selectedCity.coordinates.lat] as [number, number]
     }
 
     map.current = new maplibregl.Map({
