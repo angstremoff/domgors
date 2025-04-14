@@ -151,9 +151,14 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
     }
   }, []) // Выполняется только при монтировании компонента
 
-  // Вообще не используем автоматическое применение фильтров
-  // Все фильтры, включая город и тип недвижимости будут применяться только по кнопке
-  // При первичной загрузке и при обновлении URL мы инициализируем фильтры, но не применяем их автоматически
+  // Важно: базовая фильтрация по типу сделки (sale/rent) срабатывает автоматически
+  // а остальные фильтры применяются только по нажатию кнопки
+  useEffect(() => {
+    // Важно выполнить базовую фильтрацию при загрузке компонента,
+    // чтобы не было смешивания объявлений из разных разделов
+    const initialFiltered = properties.filter(property => property.type === type);
+    setFilteredProperties(initialFiltered);
+  }, [properties, type, setFilteredProperties])
 
   const applyFilters = useCallback(() => {
     console.log('Applying filters:', localFilters)
@@ -163,6 +168,12 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
     // Это ключевой момент - мы сначала берем только объявления нужного типа
     const typeFilteredProperties = properties.filter(property => property.type === type);
     console.log(`Properties of type ${type}:`, typeFilteredProperties.length);
+
+    // Если нет фильтров, просто показываем объявления по типу
+    if (Object.keys(localFilters).length === 0) {
+      setFilteredProperties(typeFilteredProperties);
+      return;
+    }
 
     const filtered = typeFilteredProperties.filter(property => {
       // Проверяем другие фильтры (НО УЖЕ только для объявлений нужного типа)
