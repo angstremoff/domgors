@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Скрипт для обновления ссылок на скачивание Android-приложения
- * Использование: node scripts/update-app-links.mjs 0.7.0
+ * Скрипт для проверки и обновления ссылок на скачивание Android-приложения
+ * Использование: node scripts/update-app-links.mjs
  */
 
 import fs from 'fs';
@@ -13,16 +13,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Получаем версию из аргументов командной строки
-const version = process.argv[2];
-
-if (!version) {
-  console.error('Ошибка: не указана версия!');
-  console.error('Пример использования: node scripts/update-app-links.mjs 0.7.0');
-  process.exit(1);
-}
-
-console.log(`Обновляем ссылки до версии ${version}...`);
+console.log('Проверяем ссылки на скачивание приложения...');
 
 // Путь к файлу Footer.tsx
 const footerPath = path.resolve(__dirname, '../src/components/layout/Footer.tsx');
@@ -36,15 +27,20 @@ if (!fs.existsSync(footerPath)) {
 // Читаем содержимое файла
 let content = fs.readFileSync(footerPath, 'utf8');
 
-// Регулярные выражения для замены
+// Паттерны для проверки и исправления ссылок
+const standardLink = 'https://github.com/angstremoff/domgomobile/releases/latest/download/DomGo.apk';
+
+// Регулярные выражения для поиска и замены ссылок
 const patterns = [
   {
-    regex: /href="https:\/\/github\.com\/angstremoff\/domgomobile\/releases\/latest\/download\/DomGo-v[0-9\.]+\.apk"/g,
-    replacement: `href="https://github.com/angstremoff/domgomobile/releases/latest/download/DomGo-v${version}.apk"`
+    // Находим любые ссылки на скачивание APK с GitHub
+    regex: /href="https:\/\/github\.com\/angstremoff\/domgomobile\/releases\/[^"]+\.apk"/g,
+    replacement: `href="${standardLink}"`
   },
   {
-    regex: /window\.location\.href\s*=\s*'https:\/\/github\.com\/angstremoff\/domgomobile\/releases\/latest\/download\/DomGo-v[0-9\.]+\.apk'/g,
-    replacement: `window.location.href = 'https://github.com/angstremoff/domgomobile/releases/latest/download/DomGo-v${version}.apk'`
+    // Находим любые ссылки в JavaScript коде
+    regex: /window\.location\.href\s*=\s*'https:\/\/github\.com\/angstremoff\/domgomobile\/releases\/[^']+\.apk'/g,
+    replacement: `window.location.href = '${standardLink}'`
   }
 ];
 
@@ -70,5 +66,5 @@ if (modified) {
 
 console.log('Готово! Теперь вы можете отправить изменения в репозиторий:');
 console.log('git add src/components/layout/Footer.tsx');
-console.log(`git commit -m "Обновлена ссылка на скачивание приложения до версии ${version}"`);
+console.log('git commit -m "Обновлены ссылки на скачивание приложения"');
 console.log('git push origin main');
