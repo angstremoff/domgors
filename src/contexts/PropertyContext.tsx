@@ -143,9 +143,19 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       }
       setActiveSection(section);
       
-      // Немедленно применяем фильтры при изменении раздела
-      if (properties.length > 0) {
-        applyFilters();
+      // Только выполняем базовую фильтрацию по типу без применения дополнительных фильтров
+      if (properties.length > 0 && section) {
+        // Фильтруем только по типу, без применения других фильтров
+        console.log('Применяем базовую фильтрацию по типу:', section);
+        let typeFilteredData = properties.filter(property => property.type === section);
+        
+        // Если выбран город, также фильтруем по городу
+        if (selectedCity) {
+          typeFilteredData = typeFilteredData.filter(property => property.city_id === selectedCity.id);
+        }
+        
+        console.log('Количество объявлений после базовой фильтрации:', typeFilteredData.length);
+        setFilteredProperties(typeFilteredData);
       }
     } catch (e) {
       console.error('Ошибка при записи в localStorage:', e);
@@ -157,6 +167,14 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   const applyFilters = () => {
     console.log('Применяем фильтры, активный раздел:', activeSection);
     
+    // Проверяем, есть ли данные для фильтрации
+    if (properties.length === 0) {
+      console.log('Нет данных для фильтрации');
+      setFilteredProperties([]);
+      return;
+    }
+
+    // Создаем копию массива для фильтрации
     let filteredData = [...properties];
     
     // Фильтруем по типу, если задан активный раздел
@@ -196,9 +214,20 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       // Если загружено меньше записей, чем всего доступно, то есть еще данные
       setHasMore(data.length < count && data.length > 0)
       
-      // Применяем фильтры после загрузки данных
-      console.log('Данные загружены, применяем фильтры');
-      applyFilters();
+      // Применяем только базовые фильтры после загрузки данных
+      console.log('Данные загружены, применяем базовые фильтры');
+      // Если есть активный раздел, отфильтруем только по типу и городу
+      if (activeSection) {
+        let typeFilteredData = data.filter((property: Property) => property.type === activeSection);
+        if (selectedCity) {
+          typeFilteredData = typeFilteredData.filter((property: Property) => property.city_id === selectedCity.id);
+        }
+        setFilteredProperties(typeFilteredData);
+        console.log(`После базовой фильтрации по типу ${activeSection} осталось ${typeFilteredData.length} объявлений`);
+      } else {
+        // Если нет активного раздела, показываем все объявления
+        setFilteredProperties(data);
+      }
     } catch (error) {
       console.error('Ошибка при загрузке объектов недвижимости:', error)
     } finally {

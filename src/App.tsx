@@ -16,6 +16,7 @@ import { useEffect } from 'react'
 import NotFoundPage from './pages/NotFoundPage'
 import Analytics from './components/Analytics'
 import { ViewModeProvider } from './contexts/ViewModeContext'
+import { useCleanupTempFiles } from './hooks/useCleanupTempFiles'
 
 // Функция для перенаправления с domgors.onrender.com на domgo.rs
 const useRedirectToPrimaryDomain = () => {
@@ -51,6 +52,9 @@ const useRedirectToPrimaryDomain = () => {
 export default function App() {
   // Сначала вызываем редирект, перед рендерингом приложения
   useRedirectToPrimaryDomain();
+  
+  // Вызываем хук для очистки временных файлов при запуске приложения
+  useCleanupTempFiles();
   
   return (
     <HelmetProvider>

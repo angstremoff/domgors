@@ -3,7 +3,7 @@ import PropertyFilters from '../components/property/PropertyFilters'
 import PropertyList from '../components/property/PropertyList'
 import { useState, useEffect } from 'react'
 import { useProperties } from '../contexts/PropertyContext'
-import { useSearchParams } from 'react-router-dom'
+// Импорт роутинга не требуется
 import { useCity } from '../contexts/CityContext'
 import Footer from '../components/layout/Footer'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
@@ -16,15 +16,13 @@ export default function RentPage() {
   const { 
     properties, 
     filteredProperties, 
-    setFilteredProperties, 
-    setActiveSection, 
+    setActiveSection,
     loadingMore, 
     hasMore, 
     loadMoreProperties 
   } = useProperties()
   const { selectedCity } = useCity() // Добавляем доступ к выбранному городу
   const [loading, setLoading] = useState(true)
-  const [searchParams] = useSearchParams()
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [mapCenter, setMapCenter] = useState<[number, number]>([20.457273, 44.787197])
   const [mapZoom, setMapZoom] = useState<number>(11)
@@ -46,14 +44,8 @@ export default function RentPage() {
   }, [selectedCity])
   
   // Применяем дополнительные фильтры из URL-параметров
-  useEffect(() => {
-    const propertyType = searchParams.get('propertyType')
-    if (propertyType) {
-      // Фильтруем по типу недвижимости из URL
-      const filtered = filteredProperties.filter(p => p.property_type === propertyType);
-      setFilteredProperties(filtered);
-    }
-  }, [searchParams, filteredProperties, setFilteredProperties])
+  // Фильтрация по типу недвижимости теперь обрабатывается в PropertyFilters
+  // Поэтому убираем эту логику отсюда, чтобы избежать дублирования и циклических обновлений
 
   useEffect(() => {
     setLoading(false)

@@ -71,6 +71,14 @@ class CacheService {
   size(): number {
     return Object.keys(this.cache).length;
   }
+  
+  /**
+   * Получить все ключи в кеше
+   * @returns Массив ключей кеша
+   */
+  getKeys(): string[] {
+    return Object.keys(this.cache);
+  }
 }
 
 // Создаем синглтон для использования во всем приложении

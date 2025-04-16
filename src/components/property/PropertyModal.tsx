@@ -1,10 +1,12 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { useState, Fragment, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import PropertyMap from './PropertyMap'
+// Используем специальный компонент карты для модального окна,
+// который не зависит от выбранного города
+import PropertyMapForModal from './PropertyMapForModal'
 import PlaceholderImage from './PlaceholderImage'
 import FavoriteButton from './FavoriteButton'
-import { PropertyModalProps, ContextProperty } from './types'
+import { PropertyModalProps, ContextProperty, DatabaseProperty } from './types'
 
 export default function PropertyModal({ property, open, onClose }: PropertyModalProps) {
   const { t } = useTranslation()
@@ -45,23 +47,38 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
   }, [isFullScreenOpen]);
 
   const handleCopyLink = () => {
-    const propertyUrl = `${window.location.origin}?propertyId=${property.id}`
-    navigator.clipboard.writeText(propertyUrl)
+    // Формируем полное сообщение, как в Android-версии
+    const propertyMessage = formatShareMessage(property)
+    navigator.clipboard.writeText(propertyMessage)
     setIsCopied(true)
     setTimeout(() => {
       setIsCopied(false);
     }, 2000);
   }
 
+  // Форматирование сообщения для шаринга, как в Android-версии
+  const formatShareMessage = (property: DatabaseProperty) => {
+    const propertyUrl = `https://angstremoff.github.io/domgomobile/property.html?id=${property.id}`
+    const price = property.price.toLocaleString() + '€'
+    const features = []
+    
+    if (property.area) features.push(`${property.area} м²`)
+    if (property.rooms) features.push(`${property.rooms} комн.`)
+    
+    const featuresText = features.length > 0 ? `\n${features.join(' • ')}` : ''
+    
+    return `${property.title} \n${price}\n${property.location}\n\nПодробнее в приложении DomGo: ${propertyUrl}${featuresText}`
+  }
+
   const getShareUrl = (platform: string) => {
-    const propertyUrl = `${window.location.origin}?propertyId=${property.id}`
-    const title = encodeURIComponent(property.title)
+    const message = formatShareMessage(property)
     
     switch (platform) {
       case 'telegram':
-        return `https://t.me/share/url?url=${encodeURIComponent(propertyUrl)}&text=${title}`
+        // Для телеграмм используем только текст без URL параметра, т.к. ссылка уже есть в тексте
+        return `https://t.me/share/url?text=${encodeURIComponent(message)}`
       case 'whatsapp':
-        return `https://wa.me/?text=${encodeURIComponent(property.title + " " + propertyUrl)}`
+        return `https://wa.me/?text=${encodeURIComponent(message)}`
       default:
         return '#'
     }
@@ -231,7 +248,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                             
                             <div className={`rounded-lg sm:rounded-xl overflow-hidden bg-gray-100 transition-all ${!isMapExpanded ? 'h-0 lg:h-auto overflow-hidden lg:overflow-visible' : 'h-[200px]'}`}>
                               <div className={`h-full sm:h-[250px] rounded-lg sm:rounded-xl overflow-hidden`}>
-                                <PropertyMap
+                                <PropertyMapForModal
                                   center={[property.coordinates.lng, property.coordinates.lat]}
                                   zoom={14}
                                   properties={[mapProperty]}

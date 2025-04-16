@@ -33,8 +33,13 @@ export default function PropertyMap({
     // Если контейнер не готов, прерываем
     if (!mapContainer.current) return
     
-    // Если город не выбран и не в режиме размещения маркера и нет свойств
-    if (!selectedCity && !allowMarkerPlacement && properties.length === 0) return
+    // Проверяем только наличие объявлений или координат в пропсах, без зависимости от выбранного города
+    // Если есть координаты в properties или в center, или мы размещаем маркер, то карта будет отображена
+    const hasExplicitCenter = Array.isArray(center) && center.length === 2;
+    const hasPropertyCoordinates = properties && properties.length > 0 && properties[0].coordinates;
+    
+    // Если нет ни явных координат, ни координат объявления, ни режима размещения маркера
+    if (!hasExplicitCenter && !hasPropertyCoordinates && !allowMarkerPlacement && !selectedCity) return
     
     // ВАЖНО: настройка центра карты
     // Белград по умолчанию, если ничего не задано
@@ -43,18 +48,23 @@ export default function PropertyMap({
     // Проверяем и дебажим входящие данные
     console.log('PropertyMap center prop:', center);
     
-    // ЕСЛИ ЕСТЬ ХОТЯ БЫ ОДНО ОБЪЯВЛЕНИЕ С КООРДИНАТАМИ - ИСПОЛЬЗУЕМ ЕГО КООРДИНАТЫ
-    if (properties && properties.length > 0 && properties[0].coordinates) {
+    // ИЗМЕНЕННАЯ ЛОГИКА ПРИОРИТЕТОВ:
+    // 1. Сначала проверяем явно переданный центр (center из пропсов)
+    // 2. Затем проверяем координаты объявлений
+    // 3. И только потом используем координаты города
+    
+    // Проверяем, есть ли явно переданный центр в пропсах
+    if (Array.isArray(center) && center.length === 2) {
+      console.log('Using explicit center prop:', center);
+      mapCenter = center;
+    }
+    // Иначе, используем координаты объявления, если они есть
+    else if (properties && properties.length > 0 && properties[0].coordinates) {
       console.log('Using property coordinates:', properties[0].coordinates);
       mapCenter = [properties[0].coordinates.lng, properties[0].coordinates.lat];
       console.log('Map center set to property coordinates:', mapCenter);
     }
-    // Иначе, если передан центр в пропсах
-    else if (Array.isArray(center) && center.length === 2) {
-      console.log('Using explicit center prop:', center);
-      mapCenter = center;
-    } 
-    // Используем координаты города только если нет ни объявлений, ни явных координат
+    // В последнюю очередь используем координаты города
     else if (selectedCity && selectedCity.coordinates) {
       console.log('Using city coordinates as fallback:', selectedCity.coordinates);
       mapCenter = [selectedCity.coordinates.lng, selectedCity.coordinates.lat] as [number, number];

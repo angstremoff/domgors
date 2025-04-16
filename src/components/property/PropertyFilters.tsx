@@ -289,6 +289,8 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
   
   // Сброс всех фильтров
   const resetFilters = () => {
+    console.log('Сбрасываем все фильтры')
+    
     // Сбрасываем все локальные фильтры
     setLocalFilters({})
     
@@ -297,8 +299,17 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
     newParams.delete('propertyType')
     setSearchParams(newParams, { replace: true })
     
-    // Применяем фильтры (в данном случае показываем все объявления текущего типа)
-    setFilteredProperties(properties.filter(p => p.type === type))
+    // Очищаем дебаунс-таймер, если он есть
+    if (debounceTimer) {
+      clearTimeout(debounceTimer)
+      setDebounceTimer(null)
+    }
+    
+    // Применяем фильтры - показываем все объявления текущего типа (sale/rent)
+    console.log('Применяем базовую фильтрацию по типу:', type)
+    const typeFilteredProperties = properties.filter(p => p.type === type);
+    console.log('Количество объявлений после сброса фильтров:', typeFilteredProperties.length)
+    setFilteredProperties(typeFilteredProperties)
   }
 
   // Обработчик изменения фильтров без автоматического применения
@@ -316,15 +327,10 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
         clearTimeout(debounceTimer);
       }
       
-      // Синхронизируем только URL, но не применяем фильтры
-      setTimeout(() => {
-        syncUrlWithFilters(updated);
-      }, 0);
-      
       console.log('Updated filters:', updated)
       return updated
     })
-  }, [debounceTimer, applyFilters, syncUrlWithFilters])
+  }, [debounceTimer])
 
   // Мемоизируем фильтры для предотвращения лишних вычислений
   const currentFilters = useMemo(() => {
@@ -413,8 +419,9 @@ function PropertyFiltersComponent({ type, properties, initialFilters }: Property
               setDebounceTimer(null);
             }
             // Применяем фильтры и синхронизируем URL со всеми текущими фильтрами
-            applyFilters()
+            console.log('Нажата кнопка Применить фильтры')
             syncUrlWithFilters(localFilters)
+            applyFilters()
           }}
           className="w-full bg-[#1E3A8A] text-white py-3 px-4 rounded-xl hover:bg-[#1E3A8A]/90 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
         >

@@ -177,9 +177,17 @@ export const propertyService = {
 
     if (error) throw error
     
-    // При создании нового объекта сбрасываем кэш
+    // При создании нового объекта сбрасываем все кэши
     try {
+      // Сбрасываем кэш в localStorage
       localStorage.removeItem(PROPERTIES_CACHE_KEY);
+      
+      // Сбрасываем все кэши списков недвижимости в memory-кэше
+      // Очищаем все ключи, начинающиеся с "properties_page"
+      const keysToRemove = cacheService.getKeys().filter((key: string) => key.startsWith('properties_page'));
+      keysToRemove.forEach((key: string) => cacheService.remove(key));
+      
+      console.log('Кэш объявлений успешно сброшен после создания нового объявления');
     } catch (e) {
       console.error('Ошибка при сбросе кэша:', e);
     }
@@ -196,9 +204,22 @@ export const propertyService = {
 
       if (error) throw error
 
-      // При обновлении объекта инвалидируем кеши для этого объекта
-      cacheService.remove(`property_${id}`);
-      // Инвалидируем кеши списков, так как объект мог измениться
+      // При обновлении объекта инвалидируем все кеши
+      try {
+        // Удаляем кэш этого объекта
+        cacheService.remove(`property_${id}`);
+        
+        // Сбрасываем кэш в localStorage
+        localStorage.removeItem(PROPERTIES_CACHE_KEY);
+        
+        // Сбрасываем все кэши списков недвижимости в memory-кэше
+        const keysToRemove = cacheService.getKeys().filter((key: string) => key.startsWith('properties_page'));
+        keysToRemove.forEach((key: string) => cacheService.remove(key));
+        
+        console.log('Кэш объявлений успешно сброшен после обновления объявления');
+      } catch (e) {
+        console.error('Ошибка при сбросе кэша:', e);
+      }
       try {
         localStorage.removeItem(PROPERTIES_CACHE_KEY);
       } catch (e) {
