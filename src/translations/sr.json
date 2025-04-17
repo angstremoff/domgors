@@ -198,7 +198,7 @@
       "elevator": "Lift",
       "furnished": "Nameštaj",
       "photos": "Fotografije",
-      "photosHint": "Maksimalno 10 fotografija. Maksimalna veličina: 5MB",
+      "photosHint": "Maksimalno 15 fotografija. Maksimalna veličina: 5MB",
       "dropPhotos": "Prevucite fotografije ovde ili kliknite da izaberete",
       "existingPhoto": "Fotografija {{index}}",
       "newPhoto": "Nova fotografija {{index}}",
@@ -210,7 +210,7 @@
       "addError": "Greška pri dodavanju oglasa",
       "updateError": "Greška pri ažuriranju oglasa",
       "updateSuccess": "Oglas uspešno ažuriran",
-      "maxPhotos": "Maksimalno 10 fotografija",
+      "maxPhotos": "Maksimalno 15 fotografija",
       "fileSizeError": "Veličina fajla ne sme biti veća od 5MB",
       "fileTypeError": "Dozvoljene su samo slike",
       "contactInfo": "Kontakt informacije",
@@ -255,7 +255,7 @@
     "onlyImages": "Možete otpremiti samo slike",
     "uploadError": "Greška pri otpremanju datoteka",
     "addError": "Greška pri dodavanju oglasa",
-    "maxPhotos": "Maksimalan broj fotografija je 10"
+    "maxPhotos": "Maksimalan broj fotografija je 15"
   },
   "seo": {
     "defaultTitle": "Nekretnine u Srbiji - izdavanje i prodaja stanova, kuća i placeva",
