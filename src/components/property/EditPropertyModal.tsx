@@ -132,7 +132,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
     if (e.target.files && e.target.files.length > 0) {
       try {
         const files = Array.from(e.target.files)
-        if (files.length + existingImages.length + formData.images.length > 10) {
+        if (files.length + existingImages.length + formData.images.length > 15) {
           alert(t('addProperty.form.maxPhotos'))
           return
         }
