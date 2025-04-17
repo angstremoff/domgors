@@ -279,6 +279,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         const files = Array.from(e.target.files)
         if (files.length + formData.images.length > 15) {
           alert(t('addProperty.validation.maxPhotos'))
+          setIsUploading(false) // Сбрасываем состояние загрузки после предупреждения
           return
         }
 
@@ -319,7 +320,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         const urls = await Promise.all(uploadPromises)
         setFormData(prev => ({
           ...prev,
-          images: [...prev.images, ...urls].slice(0, 10)
+          images: [...prev.images, ...urls].slice(0, 15)
         }))
         setIsUploading(false)
       } catch (error) {
