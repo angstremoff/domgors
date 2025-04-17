@@ -619,7 +619,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
                     file:text-sm file:font-semibold
                     file:bg-indigo-50 file:text-indigo-700
                     hover:file:bg-indigo-100"
-                  disabled={formData.images.length >= 10 || isUploading}
+                  disabled={formData.images.length >= 15 || isUploading}
                   title={t('addProperty.form.noFileSelected')}
                   data-browse={t('addProperty.form.selectFiles')}
                 />

@@ -497,6 +497,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                       file:text-sm file:font-semibold
                       file:bg-violet-50 file:text-violet-700
                       hover:file:bg-violet-100"
+                    disabled={existingImages.length + formData.images.length >= 15}
                   />
                   <p className="mt-1 text-sm text-gray-500">{t('addProperty.form.photosHint')}</p>
 
