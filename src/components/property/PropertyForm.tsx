@@ -110,17 +110,23 @@ export default function PropertyForm() {
   }, [user]);
 
   const handleImageChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
+    // Сразу очищаем значение поля input, чтобы можно было повторно выбрать те же файлы
+    const input = e.target;
+    const files = Array.from(input.files || []);
+    
+    // Проверяем, не превышено ли максимальное количество фотографий
     if (files.length + formData.images.length > 10) {
-      alert('Максимальное количество фотографий - 10')
-      return
+      alert('Максимальное количество фотографий - 10');
+      // Сбрасываем значение поля file input, чтобы пользователь мог снова его использовать
+      if (input) input.value = '';
+      return;
     }
     
     // Добавляем файлы в состояние формы
     setFormData(prev => ({
       ...prev,
       images: [...prev.images, ...files].slice(0, 10)
-    }))
+    }));
     
     // Загружаем и сжимаем каждый файл сразу после выбора
     try {
@@ -155,6 +161,9 @@ export default function PropertyForm() {
     } catch (error) {
       console.error('Ошибка при обработке и загрузке файлов:', error);
       alert('Произошла ошибка при загрузке фотографий. Пожалуйста, попробуйте еще раз.');
+    } finally {
+      // Сбрасываем значение поля file input в любом случае, чтобы пользователь мог снова его использовать
+      if (input) input.value = '';
     }
   }, [formData.images])
 
