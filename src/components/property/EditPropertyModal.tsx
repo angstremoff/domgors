@@ -567,7 +567,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                           
                           {/* Номер фотографии */}
                           <div className="absolute bottom-0 left-0 bg-black bg-opacity-50 text-white px-1 text-xs rounded-br rounded-tl">
-                            {index + 1}
+                            {existingImages.length + index + 1}
                           </div>
                         </div>
                       ))}
@@ -581,7 +581,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                         <div key={index} className="relative group">
                           <img
                             src={image}
-                            alt={t('addProperty.form.newPhoto', { index: index + 1 })}
+                            alt={t('addProperty.form.newPhoto', { index: existingImages.length + index + 1 })}
                             className="h-24 w-full object-cover rounded-lg"
                           />
                           {/* Кнопка удаления фото */}
@@ -640,7 +640,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                           
                           {/* Номер фотографии */}
                           <div className="absolute bottom-0 left-0 bg-black bg-opacity-50 text-white px-1 text-xs rounded-br rounded-tl">
-                            {index + 1}
+                            {existingImages.length + index + 1}
                           </div>
                         </div>
                       ))}
