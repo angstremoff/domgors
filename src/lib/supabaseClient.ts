@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 import { Database } from './database.types'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -8,8 +8,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Создаем базовый клиент
-const baseClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Создаем клиент Supabase
+const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -23,8 +23,6 @@ let lastTokenRefresh = 0;
 const TOKEN_REFRESH_INTERVAL = 15000;
 // Флаг, указывающий, выполняется ли в данный момент обновление токена
 let isRefreshingToken = false;
-// Счетчик активных запросов
-let activeRequests = 0;
 
 /**
  * Функция для обновления токена авторизации
@@ -41,9 +39,9 @@ const refreshToken = async () => {
   
   try {
     // Проверяем текущую сессию
-    const { data: { session } } = await baseClient.auth.getSession();
+    const { data } = await supabase.auth.getSession();
     
-    if (session) {
+    if (data.session) {
       lastTokenRefresh = now;
       console.log('Сессия проверена:', now);
     }
@@ -54,116 +52,27 @@ const refreshToken = async () => {
   }
 };
 
-/**
- * Расширенный клиент Supabase с улучшенной обработкой ошибок авторизации
- */
-class EnhancedSupabaseClient {
-  private client: SupabaseClient<Database>;
-  
-  constructor(client: SupabaseClient<Database>) {
-    this.client = client;
+// Настраиваем обработчик ошибок для существующего клиента
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+    console.log('Событие авторизации:', event);
+    lastTokenRefresh = Date.now();
   }
   
-  get auth() {
-    return this.client.auth;
+  if (event === 'USER_UPDATED') {
+    console.log('Профиль пользователя обновлен');
+    refreshToken();
   }
-  
-  get storage() {
-    return this.client.storage;
-  }
-  
-  // Переопределяем метод from для добавления обработки ошибок авторизации
-  from(table: string) {
-    const original = this.client.from(table);
-    
-    // Увеличиваем счетчик активных запросов
-    activeRequests++;
-    
-    // Инициируем проверку токена при большом количестве запросов
-    if (activeRequests > 3) {
-      refreshToken();
-    }
-    
-    // Создаем обертку для обработки ошибок
-    const enhancedMethods = {
-      ...original,
-      
-      // Переопределяем метод select
-      select: async (columns?: string) => {
-        try {
-          const result = await original.select(columns);
-          
-          // При успешном выполнении уменьшаем счетчик запросов
-          activeRequests = Math.max(0, activeRequests - 1);
-          
-          // Проверяем на ошибки авторизации
-          if (result.error?.code === '401' || result.error?.code === '403') {
-            console.warn('Ошибка авторизации при запросе, обновляем токен...');
-            await refreshToken();
-            // Повторяем запрос после обновления токена
-            return await original.select(columns);
-          }
-          
-          return result;
-        } catch (error: any) {
-          // Обрабатываем ошибку и возможно повторяем запрос
-          console.error(`Ошибка при выполнении select в таблице ${table}:`, error);
-          
-          // Уменьшаем счетчик запросов
-          activeRequests = Math.max(0, activeRequests - 1);
-          
-          // Если ошибка связана с авторизацией, пробуем обновить токен и повторить
-          if (error.code === '401' || error.code === '403' || error.message?.includes('auth')) {
-            await refreshToken();
-            return await original.select(columns);
-          }
-          
-          throw error;
-        }
-      },
-      
-      // Переопределяем метод insert
-      insert: async (values: any, options?: any) => {
-        try {
-          // Проверяем токен перед важной операцией
-          await refreshToken();
-          
-          const result = await original.insert(values, options);
-          
-          // Уменьшаем счетчик запросов
-          activeRequests = Math.max(0, activeRequests - 1);
-          
-          // Проверяем на ошибки авторизации
-          if (result.error?.code === '401' || result.error?.code === '403') {
-            console.warn('Ошибка авторизации при вставке, обновляем токен...');
-            await refreshToken();
-            // Повторяем запрос после обновления токена
-            return await original.insert(values, options);
-          }
-          
-          return result;
-        } catch (error: any) {
-          console.error(`Ошибка при выполнении insert в таблице ${table}:`, error);
-          
-          // Уменьшаем счетчик запросов
-          activeRequests = Math.max(0, activeRequests - 1);
-          
-          // Если ошибка связана с авторизацией, пробуем обновить токен и повторить
-          if (error.code === '401' || error.code === '403' || error.message?.includes('auth')) {
-            await refreshToken();
-            return await original.insert(values, options);
-          }
-          
-          throw error;
-        }
-      },
-      
-      // Другие методы можно добавить по аналогии
-    };
-    
-    return enhancedMethods;
-  }
-}
+});
 
-// Экспортируем улучшенный клиент Supabase
-export const supabase = new EnhancedSupabaseClient(baseClient);
+/**
+ * Периодическая проверка токенов для обеспечения актуальности и предотвращения ошибок
+ */
+setInterval(async () => {
+  // Проверяем токен каждые 30 минут
+  if (lastTokenRefresh === 0 || Date.now() - lastTokenRefresh > 30 * 60 * 1000) {
+    await refreshToken();
+  }
+}, 10 * 60 * 1000); // Проверяем каждые 10 минут
+
+export { supabase };
