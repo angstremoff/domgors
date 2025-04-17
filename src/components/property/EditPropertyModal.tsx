@@ -16,6 +16,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
   const [cities, setCities] = useState<{ id: number; name: string; coordinates?: { lng: number; lat: number } }[]>([])
   const [loading, setLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [selectedCoordinates, setSelectedCoordinates] = useState<{ lng: number; lat: number } | null>(null)
   const [existingImages, setExistingImages] = useState<string[]>([])
 
@@ -131,9 +132,11 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       try {
+        setIsUploading(true) // Устанавливаем флаг загрузки
         const files = Array.from(e.target.files)
         if (files.length + existingImages.length + formData.images.length > 15) {
           alert(t('addProperty.form.maxPhotos'))
+          setIsUploading(false) // Сбрасываем флаг при превышении лимита
           return
         }
 
@@ -176,9 +179,11 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
           ...prev,
           images: [...prev.images, ...urls]
         }))
+        setIsUploading(false) // Сбрасываем флаг загрузки после успешной загрузки
       } catch (error) {
         console.error('Error uploading files:', error)
         alert(t('addProperty.form.uploadError'))
+        setIsUploading(false) // Сбрасываем флаг загрузки при ошибке
       }
     }
   }
@@ -497,7 +502,7 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
                       file:text-sm file:font-semibold
                       file:bg-violet-50 file:text-violet-700
                       hover:file:bg-violet-100"
-                    disabled={existingImages.length + formData.images.length >= 15}
+                    disabled={existingImages.length + formData.images.length >= 15 || isUploading}
                   />
                   <p className="mt-1 text-sm text-gray-500">{t('addProperty.form.photosHint')}</p>
 
