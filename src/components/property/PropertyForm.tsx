@@ -115,8 +115,8 @@ export default function PropertyForm() {
     const files = Array.from(input.files || []);
     
     // Проверяем, не превышено ли максимальное количество фотографий
-    if (files.length + formData.images.length > 10) {
-      alert('Максимальное количество фотографий - 10');
+    if (files.length + formData.images.length > 15) {
+      alert('Максимальное количество фотографий - 15');
       // Сбрасываем значение поля file input, чтобы пользователь мог снова его использовать
       if (input) input.value = '';
       return;
@@ -125,7 +125,7 @@ export default function PropertyForm() {
     // Добавляем файлы в состояние формы
     setFormData(prev => ({
       ...prev,
-      images: [...prev.images, ...files].slice(0, 10)
+      images: [...prev.images, ...files].slice(0, 15)
     }));
     
     // Загружаем и сжимаем каждый файл сразу после выбора
@@ -418,14 +418,14 @@ export default function PropertyForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Фотографии (до 10 шт.)</label>
+        <label className="block text-sm font-medium text-gray-700">Фотографии (до 15 шт.)</label>
         <input
           type="file"
           accept="image/*"
           multiple
           onChange={handleImageChange}
           className="mt-1 block w-full"
-          disabled={formData.images.length >= 10}
+          disabled={formData.images.length >= 15}
         />
         <div className="mt-2 flex flex-wrap gap-2">
           {formData.images.map((file, index) => (

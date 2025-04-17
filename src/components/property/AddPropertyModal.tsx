@@ -277,7 +277,7 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
       try {
         setIsUploading(true)
         const files = Array.from(e.target.files)
-        if (files.length + formData.images.length > 10) {
+        if (files.length + formData.images.length > 15) {
           alert(t('addProperty.validation.maxPhotos'))
           return
         }
