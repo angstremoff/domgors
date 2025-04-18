@@ -274,7 +274,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
                         {/* Property Quick Stats */}
                         <div className="flex flex-wrap gap-2 sm:gap-4 mb-5 sm:mb-7 bg-gray-100">
-                          {property.rooms && (
+                          {property.rooms && property.property_type !== 'land' && (
                             <div className="flex items-center">
                               <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
@@ -287,7 +287,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
                               <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4h16v16H4V4m4 4h8v8H8V8z" />
                               </svg>
-                              <span className="text-sm sm:text-base text-gray-700">{property.area} м²</span>
+                              <span className="text-sm sm:text-base text-gray-700">{property.area} {property.property_type === 'land' ? t('common.sotkas') : 'м²'}</span>
                             </div>
                           )}
                         </div>
