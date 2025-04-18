@@ -153,8 +153,8 @@ const CompactPropertyCard: React.FC<CompactPropertyCardProps> = ({ property }) =
               </div>
             )}
             <div className="flex items-center gap-1">
-              <span className="text-sm">📏</span>
-              <span>{area} m²</span>
+              <span className="text-sm">📍</span>
+              <span>{area} {property_type === 'land' ? t('common.sotkas') : 'm²'}</span>
             </div>
           </div>
         </div>
