@@ -27,8 +27,8 @@ const CityContext = createContext<CityContextType | undefined>(undefined);
 // Ключи для хранения в localStorage
 const SELECTED_CITY_KEY = 'domgo_selected_city';
 const CITIES_CACHE_KEY = 'domgo_cities_cache';
-// Время жизни кэша - 24 часа
-const CITIES_CACHE_TTL = 24 * 60 * 60 * 1000;
+// Время жизни кэша - 3 часа
+const CITIES_CACHE_TTL = 3 * 60 * 60 * 1000;
 
 export const CityProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cities, setCities] = useState<City[]>([]);
