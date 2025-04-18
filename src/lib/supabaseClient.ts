@@ -19,8 +19,8 @@ const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 
 // Последнее время обновления токена
 let lastTokenRefresh = 0;
-// Минимальный интервал между обновлениями токена (15 секунд)
-const TOKEN_REFRESH_INTERVAL = 15000;
+// Минимальный интервал между обновлениями токена (5 секунд)
+const TOKEN_REFRESH_INTERVAL = 5000;
 // Флаг, указывающий, выполняется ли в данный момент обновление токена
 let isRefreshingToken = false;
 
@@ -42,8 +42,15 @@ const refreshToken = async () => {
     const { data } = await supabase.auth.getSession();
     
     if (data.session) {
-      lastTokenRefresh = now;
-      console.log('Сессия проверена:', now);
+      // Активно обновляем токен, а не просто проверяем сессию
+      const { error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.error('Ошибка при обновлении сессии:', error);
+      } else {
+        lastTokenRefresh = now;
+        console.log('Токен успешно обновлен:', now);
+      }
     }
   } catch (error) {
     console.error('Ошибка при обновлении токена:', error);
@@ -69,10 +76,21 @@ supabase.auth.onAuthStateChange((event) => {
  * Периодическая проверка токенов для обеспечения актуальности и предотвращения ошибок
  */
 setInterval(async () => {
-  // Проверяем токен каждые 30 минут
-  if (lastTokenRefresh === 0 || Date.now() - lastTokenRefresh > 30 * 60 * 1000) {
+  // Проверяем токен каждые 20 минут
+  if (lastTokenRefresh === 0 || Date.now() - lastTokenRefresh > 20 * 60 * 1000) {
     await refreshToken();
   }
-}, 10 * 60 * 1000); // Проверяем каждые 10 минут
+}, 5 * 60 * 1000); // Проверяем каждые 5 минут
 
-export { supabase };
+/**
+ * Функция для проверки токена перед выполнением важных операций
+ */
+const validateSession = async () => {
+  // Если последнее обновление было давно, обновляем токен
+  if (Date.now() - lastTokenRefresh > 15 * 60 * 1000) {
+    await refreshToken();
+  }
+  return true;
+};
+
+export { supabase, validateSession };

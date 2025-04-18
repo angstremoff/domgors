@@ -1,7 +1,7 @@
 import { Dialog } from '@headlessui/react'
 import { useState, useEffect } from 'react'
 import { XMarkIcon, TrashIcon } from '@heroicons/react/24/outline'
-import { supabase } from '../../lib/supabaseClient'
+import { supabase, validateSession } from '../../lib/supabaseClient'
 import { useTranslation } from 'react-i18next'
 import { compressImage } from '../../utils/imageCompression'
 
@@ -132,6 +132,9 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       try {
+        // Проверяем сессию перед загрузкой файлов
+        await validateSession()
+        
         setIsUploading(true) // Устанавливаем флаг загрузки
         const files = Array.from(e.target.files)
         if (files.length + existingImages.length + formData.images.length > 15) {
@@ -201,6 +204,9 @@ export default function EditPropertyModal({ isOpen, onClose, propertyId }: EditP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Проверяем и обновляем токен перед отправкой формы
+    await validateSession()
     
     try {
       setIsSaving(true)

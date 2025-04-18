@@ -2,7 +2,7 @@ import { Dialog } from '@headlessui/react'
 import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useProperties } from '../../contexts/PropertyContext'
-import { supabase } from '../../lib/supabaseClient'
+import { supabase, validateSession } from '../../lib/supabaseClient'
 import PropertyMap from '../property/PropertyMap'
 import { useTranslation } from 'react-i18next'
 import { propertyService } from '../../services/propertyService'
@@ -94,6 +94,9 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Проверяем и обновляем токен перед отправкой формы
+    await validateSession()
     
     // Если загрузка фотографий уже идет, не даем отправить форму
     if (isUploading) {
@@ -275,6 +278,8 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       try {
+        // Проверяем сессию перед загрузкой файлов
+        await validateSession()
         setIsUploading(true)
         const files = Array.from(e.target.files)
         if (files.length + formData.images.length > 15) {
