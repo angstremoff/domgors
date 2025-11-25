@@ -85,9 +85,10 @@
     }
 
     const appScheme = `domgomobile://property/${propertyId}`;
-    const androidIntent = `intent://property/${propertyId}#Intent;scheme=domgomobile;package=com.anonymous.DomGoMobile;end`;
+    // Используем актуальный packageId приложения
+    const androidIntent = `intent://property/${propertyId}#Intent;scheme=domgomobile;package=domgo.rs;end`;
     const webUrl = `https://domgo.rs/?propertyId=${propertyId}`;
-    const playUrl = 'https://play.google.com/store/apps/details?id=com.anonymous.DomGoMobile';
+    const playUrl = 'https://play.google.com/store/apps/details?id=domgo.rs';
 
     document.getElementById('web-link').href = webUrl;
     document.getElementById('download-link').href = playUrl;
