@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DomGo — Открытие объявления</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+    .logo { width: 100px; height: 100px; margin-bottom: 20px; }
+    h1 { font-size: 24px; margin-bottom: 16px; color: #1E3A8A; }
+    p { font-size: 16px; margin-bottom: 24px; line-height: 1.5; color: #555; }
+    .buttons { display: flex; flex-direction: column; gap: 12px; }
+    .btn {
+      display: block; padding: 14px 20px; border-radius: 8px; text-decoration: none;
+      font-weight: 500; font-size: 16px; transition: all 0.2s;
+    }
+    .btn-primary { background-color: #1E3A8A; color: white; }
+    .btn-primary:hover { background-color: #152B67; }
+    .btn-secondary { background-color: #EEF2FF; color: #1E3A8A; border: 1px solid #1E3A8A; }
+    .btn-secondary:hover { background-color: #E0E7FF; }
+    .loading { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
+    .spinner {
+      width: 40px; height: 40px; margin-bottom: 16px;
+      border: 4px solid #f3f3f3; border-top: 4px solid #1E3A8A; border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .error { color: #E53E3E; margin-top: 20px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/favicon.svg" alt="DomGo Logo" class="logo" onerror="this.style.display='none'">
+    <div id="opening">
+      <h1>Открываем объявление...</h1>
+      <p>Пытаемся открыть объявление в приложении DomGo</p>
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Перенаправление...</p>
+      </div>
+    </div>
+    <div id="install-prompt" style="display: none;">
+      <h1>Приложение DomGo не установлено</h1>
+      <p>Для просмотра объявления вы можете установить приложение или открыть его на веб-сайте.</p>
+      <div class="buttons">
+        <a id="download-link" href="#" class="btn btn-primary">Открыть в Google Play</a>
+        <a id="web-link" href="#" class="btn btn-secondary">Просмотреть на сайте</a>
+      </div>
+      <div id="error-message" class="error">
+        Не удалось открыть магазин приложений. Пожалуйста, попробуйте позже.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get('id');
+
+    if (!propertyId) {
+      document.getElementById('opening').innerHTML = '<h1>Некорректная ссылка</h1><p>Не удалось определить ID объявления.</p>';
+      throw new Error('Missing propertyId param');
+    }
+
+    const appScheme = `domgomobile://property/${propertyId}`;
+    const androidIntent = `intent://property/${propertyId}#Intent;scheme=domgomobile;package=com.anonymous.DomGoMobile;end`;
+    const webUrl = `https://domgo.rs/?propertyId=${propertyId}`;
+    const playUrl = 'https://play.google.com/store/apps/details?id=com.anonymous.DomGoMobile';
+
+    document.getElementById('web-link').href = webUrl;
+    document.getElementById('download-link').href = playUrl;
+
+    const isAndroid = /android/i.test(navigator.userAgent);
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isMobile = isAndroid || isIOS;
+    let appProbablyOpened = false;
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        appProbablyOpened = true;
+      }
+    });
+
+    function tryOpenApp() {
+      if (isAndroid) {
+        window.location.href = androidIntent;
+      } else if (isIOS) {
+        window.location.href = appScheme;
+      }
+    }
+
+    function showFallback() {
+      if (appProbablyOpened || !isMobile) return;
+      document.getElementById('opening').style.display = 'none';
+      document.getElementById('install-prompt').style.display = 'block';
+    }
+
+    if (!isMobile) {
+      window.location.replace(webUrl);
+    } else {
+      setTimeout(() => {
+        tryOpenApp();
+        setTimeout(showFallback, 2000);
+      }, 300);
+    }
+  </script>
+</body>
+</html>

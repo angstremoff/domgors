@@ -58,7 +58,7 @@ export default function PropertyModal({ property, open, onClose }: PropertyModal
 
   // Форматирование сообщения для шаринга, как в Android-версии
   const formatShareMessage = (property: DatabaseProperty) => {
-    const propertyUrl = `https://angstremoff.github.io/domgomobile/property.html?id=${property.id}`
+    const propertyUrl = `https://domgo.rs/property.html?id=${property.id}`
     const price = property.price.toLocaleString() + '€'
     const features = []
     
