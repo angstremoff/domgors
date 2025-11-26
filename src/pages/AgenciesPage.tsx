@@ -5,7 +5,6 @@ import Footer from '../components/layout/Footer'
 import SEO from '../components/SEO'
 import { useCity } from '../contexts/CityContext'
 import { BuildingOffice2Icon, PhoneIcon, MapPinIcon } from '@heroicons/react/24/outline'
-import { Link } from 'react-router-dom'
 
 type Agency = {
   id: string
@@ -67,10 +66,9 @@ export default function AgenciesPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((agency) => (
-              <Link
-                to={`/agencies/${agency.id}`}
+              <div
                 key={agency.id}
-                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex gap-4 items-center transition hover:shadow-md hover:-translate-y-0.5"
+                className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex gap-4 items-center"
               >
                 <div className="w-12 h-12 rounded-xl bg-secondary-100 text-secondary-600 flex items-center justify-center">
                   {agency.logo_url ? (
@@ -86,21 +84,13 @@ export default function AgenciesPage() {
                     <span>{agency.city?.name || agency.location || t('common.notSpecified', 'Не указано')}</span>
                   </div>
                   {agency.phone && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        window.location.href = `tel:${agency.phone}`
-                      }}
-                      className="flex items-center text-secondary-600 text-sm gap-1 mt-2 hover:text-secondary-700"
-                    >
+                    <a href={`tel:${agency.phone}`} className="flex items-center text-secondary-600 text-sm gap-1 mt-2 hover:text-secondary-700">
                       <PhoneIcon className="w-4 h-4" />
                       <span>{agency.phone}</span>
-                    </button>
+                    </a>
                   )}
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}
