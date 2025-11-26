@@ -10,7 +10,9 @@ import { useCity } from '../../contexts/CityContext'
 
 const getNavigation = (pathname: string, t: (key: string) => string) => [
   { name: t('transactionTypes.rent'), href: '/rent', current: pathname === '/rent' },
-  { name: t('transactionTypes.sale'), href: '/buy', current: pathname === '/buy' }
+  { name: t('transactionTypes.sale'), href: '/buy', current: pathname === '/buy' },
+  { name: t('common.newBuildings', 'Новостройки'), href: '/new-buildings', current: pathname === '/new-buildings' },
+  { name: t('common.agencies', 'Агентства'), href: '/agencies', current: pathname === '/agencies' },
 ]
 
 function classNames(...classes: string[]) {

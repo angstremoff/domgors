@@ -15,6 +15,7 @@ export type Property = {
   images: string[]
   features: string[]
   created_at: string
+  is_new_building?: boolean | null
   coordinates: {
     lat: number
     lng: number
