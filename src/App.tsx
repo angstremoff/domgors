@@ -5,6 +5,7 @@ import RentPage from './pages/RentPage'
 import SalePage from './pages/SalePage'
 import NewBuildingsPage from './pages/NewBuildingsPage'
 import AgenciesPage from './pages/AgenciesPage'
+import AgencyDetailPage from './pages/AgencyDetailPage'
 import FavoritesPage from './pages/FavoritesPage'
 import ProfilePage from './components/profile/ProfilePage'
 import AuthCallback from './components/auth/AuthCallback'
@@ -76,6 +77,7 @@ export default function App() {
                     <Route path="/buy" element={<SalePage />} />
                     <Route path="/new-buildings" element={<NewBuildingsPage />} />
                     <Route path="/agencies" element={<AgenciesPage />} />
+                    <Route path="/agencies/:id" element={<AgencyDetailPage />} />
                     <Route path="/favorites" element={<FavoritesPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/profile/listings" element={<ProfilePage activeTab="listings" />} />
