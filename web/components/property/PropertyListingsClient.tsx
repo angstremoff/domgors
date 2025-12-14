@@ -32,15 +32,16 @@ export function PropertyListingsClient({
 }: PropertyListingsClientProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const PAGE_SIZE = 50;
   const [properties, setProperties] = useState<PropertyWithRelations[]>(initialProperties);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(initialProperties.length === PAGE_SIZE);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [filters, setFilters] = useState<FilterState>({});
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(initialProperties.length > 0 ? 1 : 0);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
 
@@ -132,8 +133,6 @@ export function PropertyListingsClient({
       setFilters((prev) => ({ ...prev, cityId: undefined, districtId: undefined }));
     }
   }, [fetchDistricts, selectedCity]);
-
-  const PAGE_SIZE = 50;
 
   const fetchProperties = useCallback(
     async (options: { reset?: boolean; filters?: FilterState } = {}) => {
@@ -310,6 +309,9 @@ export function PropertyListingsClient({
 
   // Инициализационная загрузка
   useEffect(() => {
+    if (initialProperties.length > 0) {
+      return;
+    }
     fetchProperties({ reset: true, filters });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

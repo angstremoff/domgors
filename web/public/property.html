@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, follow">
   <title>DomGo — Открытие объявления</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,14 +82,14 @@
 
     if (!propertyId) {
       document.getElementById('opening').innerHTML = '<h1>Некорректная ссылка</h1><p>Не удалось определить ID объявления.</p>';
-      throw new Error('Missing propertyId param');
+      throw new Error('Отсутствует параметр id');
     }
 
     const appScheme = `domgomobile://property/${propertyId}`;
     // Указываем актуальный packageId домена приложения, чтобы Android корректно находил установленный клиент
     const androidIntent = `intent://property/${propertyId}#Intent;scheme=domgomobile;package=domgo.rs;end`;
     
-    // Check if we are pointing to the correct web route
+    // Проверяем, что указываем на правильную веб-страницу
     const webUrl = `https://domgo.rs/oglas?id=${propertyId}`;
 
     document.getElementById('web-link').href = webUrl;

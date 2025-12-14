@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@shared/lib/database.types';
 
-const BASE_url = 'https://domgo.rs';
+const BASE_URL = 'https://domgo.rs';
 
 export const dynamic = 'force-static';
 
@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         '/novogradnja',
         '/agencije',
     ].map((route) => ({
-        url: `${BASE_url}${route}`,
+        url: route === '' ? `${BASE_URL}/` : `${BASE_URL}${route}/`,
         lastModified: new Date(),
         changeFrequency: 'daily' as const,
         priority: route === '' ? 1 : 0.8,
@@ -39,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const properties = propertiesData as unknown as { id: string; created_at: string }[] | null;
 
     const propertyRoutes = (properties || []).map((property) => ({
-        url: `${BASE_url}/oglas?id=${property.id}`,
+        url: `${BASE_URL}/oglas/?id=${property.id}`,
         lastModified: new Date(property.created_at),
         changeFrequency: 'weekly' as const,
         priority: 0.7,
@@ -54,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const agencies = agenciesData as unknown as { id: string; created_at: string }[] | null;
 
     const agencyRoutes = (agencies || []).map((agency) => ({
-        url: `${BASE_url}/agencija?id=${agency.id}`,
+        url: `${BASE_URL}/agencija/?id=${agency.id}`,
         lastModified: new Date(agency.created_at),
         changeFrequency: 'monthly' as const,
         priority: 0.6,

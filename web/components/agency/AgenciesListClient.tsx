@@ -8,20 +8,44 @@ import type { Database } from '@shared/lib/database.types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Link from 'next/link';
 
-type Agency = Database['public']['Tables']['agency_profiles']['Row'];
+type Agency = Pick<
+  Database['public']['Tables']['agency_profiles']['Row'],
+  | 'id'
+  | 'name'
+  | 'phone'
+  | 'email'
+  | 'site'
+  | 'location'
+  | 'logo_url'
+  | 'description'
+  | 'city_id'
+>;
 type City = Database['public']['Tables']['cities']['Row'];
 
-export function AgenciesListClient() {
+interface AgenciesListClientProps {
+  initialAgencies?: Agency[];
+  initialCities?: City[];
+  initialDataLoaded?: boolean;
+}
+
+export function AgenciesListClient({
+  initialAgencies = [],
+  initialCities = [],
+  initialDataLoaded = false,
+}: AgenciesListClientProps) {
   const { t } = useTranslation();
-  const [agencies, setAgencies] = useState<Agency[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [agencies, setAgencies] = useState<Agency[]>(initialAgencies);
+  const [loading, setLoading] = useState(!initialDataLoaded);
   const [error, setError] = useState(false);
-  const [cities, setCities] = useState<City[]>([]);
+  const [cities, setCities] = useState<City[]>(initialCities);
   const [selectedCity, setSelectedCity] = useState<string | undefined>();
   const supabase = createClient();
 
   // Загрузка списка городов
   useEffect(() => {
+    if (initialCities.length > 0) {
+      return;
+    }
     const fetchCities = async () => {
       const { data } = await supabase
         .from('cities')
@@ -30,9 +54,13 @@ export function AgenciesListClient() {
       if (data) setCities(data);
     };
     fetchCities();
-  }, [supabase]);
+  }, [initialCities.length, supabase]);
 
   useEffect(() => {
+    if (initialAgencies.length > 0) {
+      setLoading(false);
+      return;
+    }
     const loadAgencies = async () => {
       const { data, error: fetchError } = await supabase
         .from('agency_profiles')
@@ -49,7 +77,7 @@ export function AgenciesListClient() {
     };
 
     loadAgencies();
-  }, [supabase]);
+  }, [initialAgencies.length, supabase]);
 
   // Фильтрация агентств по городу
   const filteredAgencies = useMemo(() => {
