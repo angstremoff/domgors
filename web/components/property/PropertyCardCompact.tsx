@@ -50,7 +50,7 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
   return (
     <div
       className={cn(
-        'group relative flex-shrink-0 snap-start w-72 sm:w-80 rounded-xl border border-border overflow-hidden bg-white dark:bg-surface hover:shadow-xl transition-all duration-300',
+        'group relative flex-shrink-0 snap-start w-72 sm:w-80 h-full rounded-xl border border-border overflow-hidden bg-white dark:bg-surface hover:shadow-xl transition-all duration-300 flex flex-col',
         className
       )}
     >
@@ -83,7 +83,7 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
         </div>
       </Link>
 
-      <Link href={detailsUrl} className="block p-4">
+      <Link href={detailsUrl} className="block p-4 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-3 mb-2">
           <span className="inline-block px-2.5 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full whitespace-nowrap">
             {getPropertyTypeLabel()}
@@ -110,7 +110,7 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
           </span>
         </div>
 
-        <div className="flex items-center gap-4 text-xs text-textSecondary mt-3 pt-3 border-t border-border min-h-[28px]">
+        <div className="flex items-center gap-4 text-xs text-textSecondary mt-auto pt-3 border-t border-border min-h-[28px]">
           <div className={cn('flex items-center gap-1.5', property.area ? '' : 'invisible')}>
             <Maximize className="h-4 w-4" />
             <span className="font-medium">

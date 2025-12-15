@@ -21,7 +21,6 @@ export function AutoScrollCarousel({
 }: AutoScrollCarouselProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isPausedRef = useRef(false);
-  const isAutoScrollEventRef = useRef(false);
   const resumeTimeoutRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
@@ -60,8 +59,6 @@ export function AutoScrollCarousel({
     lastTimestampRef.current = null;
 
     const step = (timestamp: number) => {
-      isAutoScrollEventRef.current = false;
-
       if (lastTimestampRef.current === null) {
         lastTimestampRef.current = timestamp;
       }
@@ -73,7 +70,6 @@ export function AutoScrollCarousel({
         const halfWidth = container.scrollWidth / 2;
         if (halfWidth > container.clientWidth + 8) {
           const deltaPx = (speedPxPerSecond / 1000) * deltaMs;
-          isAutoScrollEventRef.current = true;
           container.scrollLeft += deltaPx;
           if (container.scrollLeft >= halfWidth) {
             container.scrollLeft -= halfWidth;
@@ -167,30 +163,11 @@ export function AutoScrollCarousel({
     endDrag(e);
   };
 
-  const onMouseEnter = () => {
-    pause();
-  };
-
-  const onMouseLeave = () => {
-    scheduleResume();
-  };
-
   const onTouchStart = () => {
     pause();
   };
 
   const onTouchEnd = () => {
-    scheduleResume();
-  };
-
-  const onScroll = () => {
-    // При нативном скролле (тач/трекпад) — пауза и плавное возобновление.
-    if (isAutoScrollEventRef.current) {
-      isAutoScrollEventRef.current = false;
-      return;
-    }
-    if (draggingRef.current) return;
-    pause();
     scheduleResume();
   };
 
@@ -220,18 +197,15 @@ export function AutoScrollCarousel({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
-      onScroll={onScroll}
       onWheel={onWheel}
       onDragStartCapture={(e) => e.preventDefault()}
       onClickCapture={onClickCapture}
     >
-      <div className={cn('flex gap-4 pb-2', contentClassName)}>
+      <div className={cn('flex gap-4 pb-2 items-stretch', contentClassName)}>
         {duplicatedItems.map((child, index) => (
-          <div key={index} className="flex-shrink-0">
+          <div key={index} className="flex-shrink-0 h-full">
             {child}
           </div>
         ))}
