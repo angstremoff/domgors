@@ -85,18 +85,20 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
 
       <Link href={detailsUrl} className="block p-4">
         <div className="flex items-start justify-between gap-3 mb-2">
-          <span className="inline-block px-2.5 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+          <span className="inline-block px-2.5 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full whitespace-nowrap">
             {getPropertyTypeLabel()}
           </span>
           <div className="text-right leading-tight">
             <div className="text-lg font-bold text-primary">{price}</div>
-            {property.type === 'rent' && (
-              <div className="text-xs text-textSecondary">/{t('property.month')}</div>
-            )}
+            <div className="text-xs text-textSecondary h-4">
+              <span className={cn(property.type === 'rent' ? '' : 'invisible')}>
+                /{t('property.month')}
+              </span>
+            </div>
           </div>
         </div>
 
-        <h3 className="text-base font-semibold text-text mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="text-base font-semibold text-text mb-2 line-clamp-2 min-h-[48px] group-hover:text-primary transition-colors">
           {property.title}
         </h3>
 
@@ -108,28 +110,21 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
           </span>
         </div>
 
-        {(property.area || property.rooms) && (
-          <div className="flex items-center gap-4 text-xs text-textSecondary mt-3 pt-3 border-t border-border">
-            {property.area && (
-              <div className="flex items-center gap-1.5">
-                <Maximize className="h-4 w-4" />
-                <span className="font-medium">
-                  {property.area} {t('property.sqm')}
-                </span>
-              </div>
-            )}
-            {property.rooms && (
-              <div className="flex items-center gap-1.5">
-                <Bed className="h-4 w-4" />
-                <span className="font-medium">
-                  {property.rooms} {t('property.rooms')}
-                </span>
-              </div>
-            )}
+        <div className="flex items-center gap-4 text-xs text-textSecondary mt-3 pt-3 border-t border-border min-h-[28px]">
+          <div className={cn('flex items-center gap-1.5', property.area ? '' : 'invisible')}>
+            <Maximize className="h-4 w-4" />
+            <span className="font-medium">
+              {property.area ?? 0} {t('property.sqm')}
+            </span>
           </div>
-        )}
+          <div className={cn('flex items-center gap-1.5', property.rooms ? '' : 'invisible')}>
+            <Bed className="h-4 w-4" />
+            <span className="font-medium">
+              {property.rooms ?? 0} {t('property.rooms')}
+            </span>
+          </div>
+        </div>
       </Link>
     </div>
   );
 }
-

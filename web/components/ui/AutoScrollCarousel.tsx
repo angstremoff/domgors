@@ -21,6 +21,7 @@ export function AutoScrollCarousel({
 }: AutoScrollCarouselProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isPausedRef = useRef(false);
+  const isAutoScrollEventRef = useRef(false);
   const resumeTimeoutRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
@@ -59,6 +60,8 @@ export function AutoScrollCarousel({
     lastTimestampRef.current = null;
 
     const step = (timestamp: number) => {
+      isAutoScrollEventRef.current = false;
+
       if (lastTimestampRef.current === null) {
         lastTimestampRef.current = timestamp;
       }
@@ -70,6 +73,7 @@ export function AutoScrollCarousel({
         const halfWidth = container.scrollWidth / 2;
         if (halfWidth > container.clientWidth + 8) {
           const deltaPx = (speedPxPerSecond / 1000) * deltaMs;
+          isAutoScrollEventRef.current = true;
           container.scrollLeft += deltaPx;
           if (container.scrollLeft >= halfWidth) {
             container.scrollLeft -= halfWidth;
@@ -101,8 +105,10 @@ export function AutoScrollCarousel({
       return;
     }
 
-    const container = containerRef.current;
-    if (!container) return;
+    if (e.button !== 0) return;
+
+    const container = e.currentTarget;
+    e.preventDefault();
 
     pause();
     draggingRef.current = true;
@@ -119,8 +125,8 @@ export function AutoScrollCarousel({
 
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     if (!draggingRef.current) return;
-    const container = containerRef.current;
-    if (!container) return;
+    const container = e.currentTarget;
+    e.preventDefault();
 
     const deltaX = e.clientX - dragStartXRef.current;
     if (Math.abs(deltaX) > 3) {
@@ -139,7 +145,7 @@ export function AutoScrollCarousel({
   };
 
   const endDrag = (e: PointerEvent<HTMLDivElement>) => {
-    const container = containerRef.current;
+    const container = e.currentTarget;
     if (container) {
       try {
         container.releasePointerCapture(e.pointerId);
@@ -179,6 +185,16 @@ export function AutoScrollCarousel({
 
   const onScroll = () => {
     // При нативном скролле (тач/трекпад) — пауза и плавное возобновление.
+    if (isAutoScrollEventRef.current) {
+      isAutoScrollEventRef.current = false;
+      return;
+    }
+    if (draggingRef.current) return;
+    pause();
+    scheduleResume();
+  };
+
+  const onWheel = () => {
     if (draggingRef.current) return;
     pause();
     scheduleResume();
@@ -209,6 +225,8 @@ export function AutoScrollCarousel({
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onScroll={onScroll}
+      onWheel={onWheel}
+      onDragStartCapture={(e) => e.preventDefault()}
       onClickCapture={onClickCapture}
     >
       <div className={cn('flex gap-4 pb-2', contentClassName)}>
