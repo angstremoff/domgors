@@ -532,6 +532,7 @@
   },
   "web": {
     "heroSubtitle": "Pretraga stanova, kuća i poslovnih prostora u Srbiji. Prodaja, zakup, novogradnja.",
+    "homeRentShort": "Izdavanje",
     "latestPropertiesTitle": "Najnoviji oglasi",
     "latestPropertiesEmpty": "Još nema oglasa"
   }

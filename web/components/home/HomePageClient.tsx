@@ -72,17 +72,17 @@ export function HomePageClient() {
 
       {/* Категории */}
       <section className="py-8">
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 max-w-4xl mx-auto">
           {/* Продажа */}
           <Link
             href="/prodaja"
-            className="group p-4 sm:p-6 border border-border rounded-lg hover:shadow-lg hover:border-primary transition-all bg-surface"
+            className="group p-3 sm:p-6 border border-border rounded-lg hover:shadow-lg hover:border-primary transition-all bg-surface"
           >
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-primary/20 transition-colors">
-                <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <div className="w-10 h-10 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 sm:mb-4 group-hover:bg-primary/20 transition-colors">
+                <Building2 className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-text mb-1 sm:mb-2">
+              <h3 className="text-xs sm:text-lg font-semibold text-text mb-0.5 sm:mb-2 leading-tight break-words whitespace-normal line-clamp-2">
                 {t('common.sale')}
               </h3>
               <p className="hidden sm:block text-textSecondary text-sm">
@@ -94,14 +94,15 @@ export function HomePageClient() {
           {/* Аренда */}
           <Link
             href="/izdavanje"
-            className="group p-4 sm:p-6 border border-border rounded-lg hover:shadow-lg hover:border-primary transition-all bg-surface"
+            className="group p-3 sm:p-6 border border-border rounded-lg hover:shadow-lg hover:border-primary transition-all bg-surface"
           >
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-primary/20 transition-colors">
-                <Key className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <div className="w-10 h-10 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 sm:mb-4 group-hover:bg-primary/20 transition-colors">
+                <Key className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-text mb-1 sm:mb-2">
-                {t('common.rent')}
+              <h3 className="text-xs sm:text-lg font-semibold text-text mb-0.5 sm:mb-2 leading-tight break-words whitespace-normal line-clamp-2">
+                <span className="sm:hidden">{t('web.homeRentShort')}</span>
+                <span className="hidden sm:inline">{t('common.rent')}</span>
               </h3>
               <p className="hidden sm:block text-textSecondary text-sm">
                 {t('property.rentApartment')}, {t('property.rentHouse')}
@@ -112,13 +113,13 @@ export function HomePageClient() {
           {/* Новостройки */}
           <Link
             href="/novogradnja"
-            className="group p-4 sm:p-6 border border-border rounded-lg hover:shadow-lg hover:border-primary transition-all bg-surface"
+            className="group p-3 sm:p-6 border border-border rounded-lg hover:shadow-lg hover:border-primary transition-all bg-surface"
           >
             <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3 sm:mb-4 group-hover:bg-primary/20 transition-colors">
-                <Home className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+              <div className="w-10 h-10 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mb-2 sm:mb-4 group-hover:bg-primary/20 transition-colors">
+                <Home className="h-5 w-5 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-text mb-1 sm:mb-2">
+              <h3 className="text-xs sm:text-lg font-semibold text-text mb-0.5 sm:mb-2 leading-tight break-words whitespace-normal line-clamp-2">
                 {t('common.newBuildings')}
               </h3>
               <p className="hidden sm:block text-textSecondary text-sm">
