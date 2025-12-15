@@ -21,6 +21,7 @@ export function AutoScrollCarousel({
 }: AutoScrollCarouselProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const isPausedRef = useRef(false);
+  const autoScrollLeftRef = useRef(0);
   const resumeTimeoutRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastTimestampRef = useRef<number | null>(null);
@@ -47,6 +48,10 @@ export function AutoScrollCarousel({
       window.clearTimeout(resumeTimeoutRef.current);
     }
     resumeTimeoutRef.current = window.setTimeout(() => {
+      const container = containerRef.current;
+      if (container) {
+        autoScrollLeftRef.current = container.scrollLeft;
+      }
       isPausedRef.current = false;
     }, resumeDelayMs);
   };
@@ -56,6 +61,7 @@ export function AutoScrollCarousel({
     if (!container) return;
     if (items.length === 0) return;
 
+    autoScrollLeftRef.current = container.scrollLeft;
     lastTimestampRef.current = null;
 
     const step = (timestamp: number) => {
@@ -70,10 +76,12 @@ export function AutoScrollCarousel({
         const halfWidth = container.scrollWidth / 2;
         if (halfWidth > container.clientWidth + 8) {
           const deltaPx = (speedPxPerSecond / 1000) * deltaMs;
-          container.scrollLeft += deltaPx;
-          if (container.scrollLeft >= halfWidth) {
-            container.scrollLeft -= halfWidth;
+          let nextScrollLeft = autoScrollLeftRef.current + deltaPx;
+          if (nextScrollLeft >= halfWidth) {
+            nextScrollLeft -= halfWidth;
           }
+          autoScrollLeftRef.current = nextScrollLeft;
+          container.scrollLeft = nextScrollLeft;
         }
       }
 
@@ -107,6 +115,7 @@ export function AutoScrollCarousel({
     e.preventDefault();
 
     pause();
+    autoScrollLeftRef.current = container.scrollLeft;
     draggingRef.current = true;
     didDragRef.current = false;
     dragStartXRef.current = e.clientX;
@@ -138,6 +147,7 @@ export function AutoScrollCarousel({
     // Нормализуем, чтобы оставаться в пределах первой половины (для бесшовной цикличности).
     nextScrollLeft = ((nextScrollLeft % halfWidth) + halfWidth) % halfWidth;
     container.scrollLeft = nextScrollLeft;
+    autoScrollLeftRef.current = nextScrollLeft;
   };
 
   const endDrag = (e: PointerEvent<HTMLDivElement>) => {
