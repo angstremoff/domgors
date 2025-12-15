@@ -35,7 +35,7 @@
 - Быстрая локальная проверка mobile: `npm run check` (lint + typecheck + tests)
 - Быстрая локальная проверка web (Next): `cd web && npm run lint && npm run build`
 - Локальные APK: `build-simple-apk.sh`, `build-local-apk.sh`, `build-dev-apk.sh`, `build-local-user-apk.sh`.
-- Прочие утилиты: `build-apk-eas.sh`, `build-and-upload.sh`, `release-build.sh`, `release.sh`, `create-release.sh`, `easy-build-apk.sh`, `build-simple-apk.sh`, `update-version.sh`, `generate-keystore.sh`, `download-apk.sh`.
+- Прочие утилиты: `build-apk-eas.sh`, `build-and-upload.sh`, `release-build.sh`, `release.sh`, `create-release.sh`, `easy-build-apk.sh`, `update-version.sh`, `generate-keystore.sh`, `download-apk.sh`.
 - Выпуск AAB: `./build-release-bundle.sh` (оборачивает `gradlew bundleRelease` и кладёт `~/Desktop/DomGoMobile-<версия>-release.aab`).
 - Релизный APK для локального QA: `android/app/build/outputs/apk/release/app-release.apk`. Установка через `adb install -r`.
 - **ВАЖНО:** Не пытаться собирать release APK через `./gradlew assembleRelease` без keystore файла - упадет с ошибкой. Для релизной сборки использовать скрипты или Metro.
@@ -76,7 +76,7 @@
 ## 8. Обновление версий и сборки
 - Версия приложения (отображается в настройках и в store): `package.json` → `version`, синхронизирована с `package-lock.json` (поле `version` в корне и в корневом пакете).
 - Android: `android/app/build.gradle` → `defaultConfig.versionCode` (целое, растёт) и `versionName` (строка, совпадает с версией приложения).
- - iOS: `app.config.js` → `ios.buildNumber` (строка) и `version` берётся из `APP_VERSION`/`package.json` (настроено через `APP_VERSION` env или pkg.version).
+- iOS: `app.config.js` → `ios.buildNumber` (строка) и `version` берётся из `APP_VERSION`/`package.json` (настроено через `APP_VERSION` env или pkg.version).
 - Runtime остаётся фиксированным: `app.config.js` → `runtimeVersion` (не менять без миграции обновлений), сейчас 1.0.4.
 - Fallback версии в коде: `src/services/AppVersionManager.ts` хранит запасное значение (держать в актуальной версии приложения).
 - Сборка AAB: `./build-release-bundle.sh` (использует версию из package.json, кладёт на Desktop `DomGoMobile-<версия>-release.aab`). Перед запуском убедиться, что `release.keystore` актуальный.
@@ -129,8 +129,8 @@
 - Модальные окна для информационных сообщений реализованы inline (без отдельного компонента).
 
 ## 13. UI исправления веб-версии
-- **Hero-секция** (`app/page.tsx`): убран дублирующийся заголовок "DomGo.rs", уменьшены вертикальные отступы `py-16` → `py-6`. **CTA секция теперь учитывает авторизацию** — для залогиненных показывает кнопку "Добавить объявление" → `/oglas/novi`, для гостей — "Регистрация".
-- **Header** (`components/layout/Header.tsx`): добавлен `flex-shrink-0` к логотипу для предотвращения сжатия на мобильных; уменьшены отступы `space-x-4` → `space-x-2 sm:space-x-4` для предотвращения наезда переключателя языка на логотип.
+- **Hero-секция** (`web/components/home/HomePageClient.tsx`): убран дублирующийся заголовок "DomGo.rs", уменьшены вертикальные отступы `py-16` → `py-6`. **CTA секция теперь учитывает авторизацию** — для залогиненных показывает кнопку "Добавить объявление" → `/oglas/novi`, для гостей — "Регистрация".
+- **Header** (`web/components/layout/Header.tsx`): добавлен `flex-shrink-0` к логотипу для предотвращения сжатия на мобильных; уменьшены отступы `space-x-4` → `space-x-2 sm:space-x-4` для предотвращения наезда переключателя языка на логотип.
 
 ## 14. SEO и Аналитика (Web)
 
@@ -198,13 +198,16 @@
 - Google Search Console: настроена DNS‑верификация доменного свойства через CNAME (см. раздел 14.1)
 - SEO: `robots.txt` разрешает `manifest.json`; favicon приведён к корректному ICO
 - Mobile: `npm run check` проходит; `tsconfig.json` исключает `web/` из корневого typecheck
+- Mobile: исправлен баг — при добавлении/удалении из избранного в списках (Аренда/Продажа/Новостройки) не сбрасываются фильтры (убран refresh списка по изменению избранного в `HomeScreen`)
+- Mobile: исправлен баг — добавление в избранное срабатывает с первого нажатия (синхронизация `favoritesSetRef` при `setFavorites` в `FavoritesContext`)
+- Mobile: проверено на Android эмуляторе через `AVD_NAME='Medium_Phone_API_36.1' npm run android:emu`
 - DeepLink: ID объявлений/агентств — UUID; тесты `deepLinkParser` обновлены под UUID
 - TypeScript: добавлен `src/types/assets.d.ts` для импортов изображений (вместо `require()`)
 - Логи: русские сообщения и префиксы в `src/utils/logger.ts` (английские теги/сообщения не используем)
 - Отчёт ревью: `docs/code-review-2025-12-14.md`
 
 ## 16. Изменения 2025‑12‑15 (важное)
-- Web (главная): карточки категорий уменьшены, на mobile web всегда 3 в ряд (`web/components/home/HomePageClient.tsx`)
-- Web (главная): добавлен горизонтальный список 10 последних активных объявлений (клиентская загрузка из Supabase), карточка `PropertyCardCompact` (`web/components/property/PropertyCardCompact.tsx`)
-- Web (главная): карусель “Последние объявления” — авто‑прокрутка по кругу, скрытый скроллбар, ручное листание (тач/мышь) (`web/components/ui/AutoScrollCarousel.tsx`, `web/styles/globals.css`)
+- Web (главная): карточки категорий уменьшены, на mobile web всегда 3 в ряд; исправлен overflow текста, для аренды на мобиле используется короткая подпись `web.homeRentShort` (`web/components/home/HomePageClient.tsx`)
+- Web (главная): добавлен список “Последние объявления” — 10 последних активных объявлений (клиентская загрузка из Supabase), карточка `PropertyCardCompact` с выравниванием высоты (`web/components/home/HomePageClient.tsx`, `web/components/property/PropertyCardCompact.tsx`)
+- Web (главная): карусель “Последние объявления” — авто‑прокрутка по кругу (включая desktop через накопление дробных пикселей `scrollLeft`), скрытый скроллбар, ручное листание (тач/мышь) (`web/components/ui/AutoScrollCarousel.tsx`, `web/styles/globals.css`)
 - Переводы: добавлены ключи `web.homeRentShort`, `web.latestPropertiesTitle`, `web.latestPropertiesEmpty` в `src/translations/ru.json` и `src/translations/sr.json`
