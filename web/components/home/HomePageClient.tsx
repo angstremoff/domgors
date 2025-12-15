@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@shared/lib/database.types';
 import { PropertyCardCompact } from '@/components/property/PropertyCardCompact';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { AutoScrollCarousel } from '@/components/ui/AutoScrollCarousel';
 
 type PropertyRow = Database['public']['Tables']['properties']['Row'];
 type PropertyWithRelations = PropertyRow & {
@@ -136,21 +137,19 @@ export function HomePageClient() {
           {t('web.latestPropertiesTitle')}
         </h2>
 
-        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto">
-          <div className="flex gap-4 pb-2 snap-x snap-mandatory">
-            {latestLoading
-              ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex-shrink-0 snap-start w-72 sm:w-80">
-                    <Skeleton className="h-40 w-full mb-3" />
-                    <Skeleton className="h-4 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ))
-              : latestProperties.map((property) => (
-                  <PropertyCardCompact key={property.id} property={property} />
-                ))}
-          </div>
-        </div>
+        <AutoScrollCarousel className="-mx-4 px-4 sm:mx-0 sm:px-0">
+          {latestLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={`skeleton-${i}`} className="w-72 sm:w-80">
+                  <Skeleton className="h-40 w-full mb-3" />
+                  <Skeleton className="h-4 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))
+            : latestProperties.map((property) => (
+                <PropertyCardCompact key={property.id} property={property} />
+              ))}
+        </AutoScrollCarousel>
 
         {!latestLoading && latestProperties.length === 0 && (
           <p className="text-textSecondary text-sm mt-4">

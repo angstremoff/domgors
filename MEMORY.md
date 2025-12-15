@@ -206,4 +206,5 @@
 ## 16. Изменения 2025‑12‑15 (важное)
 - Web (главная): карточки категорий уменьшены, на mobile web всегда 3 в ряд (`web/components/home/HomePageClient.tsx`)
 - Web (главная): добавлен горизонтальный список 10 последних активных объявлений (клиентская загрузка из Supabase), карточка `PropertyCardCompact` (`web/components/property/PropertyCardCompact.tsx`)
+- Web (главная): карусель “Последние объявления” — авто‑прокрутка по кругу, скрытый скроллбар, ручное листание (тач/мышь) (`web/components/ui/AutoScrollCarousel.tsx`, `web/styles/globals.css`)
 - Переводы: добавлены ключи `web.homeRentShort`, `web.latestPropertiesTitle`, `web.latestPropertiesEmpty` в `src/translations/ru.json` и `src/translations/sr.json`

@@ -1,0 +1,223 @@
+'use client';
+
+import { Children, useEffect, useMemo, useRef } from 'react';
+import type { MouseEvent, PointerEvent, ReactNode } from 'react';
+import { cn } from '@/lib/utils/cn';
+
+interface AutoScrollCarouselProps {
+  children: ReactNode;
+  className?: string;
+  contentClassName?: string;
+  speedPxPerSecond?: number;
+  resumeDelayMs?: number;
+}
+
+export function AutoScrollCarousel({
+  children,
+  className,
+  contentClassName,
+  speedPxPerSecond = 18,
+  resumeDelayMs = 1200,
+}: AutoScrollCarouselProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const isPausedRef = useRef(false);
+  const resumeTimeoutRef = useRef<number | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastTimestampRef = useRef<number | null>(null);
+
+  const draggingRef = useRef(false);
+  const didDragRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartScrollLeftRef = useRef(0);
+
+  const items = useMemo(() => Children.toArray(children).filter(Boolean), [children]);
+
+  const duplicatedItems = useMemo(() => [...items, ...items], [items]);
+
+  const pause = () => {
+    isPausedRef.current = true;
+    if (resumeTimeoutRef.current !== null) {
+      window.clearTimeout(resumeTimeoutRef.current);
+      resumeTimeoutRef.current = null;
+    }
+  };
+
+  const scheduleResume = () => {
+    if (resumeTimeoutRef.current !== null) {
+      window.clearTimeout(resumeTimeoutRef.current);
+    }
+    resumeTimeoutRef.current = window.setTimeout(() => {
+      isPausedRef.current = false;
+    }, resumeDelayMs);
+  };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (items.length === 0) return;
+
+    lastTimestampRef.current = null;
+
+    const step = (timestamp: number) => {
+      if (lastTimestampRef.current === null) {
+        lastTimestampRef.current = timestamp;
+      }
+
+      const deltaMs = timestamp - lastTimestampRef.current;
+      lastTimestampRef.current = timestamp;
+
+      if (!isPausedRef.current) {
+        const halfWidth = container.scrollWidth / 2;
+        if (halfWidth > container.clientWidth + 8) {
+          const deltaPx = (speedPxPerSecond / 1000) * deltaMs;
+          container.scrollLeft += deltaPx;
+          if (container.scrollLeft >= halfWidth) {
+            container.scrollLeft -= halfWidth;
+          }
+        }
+      }
+
+      animationFrameRef.current = window.requestAnimationFrame(step);
+    };
+
+    animationFrameRef.current = window.requestAnimationFrame(step);
+
+    return () => {
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      if (resumeTimeoutRef.current !== null) {
+        window.clearTimeout(resumeTimeoutRef.current);
+        resumeTimeoutRef.current = null;
+      }
+    };
+  }, [items.length, speedPxPerSecond]);
+
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    // На тач-устройствах оставляем нативный свайп, без перехвата (чтобы не ломать вертикальный скролл страницы).
+    if (e.pointerType !== 'mouse') {
+      pause();
+      return;
+    }
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    pause();
+    draggingRef.current = true;
+    didDragRef.current = false;
+    dragStartXRef.current = e.clientX;
+    dragStartScrollLeftRef.current = container.scrollLeft;
+
+    try {
+      container.setPointerCapture(e.pointerId);
+    } catch {
+      // Ничего не делаем — без capture тоже работает.
+    }
+  };
+
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const deltaX = e.clientX - dragStartXRef.current;
+    if (Math.abs(deltaX) > 3) {
+      didDragRef.current = true;
+    }
+
+    const halfWidth = container.scrollWidth / 2;
+    if (halfWidth <= 0) return;
+
+    // Двигаем в противоположную сторону движения курсора.
+    let nextScrollLeft = dragStartScrollLeftRef.current - deltaX;
+
+    // Нормализуем, чтобы оставаться в пределах первой половины (для бесшовной цикличности).
+    nextScrollLeft = ((nextScrollLeft % halfWidth) + halfWidth) % halfWidth;
+    container.scrollLeft = nextScrollLeft;
+  };
+
+  const endDrag = (e: PointerEvent<HTMLDivElement>) => {
+    const container = containerRef.current;
+    if (container) {
+      try {
+        container.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+    }
+    draggingRef.current = false;
+    scheduleResume();
+  };
+
+  const onPointerUp = (e: PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    endDrag(e);
+  };
+
+  const onPointerCancel = (e: PointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    endDrag(e);
+  };
+
+  const onMouseEnter = () => {
+    pause();
+  };
+
+  const onMouseLeave = () => {
+    scheduleResume();
+  };
+
+  const onTouchStart = () => {
+    pause();
+  };
+
+  const onTouchEnd = () => {
+    scheduleResume();
+  };
+
+  const onScroll = () => {
+    // При нативном скролле (тач/трекпад) — пауза и плавное возобновление.
+    if (draggingRef.current) return;
+    pause();
+    scheduleResume();
+  };
+
+  const onClickCapture = (e: MouseEvent<HTMLDivElement>) => {
+    // Если пользователь тащил карусель мышью — блокируем клик по карточке.
+    if (didDragRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      didDragRef.current = false;
+    }
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        'overflow-x-auto overscroll-x-contain no-scrollbar select-none cursor-grab active:cursor-grabbing',
+        className
+      )}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      onScroll={onScroll}
+      onClickCapture={onClickCapture}
+    >
+      <div className={cn('flex gap-4 pb-2', contentClassName)}>
+        {duplicatedItems.map((child, index) => (
+          <div key={index} className="flex-shrink-0">
+            {child}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
