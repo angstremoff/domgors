@@ -202,3 +202,8 @@
 - TypeScript: добавлен `src/types/assets.d.ts` для импортов изображений (вместо `require()`)
 - Логи: русские сообщения и префиксы в `src/utils/logger.ts` (английские теги/сообщения не используем)
 - Отчёт ревью: `docs/code-review-2025-12-14.md`
+
+## 16. Изменения 2025‑12‑15 (важное)
+- Web (главная): карточки категорий уменьшены, на mobile web всегда 3 в ряд (`web/components/home/HomePageClient.tsx`)
+- Web (главная): добавлен горизонтальный список 10 последних активных объявлений (клиентская загрузка из Supabase), карточка `PropertyCardCompact` (`web/components/property/PropertyCardCompact.tsx`)
+- Переводы: добавлены ключи `web.latestPropertiesTitle`, `web.latestPropertiesEmpty` в `src/translations/ru.json` и `src/translations/sr.json`

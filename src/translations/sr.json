@@ -531,6 +531,8 @@
     "listingsCount": "Ukupno {{count}} oglasa"
   },
   "web": {
-    "heroSubtitle": "Pretraga stanova, kuća i poslovnih prostora u Srbiji. Prodaja, zakup, novogradnja."
+    "heroSubtitle": "Pretraga stanova, kuća i poslovnih prostora u Srbiji. Prodaja, zakup, novogradnja.",
+    "latestPropertiesTitle": "Najnoviji oglasi",
+    "latestPropertiesEmpty": "Još nema oglasa"
   }
 }

@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthContext';
 import { Logger } from '../utils/logger';
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface FavoritesContextType {
   favorites: string[];
   toggleFavorite: (propertyId: string) => Promise<void>;
@@ -21,7 +23,18 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   // Set для O(1) проверки isFavorite вместо O(N) поиска в массиве
   const favoritesSetRef = useRef<Set<string>>(new Set());
 
-  // Обновляем Set при изменении favorites
+  const setFavoritesAndSync = useCallback((updater: string[] | ((prev: string[]) => string[])) => {
+    setFavorites((prev) => {
+      const nextFavorites =
+        typeof updater === 'function'
+          ? (updater as (prev: string[]) => string[])(prev)
+          : updater;
+      favoritesSetRef.current = new Set(nextFavorites);
+      return nextFavorites;
+    });
+  }, []);
+
+  // Дополнительная синхронизация (на случай внешних обновлений стейта)
   useEffect(() => {
     favoritesSetRef.current = new Set(favorites);
   }, [favorites]);
@@ -30,17 +43,13 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const loadLocalFavorites = async () => {
     try {
       const saved = await AsyncStorage.getItem('favorites');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const validFavorites = parsed.filter((id: any) =>
-          typeof id === 'string' &&
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)
-        );
-        setFavorites(validFavorites);
-      }
+      const parsed: unknown = saved ? JSON.parse(saved) : null;
+      const list = Array.isArray(parsed) ? parsed : [];
+      const validFavorites = list.filter((id): id is string => typeof id === 'string' && UUID_REGEX.test(id));
+      setFavoritesAndSync(validFavorites);
     } catch (error) {
       Logger.error('Ошибка разбора локального избранного:', error);
-      setFavorites([]);
+      setFavoritesAndSync([]);
     }
     setIsLoading(false);
   };
@@ -59,15 +68,15 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         .eq('user_id', user.id);
 
       if (error) {
-        Logger.error('Error loading favorites from Supabase:', error);
+        Logger.error('Ошибка загрузки избранного из Supabase:', error);
         return;
       }
 
       if (data) {
-        setFavorites(data.map(f => f.property_id));
+        setFavoritesAndSync(data.map((favorite) => favorite.property_id));
       }
     } catch (error) {
-      Logger.error('Error loading Supabase favorites:', error);
+      Logger.error('Ошибка загрузки избранного из Supabase:', error);
     } finally {
       setIsLoading(false);
     }
@@ -86,15 +95,13 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const toggleFavorite = useCallback(async (propertyId: string) => {
     if (!user) {
       // Неавторизованный пользователь - используем AsyncStorage
-      setFavorites(prev => {
+      setFavoritesAndSync((prev) => {
         const isCurrentlyFavorite = prev.includes(propertyId);
-        const newFavorites = isCurrentlyFavorite
-          ? prev.filter(id => id !== propertyId)
-          : [...prev, propertyId];
+        const newFavorites = isCurrentlyFavorite ? prev.filter((id) => id !== propertyId) : [...prev, propertyId];
 
         // Асинхронно сохраняем в AsyncStorage
-        AsyncStorage.setItem('favorites', JSON.stringify(newFavorites)).catch(err =>
-          Logger.error('Error saving favorites to AsyncStorage:', err)
+        AsyncStorage.setItem('favorites', JSON.stringify(newFavorites)).catch((error) =>
+          Logger.error('Ошибка сохранения избранного в AsyncStorage:', error),
         );
 
         return newFavorites;
@@ -115,7 +122,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           .eq('property_id', propertyId);
 
         if (deleteError) throw deleteError;
-        setFavorites(prev => prev.filter(id => id !== propertyId));
+        setFavoritesAndSync((prev) => prev.filter((id) => id !== propertyId));
       } else {
         // Добавляем в избранное
         const { error: insertError } = await supabase
@@ -126,10 +133,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           });
 
         if (insertError) throw insertError;
-        setFavorites(prev => [...prev, propertyId]);
+        setFavoritesAndSync((prev) => (prev.includes(propertyId) ? prev : [...prev, propertyId]));
       }
     } catch (error) {
-      Logger.error('Error toggling favorite:', error);
+      Logger.error('Ошибка изменения избранного:', error);
     }
   }, [user]);
 
@@ -148,7 +155,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 export function useFavorites() {
   const context = useContext(FavoritesContext);
   if (context === undefined) {
-    throw new Error('useFavorites must be used within a FavoritesProvider');
+    throw new Error('useFavorites должен использоваться внутри FavoritesProvider');
   }
   return context;
 }

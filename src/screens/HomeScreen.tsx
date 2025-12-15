@@ -37,7 +37,7 @@ interface AgencySummary {
 const HomeScreen = ({ navigation }: any) => {
   // Вернулись к использованию стандартного компонента PropertyCard
   const { t } = useTranslation();
-  const { favorites, isLoading: favoritesLoading } = useFavorites();
+  const { isLoading: favoritesLoading } = useFavorites();
   const {
     properties,
     filteredProperties,
@@ -87,8 +87,7 @@ const HomeScreen = ({ navigation }: any) => {
   const scrollOffsetRef = useRef(0); // Для сохранения позиции прокрутки
   const lastLoadMoreAtRef = useRef<number>(0); // Для троттлинга onEndReached
   const LOAD_MORE_MIN_INTERVAL = 800; // мс
-  // RU: Троттлинг onEndReached во избежание частых вызовов, которые ведут к рывкам скролла.
-  // EN: Throttle onEndReached to avoid frequent triggers that cause scroll jumps.
+  // Троттлинг onEndReached во избежание частых вызовов, которые ведут к рывкам скролла.
 
   // Состояние для фильтров аренды
   const [rentFilters, setRentFilters] = useState<DealFilters>({
@@ -128,10 +127,6 @@ const HomeScreen = ({ navigation }: any) => {
   });
   const [districtModalVisible, setDistrictModalVisible] = useState(false);
 
-  // Обновляем свойства только при существенных изменениях в избранном
-  // Добавляем useRef для предотвращения повторных запросов
-  const previousFavoritesLength = React.useRef(0);
-
   const [agencies, setAgencies] = useState<AgencySummary[]>([]);
   const [agenciesLoading, setAgenciesLoading] = useState(false);
   const [agenciesError, setAgenciesError] = useState<string | null>(null);
@@ -158,15 +153,6 @@ const HomeScreen = ({ navigation }: any) => {
       setAgenciesLoading(false);
     }
   }, [t]);
-
-  useEffect(() => {
-    // Обновляем только если количество избранных изменилось
-    if (!favoritesLoading && favorites && previousFavoritesLength.current !== favorites.length) {
-      Logger.debug(`Количество избранных изменилось: ${previousFavoritesLength.current} -> ${favorites.length}`);
-      previousFavoritesLength.current = favorites.length;
-      refreshProperties();
-    }
-  }, [favorites, favoritesLoading, refreshProperties]);
 
   useEffect(() => {
     if (propertyType === 'agencies' && !agenciesLoading && agencies.length === 0) {
@@ -750,8 +736,7 @@ const HomeScreen = ({ navigation }: any) => {
   }, [filteredProperties, propertyType]);
 
   // Обработка загрузки дополнительных объявлений с сохранением позиции прокрутки
-  // RU: Восстанавливаем позицию скролла после догрузки; дожидаемся await loadMoreProperties для стабильности.
-  // EN: Restore scroll offset after pagination; await loadMoreProperties for stability.
+  // Восстанавливаем позицию скролла после догрузки; дожидаемся await loadMoreProperties для стабильности.
   const handleLoadMore = useCallback(async () => {
     if (isAgencyView) {
       return;
