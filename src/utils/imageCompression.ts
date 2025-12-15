@@ -27,7 +27,7 @@ export async function compressImage(uri: string, maxSizeMB: number = 0.4): Promi
     }
     
     try {
-      let compressed = await manipulateAsync(
+      const compressed = await manipulateAsync(
         uri,
         [{ resize: { width: 1280 } }], // Максимальная ширина 1280px
         { compress: quality, format: SaveFormat.JPEG }
@@ -43,7 +43,7 @@ export async function compressImage(uri: string, maxSizeMB: number = 0.4): Promi
       Logger.error('Ошибка при манипуляции с изображением:', manipulateError);
       // Пробуем с меньшим качеством, если первая попытка не удалась
       try {
-        let compressed = await manipulateAsync(
+        const compressed = await manipulateAsync(
           uri,
           [{ resize: { width: 800 } }], // Уменьшаем размер еще больше
           { compress: 0.4, format: SaveFormat.JPEG }

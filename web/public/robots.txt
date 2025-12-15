@@ -6,6 +6,9 @@ Disallow: /_next/
 Disallow: /profil/
 Disallow: /*.json$
 
+# Разрешаем manifest.json (нужен для PWA)
+Allow: /manifest.json
+
 # Разрешаем индексацию важных страниц
 Allow: /prodaja
 Allow: /izdavanje

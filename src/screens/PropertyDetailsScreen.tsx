@@ -191,7 +191,7 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
       const deeplinkHandlerUrl = `https://domgo.rs/property.html?id=${property.id}`;
 
       // Формируем текст для шаринга в зависимости от выбранного языка
-      let moreDetailsText = t('property.moreDetailsInApp', 'Подробнее в приложении DomGo');
+      const moreDetailsText = t('property.moreDetailsInApp', 'Подробнее в приложении DomGo');
 
       // Получаем переведенное название города, если есть
       const cityName = property.city?.name || '';
@@ -676,7 +676,6 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
                 <View style={styles.mapContainer}>
                   {isWebPlatform && webFallbackHTML ? (
                     <View style={styles.webMapWrapper}>
-                      {/* eslint-disable-next-line react-native/no-inline-styles */}
                       <iframe
                         title="property-map"
                         srcDoc={webFallbackHTML}

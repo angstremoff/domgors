@@ -152,8 +152,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     newBuildings: 0
   });
   const pageSize = 10; // Размер страницы для пагинации
-  // RU: Пагинация: фиксированный размер страницы. Избегаем рывков скролла за счет аккуратного обновления списков без глобального setLoading при догрузке.
-  // EN: Pagination: fixed page size. Avoid scroll jumps by updating lists carefully and not toggling global loading during pagination.
+  // Пагинация: фиксированный размер страницы. Избегаем рывков скролла за счет аккуратного обновления списков без глобального setLoading при догрузке.
 
   // Загрузка объявлений при первом рендере
   useEffect(() => {
@@ -164,7 +163,6 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Флаг для отслеживания текущих запросов, чтобы избежать параллельных запросов
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const requestInProgress = React.useRef({
     all: false,
     sale: false,
@@ -173,7 +171,6 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   });
 
   // Кэш последних запросов для предотвращения дублирования
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const lastFetchTime = React.useRef({
     all: 0,
     sale: 0,
@@ -328,7 +325,6 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   };
   
   // Кэш для хранения последних результатов запросов по типу
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const typeCache = React.useRef<Record<'sale' | 'rent' | 'newBuildings', TypeCacheResult>>({
     sale: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 },
     rent: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 },
@@ -662,7 +658,6 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     });
 
     loadDistricts(numericId).catch((error) => Logger.error('Ошибка автозагрузки районов:', error));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCity]);
   
   // Загрузка объявления по ID для открытия по ссылке

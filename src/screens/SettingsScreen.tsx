@@ -17,9 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Colors from '../constants/colors';
 import CustomModal from '../components/CustomModal';
-
-// Импортируем версию напрямую из package.json
-const packageJson = require('../../package.json');
+import packageJson from '../../package.json';
 
 const SettingsScreen = ({ navigation }: any) => {
   const { t } = useTranslation();

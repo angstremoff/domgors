@@ -316,7 +316,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ navigation, route }) => {
         navigation.navigate('PropertyDetails', { propertyId: data.id });
       }
     } catch (error) {
-      Logger.error('Error parsing WebView message:', error);
+      Logger.error('Ошибка разбора сообщения WebView:', error);
     }
   };
 
@@ -324,7 +324,6 @@ const MapScreen: React.FC<MapScreenProps> = ({ navigation, route }) => {
     <View style={styles.container}>
       {isWeb ? (
         <View style={styles.webMapWrapper}>
-          {/* eslint-disable-next-line react-native/no-inline-styles */}
           <iframe
             key={mapKey}
             title="map-screen"

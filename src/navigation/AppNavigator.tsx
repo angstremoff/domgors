@@ -6,7 +6,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useProperties } from '../contexts/PropertyContext';
 import HeaderControls from '../components/HeaderControls';
@@ -426,7 +425,6 @@ const MainTabs = () => {
 };
 
 const AppNavigator = ({ pendingPropertyId, clearPendingPropertyId, pendingAgencyId, clearPendingAgencyId }: AppNavigatorProps) => {
-  const { } = useAuth(); // Используем пустую деструктуризацию, так как user не используется
   const { darkMode } = useTheme();
   const { fetchPropertyById } = useProperties();
 

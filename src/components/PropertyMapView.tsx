@@ -170,7 +170,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({
   const generateMapHTML = useCallback(() => {
     let centerLat = 44.5315;
     let centerLng = 19.2249;
-    let zoom = 12;
+    const zoom = 12;
 
     if (selectedCity && selectedCity.latitude && selectedCity.longitude) {
       centerLat = parseFloat(String(selectedCity.latitude));
@@ -357,7 +357,6 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({
             </View>
           ) : isWeb ? (
             <View style={styles.webMapWrapper}>
-              {/* eslint-disable-next-line react-native/no-inline-styles */}
               <iframe
                 title="properties-map"
                 srcDoc={mapHtml}
@@ -380,7 +379,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({
                     }
                   }
                 } catch (e) {
-                  Logger.error('Error parsing WebView message:', e);
+                  Logger.error('Ошибка разбора сообщения WebView:', e);
                 }
               }}
             />

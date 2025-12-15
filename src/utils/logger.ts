@@ -28,35 +28,35 @@ class LoggerService {
       : this.config.enableInProduction;
   }
 
-  log(...args: any[]): void {
+  log(...args: unknown[]): void {
     if (this.shouldLog() && !this.config.excludeMethods?.includes('LOG')) {
-      console.log('[LOG]', ...args);
+      console.log('[ЛОГ]', ...args);
     }
   }
 
-  info(...args: any[]): void {
+  info(...args: unknown[]): void {
     this.log(...args);
   }
 
-  warn(...args: any[]): void {
+  warn(...args: unknown[]): void {
     if (this.shouldLog() && !this.config.excludeMethods?.includes('WARN')) {
-      console.warn('[WARN]', ...args);
+      console.warn('[ПРЕДУПР]', ...args);
     }
   }
 
-  error(...args: any[]): void {
+  error(...args: unknown[]): void {
     // Ошибки всегда логируем для критической диагностики
-    console.error('[ERROR]', ...args);
+    console.error('[ОШИБКА]', ...args);
   }
 
-  debug(...args: any[]): void {
+  debug(...args: unknown[]): void {
     if (this.shouldLog() && this.isDevelopment && !this.config.excludeMethods?.includes('DEBUG')) {
-      console.log('[DEBUG]', ...args);
+      console.log('[ОТЛАДКА]', ...args);
     }
   }
 
   // Метод для безопасного логирования объектов
-  logObject(label: string, obj: any): void {
+  logObject(label: string, obj: unknown): void {
     if (this.shouldLog()) {
       try {
         this.log(label, JSON.stringify(obj, null, 2));
@@ -69,13 +69,13 @@ class LoggerService {
   // Профилирование производительности
   time(label: string): void {
     if (this.shouldLog()) {
-      console.time(`[PERF] ${label}`);
+      console.time(`[ПРОИЗВ] ${label}`);
     }
   }
 
   timeEnd(label: string): void {
     if (this.shouldLog()) {
-      console.timeEnd(`[PERF] ${label}`);
+      console.timeEnd(`[ПРОИЗВ] ${label}`);
     }
   }
 

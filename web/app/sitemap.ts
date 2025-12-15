@@ -7,12 +7,12 @@ const BASE_URL = 'https://domgo.rs';
 export const dynamic = 'force-static';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    // For static export we must use a client that doesn't rely on cookies/headers
+    // Для static export нужен клиент, который не зависит от cookies/headers
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
-    // Static routes
+    // Статические маршруты
     const routes = [
         '',
         '/prodaja',
@@ -26,9 +26,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: route === '' ? 1 : 0.8,
     }));
 
-    // Fetch active properties
-    // Note: We only take the last 10000 to avoid hitting limits or timeouts initially.
-    // In a real large-scale app, we would split sitemaps.
+    // Получаем активные объявления
+    // Примечание: берём максимум 10000, чтобы не упереться в лимиты/таймауты.
+    // Для большого проекта нужно дробить sitemap на несколько файлов.
     const { data: propertiesData } = await supabase
         .from('properties')
         .select('id, created_at')
@@ -45,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
     }));
 
-    // Fetch agencies
+    // Получаем агентства
     const { data: agenciesData } = await supabase
         .from('agency_profiles')
         .select('id, created_at')

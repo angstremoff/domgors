@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Platform, GestureResponderEvent } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from '../contexts/FavoritesContext';
@@ -20,10 +20,10 @@ const PropertyCardCompact = memo(({ property, onPress, darkMode = false }: Prope
   
   // toggleFavorite теперь стабильная ссылка (useCallback в FavoritesContext),
   // поэтому не включаем её в зависимости для предотвращения лишних ререндеров
-  const handleFavoritePress = useCallback((e: any) => {
+  const handleFavoritePress = useCallback((e: GestureResponderEvent) => {
     e.stopPropagation();
     toggleFavorite(property.id);
-  }, [property.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [property.id]);
 
   // Мемоизация форматирования цены для оптимизации
   const formattedPrice = useMemo(() => {

@@ -38,7 +38,7 @@ const LoginScreen = ({ navigation }: any) => {
         routes: [{ name: 'MainTabs' }],
       });
     } catch (error: any) {
-      Logger.error('Unexpected error:', error);
+      Logger.error('Непредвиденная ошибка:', error);
       showErrorAlert(t('auth.loginFailed'));
     } finally {
       setLoading(false);

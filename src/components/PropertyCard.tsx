@@ -1,11 +1,12 @@
 import { memo, useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Platform, GestureResponderEvent } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from '../contexts/FavoritesContext';
 import type { Property } from '../contexts/PropertyContext';
 import Colors from '../constants/colors';
 import { Logger } from '../utils/logger';
+import placeholderImage from '../../assets/placeholder.png';
 
 interface PropertyCardProps {
   property: Property;
@@ -21,10 +22,10 @@ const PropertyCard = memo(({ property, onPress, darkMode = false }: PropertyCard
 
   // toggleFavorite теперь стабильная ссылка (useCallback в FavoritesContext),
   // поэтому не включаем её в зависимости для предотвращения лишних ререндеров
-  const handleFavoritePress = useCallback((e: any) => {
+  const handleFavoritePress = useCallback((e: GestureResponderEvent) => {
     e.stopPropagation();
     toggleFavorite(property.id);
-  }, [property.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [property.id]);
 
   // Получаем название города из объекта city, если оно доступно
   const cityName = property.city?.name || '';
@@ -68,7 +69,7 @@ const PropertyCard = memo(({ property, onPress, darkMode = false }: PropertyCard
             uri: property.images?.[0] || 'https://via.placeholder.com/300x200',
             cache: 'force-cache'
           }}
-          defaultSource={require('../../assets/placeholder.png')}
+          defaultSource={placeholderImage}
           style={[
             styles.image,
             Platform.OS === 'web' && styles.imageWeb,

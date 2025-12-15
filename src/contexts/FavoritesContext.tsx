@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthContext';
@@ -39,7 +39,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         setFavorites(validFavorites);
       }
     } catch (error) {
-      Logger.error('Error parsing local favorites:', error);
+      Logger.error('Ошибка разбора локального избранного:', error);
       setFavorites([]);
     }
     setIsLoading(false);

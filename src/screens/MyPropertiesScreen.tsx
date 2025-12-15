@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, ActivityIndi
 import { useTranslation } from 'react-i18next';
 import { propertyService } from '../services/propertyService';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../contexts/AuthContext';
 import { Property } from '../contexts/PropertyContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Colors from '../constants/colors';
@@ -12,7 +11,6 @@ import { Logger } from '../utils/logger';
 
 const MyPropertiesScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
-  const { } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

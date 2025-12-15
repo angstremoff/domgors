@@ -12,7 +12,7 @@
 - **Веб-сайт (domgo.rs)**: Next.js 15.5.7 + React + TypeScript в `/web`. **Общая база данных Supabase**, но отдельный фронтенд (не React Native Web). Компоненты в `/web/components`, страницы в `/web/app`. Запуск: `npm run dev` (порт 3000).
 - **Общее**: Supabase (auth, база данных, storage), i18next (ru/sr), темная/светлая тема, те же API и бизнес-логика.
 - Старт мобильного: `index.ts` → `App.tsx` → провайдеры → `AppNavigator`.
-- Deep Link: `domgomobile://...`, `domgo.rs/property.html` (GitHub Pages fallback).
+- Deep Link: `domgomobile://property/<UUID>`, `domgomobile://agency/<UUID>`, `domgomobile://auth/callback?...`; веб‑фолбек: `https://domgo.rs/property.html?id=<UUID>` (`noindex`, пытается открыть приложение или ведёт на `/oglas?id=<UUID>`).
 
 ## 3. Основные сервисы и модули
 - `src/services/propertyService.ts`: CRUD объявлений в Supabase, пагинация, retry, загрузка изображений ≤5 МБ (jpg/jpeg/png/webp), работа с Supabase Storage, LRU-кэши `propertyCache`/`apiCache`.
@@ -32,6 +32,8 @@
 ### 5.1 Скрипты и запуск
 - **Рекомендуемый запуск для разработки:** `npm run android` (expo run:android) - Metro bundler автоматически запускается, приложение работает в dev-режиме с hot reload
 - **Debug APK на эмуляторе:** `npx react-native run-android` - устанавливает debug версию с подключением к Metro
+- Быстрая локальная проверка mobile: `npm run check` (lint + typecheck + tests)
+- Быстрая локальная проверка web (Next): `cd web && npm run lint && npm run build`
 - Локальные APK: `build-simple-apk.sh`, `build-local-apk.sh`, `build-dev-apk.sh`, `build-local-user-apk.sh`.
 - Прочие утилиты: `build-apk-eas.sh`, `build-and-upload.sh`, `release-build.sh`, `release.sh`, `create-release.sh`, `easy-build-apk.sh`, `build-simple-apk.sh`, `update-version.sh`, `generate-keystore.sh`, `download-apk.sh`.
 - Выпуск AAB: `./build-release-bundle.sh` (оборачивает `gradlew bundleRelease` и кладёт `~/Desktop/DomGoMobile-<версия>-release.aab`).
@@ -60,12 +62,12 @@
 ## 7. Важные напоминания
 - **Две платформы**: мобильное (Android/iOS) и веб (Next.js). Общая БД Supabase, но разные фронтенды. Веб не использует React Native Web - это отдельный Next.js проект в `/web`.
 - **Веб-особенности**: Hydration: клиентские компоненты с i18next требуют `mounted` проверки. Тема: используем `theme` из next-themes, не `resolvedTheme`.
-- При шаринге объявлений используем `https://domgo.rs/property.html?id=<ID>` (GitHub Pages) — страница пытается открыть приложение, если нет — предлагает Web + Google Play.
+- При шаринге объявлений используем `https://domgo.rs/property.html?id=<UUID>` — страница `noindex`, пытается открыть приложение, иначе ведёт на `https://domgo.rs/oglas?id=<UUID>` и показывает кнопку установки.
+- В репозитории есть **две веб-сборки**: Next.js сайт в `/web` (сборка в `web/out`) и Expo Web (React Native Web) экспорт в `dist` (см. `netlify.toml`: `npx expo export -p web`) — не путать.
+- TypeScript: корневой `npm run typecheck` проверяет mobile и **исключает `web/`**; web проверяем через `cd web && npm run build` (Next делает проверку типов на сборке).
 - Любые новые задачи, связанные с публикацией, должны учитывать требования Google Play и наличие AAB; APK используется только для локального тестирования.
 - iOS нюансы: симулятор не умеет `tel:` — в PropertyDetails показываем алерт и копируем номер в буфер; фильтры имеют safe-area паддинг и расширенный hitSlop для кнопки закрытия; заголовок DomGo.rs на iOS выровнен влево, а блок выбора города сдвинут для предотвращения наложения.
 - Supabase агенты: `agency_profiles.user_id` 1:1 к `users.id`, `properties.agency_id` → `agency_profiles.id`. Есть триггер на `agency_profiles` (after insert/update) для заполнения `agency_id` у объявлений по `user_id`, и триггер на `properties` (before insert/update user_id) для автоподстановки `agency_id`. Разовая синхронизация: `update properties p set agency_id = ap.id from agency_profiles ap where p.user_id = ap.user_id and p.agency_id is null`.
-- Статика для домена domgo.rs живёт в отдельном репо `angstremoff/domgors` (Render / GitHub Pages). `property.html`/deeplink-handler там; для новых страниц (например, agency.html) добавляем в этот репозиторий, чтобы ссылки вида `https://domgo.rs/...` работали.
-- Репозиторий `angstremoff/domgors` (локально `/Users/test/CascadeProjects/domgors`) — старый сайт на проде для домена domgo.rs: содержит статические страницы (`public/property.html`, `public/agency.html` и др.), конфиги деплоя (render.yaml, netlify/vercel, htaccess), фронт-код (src, package.json), supabase/sql вспомогательные скрипты. Любые новые публичные страницы для домgo.rs добавляем туда.
 - При достижении остатка контекста ~5% нужно сжимать контекст (конспект, выжимка последних шагов).
 - Важно (web, SEO и стабильность): страницы `/oglas` и `/agencija` переведены в client-only режим (без `generateMetadata`) из-за падений RSC при static export. Метатеги для карточек теперь ставятся только на клиенте через `PropertyPageClient`/`AgencyPageClient`, поэтому серверный HTML содержит общие метаданные. Для полноценного SEO карточек требуется вернуть серверную генерацию (динамический рендер или отказ от `output: 'export'`).
 - Supabase-клиент web: если нет `NEXT_PUBLIC_SUPABASE_URL/ANON_KEY`, возвращается безопасный мок (ошибка в ответах, но без исключений). При наличии env используется обычный `createBrowserClient`.
@@ -86,18 +88,18 @@
 ### 8.2 Deep Link и UI-тема Android
 - Deep link: есть мгновенная навигация к экрану объявления при активном приложении + отложенные ретраи при холодном старте; экран деталей дотягивает данные по `propertyId`, если не пришли в параметрах.
 - Android системная навигационная панель синхронизируется с темой через `expo-navigation-bar` (фон и стиль кнопок меняются под светлую/тёмную тему).
-- Агентства deep link: парсим `domgomobile://agency/...` и `https://domgo.rs/agency.html?id=...`; Android манифест содержит intent-filter (`scheme=domgomobile`, host=agency, pathPrefix=/). Статическая `agency.html` в корне репо пытается открыть приложение, иначе предлагает Web/Play Store.
+- Агентства deep link: `domgomobile://agency/<UUID>`; на вебе используем `/agencija/?id=<UUID>` (Next). `parseDeepLink` также поддерживает legacy `https://domgo.rs/agency.html?id=<UUID>` если такой линк прилетит. Android манифест содержит intent-filter (`scheme=domgomobile`, host=agency, pathPrefix=/).
 
 ## 9. Районы (districts)
 - Схема: таблица `districts` (id uuid PK, city_id FK → cities, name, is_active, sort_order, latitude, longitude), колонка `properties.district_id` (FK → districts). Индексы: `districts_city_id_idx`, `districts_city_name_unique`, `properties_district_id_idx`.
 - RLS: включаем RLS на `districts`; политика select (как для cities). Insert/update — через service_role или нужные правила. Предупреждения Supabase про RLS нужно закрыть.
 - Миграции (актуальные): `20250218110000_add_coordinates_to_districts.sql` (latitude/longitude), `20250218110100_seed_districts.sql` (сид всех районов), `20250218110200_migrate_banja_koviljaca.sql` (перенос объявлений города Баня Ковиляча в Лозницу, район «Ковиљача Бања», архивирование города).
 - Фронт: поддержка района в фильтрах (HomeScreen — «Все районы» после выбора города), формах создания/редактирования, отображении карточек/деталей (адрес `Город, Район`). В выборке данных сервисы возвращают `district` с координатами.
-- Типы: `src/lib/database.types.ts` обновлены вручную под координаты; после миграций желательно прогнать `supabase gen types typescript`.
+- Типы: `src/lib/database.types.ts` — автоген (лучше не править руками); после миграций обязательно прогнать `supabase gen types typescript`.
 - Важный фикс: в `PropertyContext` автозагрузка районов в useEffect не должна зависеть от loadDistricts, иначе цикл ререндеров. Сейчас зависимость убрана, стоит комментарий.
 
 ## 10. Веб: агентства и i18n
-- Веб агентства: список в `/web/app/(routes)/agencije/page.tsx` грузит `agency_profiles` и ведёт на детальную страницу `/web/app/(routes)/agencije/[id]/page.tsx`. Детальная (`AgencyDetails`) показывает контакты/описание и объявления агентства (сначала по `agency_id`, потом фолбек по `user_id`), карточки объявлений кликабельны. **Фильтрация по городу реализована в `AgenciesListClient.tsx`** через `useMemo`, фильтрующий строго по `city_id`.
+- Веб агентства: список в `/web/app/(routes)/agencije/page.tsx` грузит `agency_profiles` и ведёт на детальную страницу `/agencija/?id=<UUID>` (`/web/app/(routes)/agencija/page.tsx`). Детальная (`AgencyPageClient`) показывает контакты/описание и объявления агентства (сначала по `agency_id`, потом фолбек по `user_id`), карточки объявлений кликабельны. **Фильтрация по городу реализована в `AgenciesListClient.tsx`** через `useMemo`, фильтрующий строго по `city_id`.
 - UI-кнопки используют обычные `Button` без `asChild` (иначе ошибка DOM). Контакты открывают tel/mailto/сайт.
 - Переводы веб обновлены: новые ключи для агентств, 404, загрузок, фильтров, профиля и галереи (ru/sr). Домашняя страница, формы, ЛК и фильтры тянут строки из i18n. `I18nProvider` синхронизирует `document.lang`.
 - Фичи в деталях объявления переводятся через i18n (`features.*`). Карточки **не показывают дату** публикации (убрано для чистоты UI).
@@ -135,6 +137,7 @@
 ### 14.1 Поисковая оптимизация
 - **Верификация поисковиков**:
   - Google Search Console: `web/public/google543a84de6483d7b7.html` + мета-тег в layout.tsx
+  - Google Search Console (Domain property): верификация **через DNS** (TXT/CNAME). Для `domgo.rs` добавлена CNAME запись: `jvkynjdksfgt` → `gv-uiyqloxnqat74x.dv.googlehosted.com` (TTL 14400)
   - Яндекс Вебмастер: `web/public/yandex_5d2c280f46e86563.html`, `yandex_5d2c288f46a86563.html`
 - **Metadata** (`web/app/layout.tsx`):
   - Двуязычные title/description (sr + ru)
@@ -151,8 +154,11 @@
   - Приоритеты: главная 1.0, разделы 0.8, объявления 0.7, агентства 0.6
 - **robots.txt** (`web/public/robots.txt`):
   - Блокировка `/api/`, `/_next/`, `/profil/`
+  - Разрешение `Allow: /manifest.json` (иначе его блокирует правило `Disallow: /*.json$`)
   - Директива `Host` для Яндекса
   - `Crawl-delay: 1` для Яндекса
+- **Favicon**: `web/public/favicon.ico` — валидный ICO (не PNG с расширением `.ico`), чтобы Google/Яндекс корректно подтягивали иконку
+- **Noindex**: технические страницы закрыты от индексации: `web/public/property.html`, `web/public/og-image.html`
 - **Хлебные крошки**: компонент `web/components/seo/Breadcrumbs.tsx` с JSON-LD BreadcrumbList, добавлен на страницы prodaja, izdavanje, novogradnja, agencije
 - **Метаданные страниц**: уникальные title/description/keywords/canonical для каждой основной страницы
 
@@ -170,8 +176,8 @@
 - **Footer**: SEO-текст на двух языках, ссылка на Google Play, schema.org разметка
 
 ### 14.4 Шаринг объявлений
-- Веб-версия теперь использует `https://domgo.rs/property.html?id=...` (как мобильное)
-- property.html проверяет платформу, пробует открыть приложение, fallback на сайт
+- Веб-версия использует `https://domgo.rs/property.html?id=<UUID>` (как мобильное)
+- `property.html` закрыт от индексации (`noindex`), проверяет платформу, пробует открыть приложение, fallback на сайт
 - Формируется информативный текст с ценой и городом
 - Fallback: копирование в буфер обмена если navigator.share недоступен
 
@@ -187,3 +193,12 @@
 - **Фильтрация агентств** (`AgenciesListClient.tsx`): строгая проверка по `city_id` вместо fuzzy-поиска по location
 - **Типы в sitemap.ts**: явное приведение типов для результатов Supabase-запросов
 - **`useCallback` в moji-oglasi**: `loadProperties` обёрнут для устранения React warnings о зависимостях
+
+## 15. Изменения 2025‑12‑14 (важное)
+- Google Search Console: настроена DNS‑верификация доменного свойства через CNAME (см. раздел 14.1)
+- SEO: `robots.txt` разрешает `manifest.json`; favicon приведён к корректному ICO
+- Mobile: `npm run check` проходит; `tsconfig.json` исключает `web/` из корневого typecheck
+- DeepLink: ID объявлений/агентств — UUID; тесты `deepLinkParser` обновлены под UUID
+- TypeScript: добавлен `src/types/assets.d.ts` для импортов изображений (вместо `require()`)
+- Логи: русские сообщения и префиксы в `src/utils/logger.ts` (английские теги/сообщения не используем)
+- Отчёт ревью: `docs/code-review-2025-12-14.md`

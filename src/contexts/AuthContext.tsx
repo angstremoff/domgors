@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Подписка на изменения состояния аутентификации
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      Logger.debug('Auth state changed:', event);
+      Logger.debug('Изменилось состояние авторизации:', event);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth должен использоваться внутри AuthProvider');
   }
   return context;
 };

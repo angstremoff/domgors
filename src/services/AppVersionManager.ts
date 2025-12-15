@@ -5,10 +5,7 @@ import * as FileSystem from 'expo-file-system';
 import { Logger } from '../utils/logger';
 import { propertyService } from './propertyService';
 import { propertyCache, apiCache } from '../utils/cacheManager';
-
-// Импортируем версию из package.json, чтобы исключить ручные несоответствия
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pkg = require('../../package.json');
+import packageJson from '../../package.json';
 
 interface VersionInfo {
   appVersion: string;
@@ -37,7 +34,7 @@ class AppVersionManager {
   private getCurrentVersion(): string {
     return (
       (Constants?.expoConfig as any)?.version ||
-      pkg.version
+      packageJson.version
     );
   }
   
@@ -58,10 +55,10 @@ class AppVersionManager {
     return this.getCurrentVersion();
   }
   
-  /**
+   /**
    * Принудительная очистка всех кэшей
    */
-  async forceClearAll(reason: string = 'Manual clear'): Promise<void> {
+  async forceClearAll(reason: string = 'Ручная очистка'): Promise<void> {
     Logger.debug(`🧹 ПРИНУДИТЕЛЬНАЯ ОЧИСТКА ВСЕХ КЭШЕЙ: ${reason}`);
     
     try {
@@ -141,10 +138,10 @@ class AppVersionManager {
     }
   }
   
-  /**
+   /**
    * Принудительный перезапуск приложения после очистки кэшей
    */
-  async forceRestart(reason: string = 'Cache cleared'): Promise<void> {
+  async forceRestart(reason: string = 'Кэш очищен'): Promise<void> {
     Logger.debug(`🔄 Запрошен перезапуск приложения: ${reason}`);
     
     if (Platform.OS === 'web') {
@@ -157,10 +154,10 @@ class AppVersionManager {
     Logger.debug('Expo OTA отключены - попросите пользователя перезапустить приложение вручную');
   }
 
-  /**
+   /**
    * Комплексная очистка с принудительным перезапуском
    */
-  async clearAndRestart(reason: string = 'Manual clear and restart'): Promise<void> {
+  async clearAndRestart(reason: string = 'Ручная очистка и перезапуск'): Promise<void> {
     Logger.debug(`🚀 КОМПЛЕКСНАЯ ОЧИСТКА И ПЕРЕЗАПУСК: ${reason}`);
     
     try {
@@ -171,7 +168,7 @@ class AppVersionManager {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // 3. Принудительно перезапускаем приложение
-      await this.forceRestart('After cache clear');
+      await this.forceRestart('После очистки кэша');
       
     } catch (error) {
       Logger.error('Критическая ошибка при комплексной очистке и перезапуске:', error);
@@ -191,7 +188,7 @@ class AppVersionManager {
       // Проверяем флаг принудительной очистки
       const forceClearFlag = await AsyncStorage.getItem(this.FORCE_CLEAR_KEY);
       if (forceClearFlag === 'true') {
-        await this.forceClearAll('Force clear flag detected');
+        await this.forceClearAll('Обнаружен флаг принудительной очистки');
         await AsyncStorage.removeItem(this.FORCE_CLEAR_KEY);
         return true;
       }
@@ -202,7 +199,7 @@ class AppVersionManager {
       if (!storedVersionInfoStr) {
         // Первый запуск приложения
         Logger.debug('Первый запуск приложения - очистка кэшей');
-        await this.forceClearAll('First app launch');
+        await this.forceClearAll('Первый запуск приложения');
         return true;
       }
       
@@ -215,13 +212,13 @@ class AppVersionManager {
       // 1. Изменилась версия приложения
       if (storedVersionInfo.appVersion !== currentVersion) {
         shouldClear = true;
-        clearReason = `App version changed: ${storedVersionInfo.appVersion} → ${currentVersion}`;
+        clearReason = `Изменилась версия приложения: ${storedVersionInfo.appVersion} → ${currentVersion}`;
       }
       
       // 2. Изменилась версия сборки
       else if (storedVersionInfo.buildVersion !== currentBuildVersion) {
         shouldClear = true;
-        clearReason = `Build version changed: ${storedVersionInfo.buildVersion} → ${currentBuildVersion}`;
+        clearReason = `Изменилась версия сборки: ${storedVersionInfo.buildVersion} → ${currentBuildVersion}`;
       }
       
       // 3. Проверка на коррупцию данных (отсутствие обязательных полей)
@@ -243,7 +240,7 @@ class AppVersionManager {
       Logger.error('Ошибка при проверке версии:', error);
       // В случае ошибки лучше очистить кэш для безопасности
       try {
-        await this.forceClearAll(`Error during version check: ${error}`);
+        await this.forceClearAll(`Ошибка при проверке версии: ${String(error)}`);
         return true;
       } catch (clearError) {
         Logger.error('Критическая ошибка при очистке кэша:', clearError);

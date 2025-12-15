@@ -25,7 +25,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           i18n.changeLanguage(storedLanguage);
         }
       } catch (error) {
-        Logger.error('Error loading language:', error);
+        Logger.error('Ошибка загрузки языка:', error);
       }
     };
 
@@ -38,7 +38,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       await AsyncStorage.setItem('language', lang);
       i18n.changeLanguage(lang);
     } catch (error) {
-      Logger.error('Error saving language:', error);
+      Logger.error('Ошибка сохранения языка:', error);
     }
   };
 
@@ -52,7 +52,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+    throw new Error('useLanguage должен использоваться внутри LanguageProvider');
   }
   return context;
 };

@@ -11,7 +11,7 @@ const supabaseAnonKey = SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   // Отдельный лог вместо throw, чтобы не падать на ранней стадии и дать понять, что нужна конфигурация
-  console.error('Supabase credentials are missing. Check SUPABASE_URL and SUPABASE_ANON_KEY in .env');
+  console.error('Отсутствуют данные Supabase. Проверьте SUPABASE_URL и SUPABASE_ANON_KEY в .env');
 }
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {

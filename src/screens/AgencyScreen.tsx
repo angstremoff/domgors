@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Linking, ActivityIndicator, Platform, useWindowDimensions, Share, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -95,7 +95,7 @@ const AgencyScreen = ({ route, navigation }: AgencyScreenProps) => {
       if (!targetId) return;
       try {
         setPropsLoading(true);
-        let { data, error } = await supabase
+        const { data: initialData, error } = await supabase
           .from('properties')
           .select(`
             *,
@@ -107,6 +107,7 @@ const AgencyScreen = ({ route, navigation }: AgencyScreenProps) => {
           .eq('agency_id', targetId)
           .order('created_at', { ascending: false });
         if (error) throw error;
+        let data = initialData;
 
         // Если по agency_id пусто — пробуем фолбек по user_id (случай, когда route получил users.id)
         if (!data || data.length === 0) {
