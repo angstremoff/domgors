@@ -28,7 +28,7 @@ export default ({ config }) => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.anonymous.DomGoMobile',
-      buildNumber: '12'
+      buildNumber: '13'
     },
     android: {
       allowBackup: false,
