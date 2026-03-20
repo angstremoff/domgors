@@ -112,7 +112,7 @@ export default function PodesavanjaPage() {
                         </button>
 
                         <a
-                            href="https://play.google.com/store/apps/details?id=domgo.rs"
+                            href="https://www.rustore.ru/catalog/app/domgo.rs"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center justify-between py-3 border-b border-border w-full text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors -mx-4 px-4"

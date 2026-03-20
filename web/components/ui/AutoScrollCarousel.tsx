@@ -112,7 +112,6 @@ export function AutoScrollCarousel({
     if (e.button !== 0) return;
 
     const container = e.currentTarget;
-    e.preventDefault();
 
     pause();
     autoScrollLeftRef.current = container.scrollLeft;
@@ -131,12 +130,14 @@ export function AutoScrollCarousel({
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     if (!draggingRef.current) return;
     const container = e.currentTarget;
-    e.preventDefault();
 
     const deltaX = e.clientX - dragStartXRef.current;
-    if (Math.abs(deltaX) > 3) {
-      didDragRef.current = true;
+    if (Math.abs(deltaX) <= 3) {
+      return;
     }
+
+    didDragRef.current = true;
+    e.preventDefault();
 
     const halfWidth = container.scrollWidth / 2;
     if (halfWidth <= 0) return;

@@ -50,8 +50,8 @@ const SettingsScreen = ({ navigation }: any) => {
   };
 
   const handleStoreUpdate = () => {
-    const playUrl = 'https://play.google.com/store/apps/details?id=domgo.rs';
-    const storeUrl = Platform.OS === 'android' ? playUrl : '';
+    const androidStoreUrl = 'https://www.rustore.ru/catalog/app/domgo.rs';
+    const storeUrl = Platform.OS === 'android' ? androidStoreUrl : '';
 
     if (!storeUrl) {
       showModal(
@@ -129,7 +129,7 @@ const SettingsScreen = ({ navigation }: any) => {
           <TouchableOpacity style={styles.settingItem} onPress={handleStoreUpdate}>
             <Text style={[styles.settingLabel, { color: theme.text }]}>
               {Platform.OS === 'android'
-                ? t('settings.update.openGooglePlay', 'Открыть DomGo в Google Play')
+                ? t('settings.update.openGooglePlay', 'Открыть DomGo в RuStore')
                 : t('settings.update.openAppStore', 'Открыть DomGo в App Store')}
             </Text>
             <Ionicons name="open-outline" size={20} color={theme.primary} />

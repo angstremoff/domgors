@@ -13,6 +13,7 @@ export function RegisterForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const router = useRouter();
@@ -21,6 +22,7 @@ export function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     if (password !== confirmPassword) {
       setError(t('auth.passwordsDoNotMatch'));
@@ -34,14 +36,24 @@ export function RegisterForm() {
 
     setLoading(true);
 
-    const { error } = await signUp(email, password);
+    const { error, session } = await signUp(email, password);
 
     if (error) {
       setError(error.message || t('auth.registerError'));
       setLoading(false);
     } else {
-      router.push('/profil');
-      router.refresh();
+      setLoading(false);
+
+      if (session) {
+        router.push('/profil');
+        router.refresh();
+        return;
+      }
+
+      setSuccess(t('auth.confirmEmailSent'));
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
     }
   };
 
@@ -80,6 +92,12 @@ export function RegisterForm() {
       {error && (
         <div className="p-3 bg-error/10 border border-error rounded-md">
           <p className="text-sm text-error">{error}</p>
+        </div>
+      )}
+
+      {success && (
+        <div className="p-3 bg-success/10 border border-success rounded-md">
+          <p className="text-sm text-success">{success}</p>
         </div>
       )}
 

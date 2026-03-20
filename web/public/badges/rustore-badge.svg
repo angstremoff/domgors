@@ -1,0 +1,13 @@
+<svg width="172" height="52" viewBox="0 0 172 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="1" y="1" width="170" height="50" rx="12" fill="#0F172A"/>
+  <rect x="1" y="1" width="170" height="50" rx="12" stroke="#334155" stroke-width="2"/>
+  <rect x="13" y="13" width="26" height="26" rx="8" fill="#2563EB"/>
+  <path d="M26 18L32.0622 21.5V28.5L26 32L19.9378 28.5V21.5L26 18Z" fill="white"/>
+  <path d="M26 21.25L29.25 23.125V26.875L26 28.75L22.75 26.875V23.125L26 21.25Z" fill="#2563EB"/>
+  <text x="48" y="20" fill="#94A3B8" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700" letter-spacing="0.08em">
+    AVAILABLE ON
+  </text>
+  <text x="48" y="35" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">
+    RuStore
+  </text>
+</svg>
