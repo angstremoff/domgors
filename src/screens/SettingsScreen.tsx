@@ -19,7 +19,7 @@ import Colors from '../constants/colors';
 import CustomModal from '../components/CustomModal';
 import packageJson from '../../package.json';
 
-const SettingsScreen = ({ navigation }: any) => {
+const SettingsScreen = () => {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { darkMode } = useTheme();

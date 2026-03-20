@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { getCacheTimestamp, propertyService } from '../services/propertyService';
 import { Alert } from 'react-native';
 import { supabase } from '../lib/supabaseClient';
+import type { Database } from '../lib/database.types';
 import { Logger } from '../utils/logger';
 
 // Тип для свойства
@@ -50,9 +51,9 @@ export interface Property {
     phone: string | null;
     logo_url?: string | null;
     description?: string | null;
-    website?: string | null;
-    instagram?: string | null;
-    facebook?: string | null;
+    email?: string | null;
+    site?: string | null;
+    location?: string | null;
   } | null;
   images?: string[];
   created_at?: string;
@@ -106,6 +107,62 @@ interface PropertyContextType {
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
+
+type PropertyListResult = {
+  data: Property[];
+  totalCount: number;
+  hasMore: boolean;
+};
+
+type CityRow = Database['public']['Tables']['cities']['Row'];
+
+const toPropertyListResult = (value: unknown): PropertyListResult | null => {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (!Array.isArray(record.data)) {
+    return null;
+  }
+
+  return {
+    data: record.data as Property[],
+    totalCount: typeof record.totalCount === 'number' ? record.totalCount : 0,
+    hasMore: record.hasMore === true,
+  };
+};
+
+const getCityCoordinates = (coordinates: CityRow['coordinates']) => {
+  const fallback = { lat: 45.267136, lng: 19.833549 };
+
+  if (!coordinates) {
+    return fallback;
+  }
+
+  const normalized =
+    typeof coordinates === 'string'
+      ? (() => {
+          try {
+            return JSON.parse(coordinates) as unknown;
+          } catch {
+            return null;
+          }
+        })()
+      : coordinates;
+
+  if (normalized && typeof normalized === 'object' && !Array.isArray(normalized)) {
+    const coordinatesRecord = normalized as Record<string, unknown>;
+    if (
+      typeof coordinatesRecord.lat === 'number' &&
+      typeof coordinatesRecord.lng === 'number'
+    ) {
+      return { lat: coordinatesRecord.lat, lng: coordinatesRecord.lng };
+    }
+  }
+
+  return fallback;
+};
 
 export function PropertyProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -198,19 +255,18 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       requestInProgress.current.all = true;
       setLoading(true);
       
-      const result = await propertyService.getProperties(1, pageSize);
+      const result = toPropertyListResult(await propertyService.getProperties(1, pageSize));
       
-      // Добавляем проверку на существование данных
-      if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data)) {
-        setProperties(result.data as Property[]);
-        setFilteredProperties(result.data as Property[]);
-        setHasMore(prev => ({ ...prev, all: (result as any).hasMore || false }));
-        setTotalCount(prev => ({ ...prev, all: (result as any).totalCount || 0, newBuildings: 0 }));
+      if (result) {
+        setProperties(result.data);
+        setFilteredProperties(result.data);
+        setHasMore(prev => ({ ...prev, all: result.hasMore }));
+        setTotalCount(prev => ({ ...prev, all: result.totalCount, newBuildings: 0 }));
         setCurrentPage(prev => ({ ...prev, all: 1 }));
         lastFetchTime.current.all = Date.now();
         cacheVersionRef.current = getCacheTimestamp();
         
-        Logger.debug(`Данные успешно загружены из Supabase: ${result.data.length} из ${(result as any).totalCount || 0}`);
+        Logger.debug(`Данные успешно загружены из Supabase: ${result.data.length} из ${result.totalCount}`);
       } else {
         // Если result пустой или неправильного формата
         setProperties([]);
@@ -250,13 +306,13 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       const activeType = activePropertyTypeRef.current;
       if (activeType === 'all') {
         // Загружаем общий список (all)
-        const result = await propertyService.getProperties(1, pageSize);
-        if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data) && result.data.length > 0) {
-          Logger.debug(`Данные успешно загружены из Supabase: ${result.data.length} из ${(result as any).totalCount || 0}`);
-          setProperties(result.data as Property[]);
-          setFilteredProperties(result.data as Property[]);
-          setHasMore(prev => ({ ...prev, all: (result as any).hasMore || false }));
-          setTotalCount(prev => ({ ...prev, all: (result as any).totalCount || 0, newBuildings: 0 }));
+        const result = toPropertyListResult(await propertyService.getProperties(1, pageSize));
+        if (result && result.data.length > 0) {
+          Logger.debug(`Данные успешно загружены из Supabase: ${result.data.length} из ${result.totalCount}`);
+          setProperties(result.data);
+          setFilteredProperties(result.data);
+          setHasMore(prev => ({ ...prev, all: result.hasMore }));
+          setTotalCount(prev => ({ ...prev, all: result.totalCount, newBuildings: 0 }));
           setCurrentPage(prev => ({ ...prev, all: 1 }));
           lastFetchTime.current.all = Date.now();
         } else {
@@ -271,12 +327,12 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         // Загружаем данные конкретного типа (sale/rent/newBuildings), чтобы не терять элементы при "all"-первой странице
         Logger.debug(`Обновляем данные для типа: ${activeType}`);
         const apiType = activeType === 'newBuildings' ? 'sale' : activeType;
-        const result = await propertyService.getPropertiesByType(apiType as 'sale' | 'rent', 1, pageSize);
-        if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data) && result.data.length > 0) {
-          setFilteredProperties(result.data as Property[]);
+        const result = toPropertyListResult(await propertyService.getPropertiesByType(apiType as 'sale' | 'rent', 1, pageSize));
+        if (result && result.data.length > 0) {
+          setFilteredProperties(result.data);
           // Обновляем состояние пагинации и кэша для активного типа
-          setHasMore(prev => ({ ...prev, [activeType]: (result as any).hasMore || false }));
-          setTotalCount(prev => ({ ...prev, [activeType]: (result as any).totalCount || 0 }));
+          setHasMore(prev => ({ ...prev, [activeType]: result.hasMore }));
+          setTotalCount(prev => ({ ...prev, [activeType]: result.totalCount }));
           setCurrentPage(prev => ({ ...prev, [activeType]: 1 }));
           if (apiType === 'sale' || apiType === 'rent') {
             lastFetchTime.current[apiType] = Date.now();
@@ -287,9 +343,9 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
               typeCache.current[apiType] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 };
             }
             typeCache.current[apiType] = {
-              data: result.data as Property[],
-              totalCount: (result as any).totalCount || 0,
-              hasMore: (result as any).hasMore || false,
+              data: result.data,
+              totalCount: result.totalCount,
+              hasMore: result.hasMore,
               timestamp: Date.now(),
               pageSize
             };
@@ -378,8 +434,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       requestInProgress.current[type === 'newBuildings' ? 'sale' : type] = true;
       setLoading(true);
       
-      const result = await propertyService.getPropertiesByType(type, page, pageSize);
-      if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data) && result.data.length > 0) {
+      const result = toPropertyListResult(await propertyService.getPropertiesByType(type, page, pageSize));
+      if (result && result.data.length > 0) {
         // Для первой страницы обновляем состояние приложения
         if (page === 1) {
           setCurrentPage(prev => ({ ...prev, [type]: 1 }));
@@ -389,9 +445,9 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
           }
           // Обновляем кэш для данного типа
           typeCache.current[cacheKey] = {
-            data: result.data as Property[],
-            totalCount: (result as any).totalCount || 0,
-            hasMore: (result as any).hasMore || false,
+            data: result.data,
+            totalCount: result.totalCount,
+            hasMore: result.hasMore,
             timestamp: Date.now(),
             pageSize
           };
@@ -400,15 +456,15 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
           setCurrentPage(prev => ({ ...prev, [type]: page }));
         }
         
-        setHasMore(prev => ({ ...prev, [type]: (result as any).hasMore || false }));
-        setTotalCount(prev => ({ ...prev, [type]: (result as any).totalCount || 0 }));
+        setHasMore(prev => ({ ...prev, [type]: result.hasMore }));
+        setTotalCount(prev => ({ ...prev, [type]: result.totalCount }));
         lastFetchTime.current[type === 'newBuildings' ? 'sale' : type] = Date.now();
         cacheVersionRef.current = getCacheTimestamp();
         
         return {
-          data: result.data as Property[],
-          totalCount: (result as any).totalCount || 0,
-          hasMore: (result as any).hasMore || false
+          data: result.data,
+          totalCount: result.totalCount,
+          hasMore: result.hasMore
         };
       } else {
         setHasMore(prev => ({ ...prev, [type]: false }));
@@ -454,21 +510,21 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       requestInProgress.current[typeKey as 'all' | 'sale' | 'rent'] = true;
       Logger.debug(`Загрузка дополнительных объявлений типа ${type}, страница ${currentPage[type] + 1}`);
       
-      let result;
+      let result: PropertyListResult | null;
       if (type === 'all') {
-        result = await propertyService.getProperties(currentPage.all + 1, pageSize);
+        result = toPropertyListResult(await propertyService.getProperties(currentPage.all + 1, pageSize));
       } else {
-        result = await propertyService.getPropertiesByType(type, currentPage[type] + 1, pageSize);
+        result = toPropertyListResult(await propertyService.getPropertiesByType(type, currentPage[type] + 1, pageSize));
       }
       
-      if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data) && result.data.length > 0) {
+      if (result && result.data.length > 0) {
         // RU: Критично: используем функциональный setState, чтобы не потерять элементы при быстрых апдейтах.
         // EN: Critical: use functional setState to avoid losing items during rapid updates.
         if (type === 'all') {
           // Добавляем новые объявления к существующим
-          setProperties(prev => [...prev, ...(result.data as Property[])]);
+          setProperties(prev => [...prev, ...result.data]);
           if (activePropertyTypeRef.current === 'all') {
-            setFilteredProperties(prev => [...prev, ...(result.data as Property[])]);
+            setFilteredProperties(prev => [...prev, ...result.data]);
           }
         } else {
           // RU: Для 'sale'/'rent'/'newBuildings' обновляем основной и при необходимости фильтрованный список, избегая дублей.
@@ -477,7 +533,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
           setProperties(prev => {
             // Фильтруем, чтобы избежать дубликатов
             const existingIds = new Set(prev.map((p: Property) => p.id));
-            const newItems = (result.data as Property[]).filter((item: Property) => !existingIds.has(item.id));
+            const newItems = result.data.filter((item: Property) => !existingIds.has(item.id));
             return [...prev, ...newItems];
           });
           
@@ -486,7 +542,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
             setFilteredProperties(prev => {
               // Фильтруем, чтобы избежать дубликатов
               const existingIds = new Set(prev.map((p: Property) => p.id));
-              const newItems = (result.data as Property[]).filter((item: Property) => !existingIds.has(item.id));
+              const newItems = result.data.filter((item: Property) => !existingIds.has(item.id));
               return [...prev, ...newItems];
             });
           }
@@ -495,8 +551,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         // RU: Обновляем состояние пагинации (текущая страница, hasMore, totalCount)
         // EN: Update pagination state (current page, hasMore, totalCount)
         setCurrentPage(prev => ({ ...prev, [type]: prev[type] + 1 }));
-        setHasMore(prev => ({ ...prev, [type]: (result as any).hasMore || false }));
-        setTotalCount(prev => ({ ...prev, [type]: (result as any).totalCount || 0 }));
+        setHasMore(prev => ({ ...prev, [type]: result.hasMore }));
+        setTotalCount(prev => ({ ...prev, [type]: result.totalCount }));
         
         Logger.debug(`Загружено дополнительно ${result.data.length} объявлений типа ${type}`);
       }
@@ -609,12 +665,16 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 
       if (citiesData) {
         // Добавляем координаты для городов
-        const citiesWithCoordinates = citiesData.map((city: any) => ({
-          ...city,
-          latitude: city.latitude || '45.267136',
-          longitude: city.longitude || '19.833549',
-          coordinates: city.coordinates || { lat: parseFloat(city.latitude || '45.267136'), lng: parseFloat(city.longitude || '19.833549') }
-        }));
+        const citiesWithCoordinates = citiesData.map((city: CityRow): City => {
+          const coordinates = getCityCoordinates(city.coordinates);
+          return {
+            id: city.id,
+            name: city.name,
+            latitude: String(coordinates.lat),
+            longitude: String(coordinates.lng),
+            coordinates,
+          };
+        });
         
         setCities(citiesWithCoordinates);
         setCitiesLoading(false);
@@ -670,7 +730,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
           user:users(name, phone, is_agency),
           city:cities(name),
           district:districts(id, name, city_id),
-          agency:agency_profiles(id, name, phone, logo_url, description, website, instagram, facebook)
+          agency:agency_profiles(id, name, phone, logo_url, description, email, site, location)
         `)
         .eq('id', id)
         .single();
@@ -685,10 +745,11 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       }
       
       // Преобразуем данные в формат Property
-      const formattedProperty = {
-        ...(data as any),
-        images: (data as any).images || []
-      } as Property;
+      const propertyData = data as Property;
+      const formattedProperty: Property = {
+        ...propertyData,
+        images: propertyData.images || []
+      };
 
       return formattedProperty;
     } catch (error) {

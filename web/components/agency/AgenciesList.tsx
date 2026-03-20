@@ -3,6 +3,7 @@
 import { Phone, Globe, Mail, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Database } from '@shared/lib/database.types';
+import { formatAgencySiteUrl } from '@shared/utils/agencyProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Link from 'next/link';
 
@@ -15,11 +16,6 @@ interface AgenciesListProps {
 
 export function AgenciesList({ agencies, hasError = false }: AgenciesListProps) {
   const { t } = useTranslation();
-
-  const formatSite = (site?: string | null) => {
-    if (!site) return null;
-    return site.startsWith('http') ? site : `https://${site}`;
-  };
 
   const renderEmptyState = () => (
     <Card>
@@ -47,7 +43,7 @@ export function AgenciesList({ agencies, hasError = false }: AgenciesListProps) 
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {agencies.map((agency) => {
-              const site = formatSite(agency.site);
+              const site = formatAgencySiteUrl(agency.site);
 
               return (
                 <Link key={agency.id} href={`/agencija/?id=${agency.id}`} className="block h-full">

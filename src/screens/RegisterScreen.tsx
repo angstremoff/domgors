@@ -14,8 +14,9 @@ import { Logger } from '../utils/logger';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
+import type { RegisterScreenProps } from '../types/navigation';
 
-const RegisterScreen = ({ navigation }: any) => {
+const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
   const { t } = useTranslation();
   const { login, register } = useAuth();
   const [email, setEmail] = useState('');

@@ -156,8 +156,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   const validateRange = (
     range: [string, string],
-    bounds: { min: number; max: number },
-    type: 'price' | 'area'
+    bounds: { min: number; max: number }
   ): { range: number[]; error?: string } => {
     const min = parseNumberOrNull(range[0]);
     const max = parseNumberOrNull(range[1]);
@@ -182,8 +181,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
   };
 
   const handleApplyPress = () => {
-    const priceValidation = validateRange(localFilters.price, getPriceBounds(), 'price');
-    const areaValidation = validateRange(localFilters.area, AREA_BOUNDS, 'area');
+    const priceValidation = validateRange(localFilters.price, getPriceBounds());
+    const areaValidation = validateRange(localFilters.area, AREA_BOUNDS);
 
     setPriceError(priceValidation.error ?? null);
     setAreaError(areaValidation.error ?? null);

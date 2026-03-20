@@ -5,6 +5,7 @@ import { Phone, Globe, Mail, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@shared/lib/database.types';
+import { formatAgencySiteUrl } from '@shared/utils/agencyProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Link from 'next/link';
 
@@ -87,11 +88,6 @@ export function AgenciesListClient({
     return agencies.filter(agency => String(agency.city_id) === selectedCity);
   }, [agencies, selectedCity]);
 
-  const formatSite = (site?: string | null) => {
-    if (!site) return null;
-    return site.startsWith('http') ? site : `https://${site}`;
-  };
-
   const handleCityChange = (cityId: string) => {
     setSelectedCity(cityId || undefined);
   };
@@ -148,7 +144,7 @@ export function AgenciesListClient({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAgencies.map((agency) => {
-              const site = formatSite(agency.site);
+              const site = formatAgencySiteUrl(agency.site);
 
               return (
                 <Link key={agency.id} href={`/agencija/?id=${agency.id}`} className="block h-full">

@@ -6,8 +6,9 @@ import { showErrorAlert, showAlert } from '../utils/alertUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import Colors from '../constants/colors';
 import { Logger } from '../utils/logger';
+import type { LoginScreenProps } from '../types/navigation';
 
-const LoginScreen = ({ navigation }: any) => {
+const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const { t } = useTranslation();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
@@ -37,7 +38,7 @@ const LoginScreen = ({ navigation }: any) => {
         index: 0,
         routes: [{ name: 'MainTabs' }],
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       Logger.error('Непредвиденная ошибка:', error);
       showErrorAlert(t('auth.loginFailed'));
     } finally {

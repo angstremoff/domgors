@@ -9,19 +9,12 @@ import type { AgencyScreenProps } from '../types/navigation';
 import OptimizedPropertyCard from '../components/OptimizedPropertyCard';
 import type { Property } from '../contexts/PropertyContext';
 import { Logger } from '../utils/logger';
-
-interface AgencyProfile {
-  id: string;
-  name: string | null;
-  phone: string | null;
-  logo_url?: string | null;
-  description?: string | null;
-  website?: string | null;
-  instagram?: string | null;
-  facebook?: string | null;
-  email?: string | null;
-  address?: string | null;
-}
+import {
+  formatAgencySiteUrl,
+  formatAgencyTelegramUrl,
+  normalizeAgencyProfile,
+  type NormalizedAgencyProfile,
+} from '../utils/agencyProfile';
 
 const AgencyScreen = ({ route, navigation }: AgencyScreenProps) => {
   const { agencyId } = route.params;
@@ -38,46 +31,37 @@ const AgencyScreen = ({ route, navigation }: AgencyScreenProps) => {
       ? 24
       : 16;
 
-  const [agency, setAgency] = useState<AgencyProfile | null>(null);
+  const [agency, setAgency] = useState<NormalizedAgencyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState<Property[]>([]);
   const [propsLoading, setPropsLoading] = useState<boolean>(false);
-
-  const sanitizeUrl = (url?: string | null) => {
-    if (!url) return '';
-    const trimmed = url.trim();
-    if (/^https?:\/\//i.test(trimmed)) return trimmed;
-    return `https://${trimmed}`;
-  };
 
   useEffect(() => {
     const loadAgency = async () => {
       try {
         setLoading(true);
-        // 1) Пытаемся найти профиль агентства по первичному ключу id
         let { data, error } = await supabase
           .from('agency_profiles')
           .select('*')
           .eq('id', agencyId)
-          .single();
+          .maybeSingle();
 
-        // Если 0 строк (PGRST116) или data пустая — пробуем фолбек по user_id
-        if ((error && (error as any)?.code === 'PGRST116') || !data) {
+        if (!data) {
           const fb = await supabase
             .from('agency_profiles')
             .select('*')
             .eq('user_id', agencyId)
-            .single();
-          data = fb.data as any;
-          error = fb.error as any;
+            .maybeSingle();
+          data = fb.data;
+          error = fb.error;
         }
 
-        if (error) {
+        if (error || !data) {
           Logger.warn('Не удалось загрузить профиль агентства:', error);
           setAgency(null);
         } else {
           Logger.debug('Agency profile loaded:', data);
-          setAgency(data as AgencyProfile);
+          setAgency(normalizeAgencyProfile(data));
         }
       } catch (e) {
         Logger.error('Ошибка загрузки агентства:', e);
@@ -107,7 +91,7 @@ const AgencyScreen = ({ route, navigation }: AgencyScreenProps) => {
           .eq('agency_id', targetId)
           .order('created_at', { ascending: false });
         if (error) throw error;
-        let data = initialData;
+        let data = initialData ?? [];
 
         // Если по agency_id пусто — пробуем фолбек по user_id (случай, когда route получил users.id)
         if (!data || data.length === 0) {
@@ -122,10 +106,10 @@ const AgencyScreen = ({ route, navigation }: AgencyScreenProps) => {
             `)
             .eq('user_id', targetId)
             .order('created_at', { ascending: false });
-          data = fb.data as any;
+          data = fb.data ?? [];
         }
 
-        setProperties((data || []) as Property[]);
+        setProperties(data as Property[]);
       } catch (e) {
         Logger.error('Ошибка загрузки объявлений агентства:', e);
       } finally {
@@ -135,12 +119,12 @@ const AgencyScreen = ({ route, navigation }: AgencyScreenProps) => {
     loadAgencyProperties();
   }, [agencyId, agency?.id]);
 
-  // Нормализуем возможные альтернативные имена полей из БД (всегда в скоупе)
-  const telegramNorm = agency?.website || (agency as any)?.site || (agency as any)?.telegram || (agency as any)?.telegram_url || null;
-  const instagramNorm = agency?.instagram || (agency as any)?.instagram_url || null;
-  const facebookNorm = agency?.facebook || (agency as any)?.facebook_url || null;
-  const emailNorm = agency?.email || (agency as any)?.mail || (agency as any)?.contact_email || null;
-  const addressNorm = agency?.address || (agency as any)?.addr || (agency as any)?.location || null;
+  const siteUrl = formatAgencySiteUrl(agency?.site);
+  const telegramUrl = formatAgencyTelegramUrl(agency?.telegram);
+  const instagramUrl = formatAgencySiteUrl(agency?.instagram);
+  const facebookUrl = formatAgencySiteUrl(agency?.facebook);
+  const emailNorm = agency?.email ?? null;
+  const addressNorm = agency?.location ?? null;
 
   if (loading) {
     return (
@@ -218,25 +202,26 @@ const AgencyScreen = ({ route, navigation }: AgencyScreenProps) => {
               </TouchableOpacity>
             ) : null}
 
-            {telegramNorm ? (
-              <TouchableOpacity style={[styles.linkButton, { borderColor: theme.primary }]} onPress={() => {
-                const url = telegramNorm.startsWith('@') || telegramNorm.startsWith('https://t.me/')
-                  ? (telegramNorm.startsWith('@') ? `https://t.me/${telegramNorm.slice(1)}` : telegramNorm)
-                  : `https://t.me/${telegramNorm}`;
-                Linking.openURL(url);
-              }}>
-                <Text style={[styles.linkText, { color: theme.primary }]}>{t('agency.telegram', 'Telegram')}</Text>
+            {siteUrl ? (
+              <TouchableOpacity style={[styles.linkButton, { borderColor: theme.primary }]} onPress={() => Linking.openURL(siteUrl)}>
+                <Text style={[styles.linkText, { color: theme.primary }]}>{t('agency.website')}</Text>
               </TouchableOpacity>
             ) : null}
 
-            {instagramNorm ? (
-              <TouchableOpacity style={[styles.linkButton, { borderColor: theme.primary }]} onPress={() => Linking.openURL(sanitizeUrl(instagramNorm))}>
+            {telegramUrl ? (
+              <TouchableOpacity style={[styles.linkButton, { borderColor: theme.primary }]} onPress={() => Linking.openURL(telegramUrl)}>
+                <Text style={[styles.linkText, { color: theme.primary }]}>{t('agency.telegram')}</Text>
+              </TouchableOpacity>
+            ) : null}
+
+            {instagramUrl ? (
+              <TouchableOpacity style={[styles.linkButton, { borderColor: theme.primary }]} onPress={() => Linking.openURL(instagramUrl)}>
                 <Text style={[styles.linkText, { color: theme.primary }]}>{t('agency.instagram')}</Text>
               </TouchableOpacity>
             ) : null}
 
-            {facebookNorm ? (
-              <TouchableOpacity style={[styles.linkButton, { borderColor: theme.primary }]} onPress={() => Linking.openURL(sanitizeUrl(facebookNorm))}>
+            {facebookUrl ? (
+              <TouchableOpacity style={[styles.linkButton, { borderColor: theme.primary }]} onPress={() => Linking.openURL(facebookUrl)}>
                 <Text style={[styles.linkText, { color: theme.primary }]}>{t('agency.facebook')}</Text>
               </TouchableOpacity>
             ) : null}

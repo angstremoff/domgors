@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { Phone, Globe, Mail, MapPin, ArrowLeft } from 'lucide-react';
 import type { Database } from '@shared/lib/database.types';
+import { formatAgencySiteUrl } from '@shared/utils/agencyProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PropertyGrid } from '@/components/property/PropertyGrid';
@@ -23,11 +24,7 @@ interface AgencyDetailsProps {
 export function AgencyDetails({ agency, properties }: AgencyDetailsProps) {
   const { t } = useTranslation();
 
-  const siteUrl = agency.site
-    ? agency.site.startsWith('http')
-      ? agency.site
-      : `https://${agency.site}`
-    : null;
+  const siteUrl = formatAgencySiteUrl(agency.site);
 
   const handleCall = () => {
     if (agency.phone) {

@@ -34,3 +34,11 @@ export type AgencyScreenProps = {
   route: RouteProp<RootStackParamList, 'Agency'>;
   navigation: NativeStackNavigationProp<RootStackParamList>;
 };
+
+export type LoginScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
+};
+
+export type RegisterScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Register'>;
+};
