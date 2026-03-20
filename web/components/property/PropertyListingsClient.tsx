@@ -135,8 +135,8 @@ export function PropertyListingsClient({
   }, [fetchDistricts, selectedCity]);
 
   const fetchProperties = useCallback(
-    async (options: { reset?: boolean; filters?: FilterState } = {}) => {
-      const { reset = false, filters: overrideFilters } = options;
+    async (options: { reset?: boolean; filters?: FilterState; silent?: boolean } = {}) => {
+      const { reset = false, filters: overrideFilters, silent = false } = options;
       const filterState = overrideFilters ?? filters;
       if (loading || loadingMore) {
         if (!reset) {
@@ -145,7 +145,9 @@ export function PropertyListingsClient({
       }
 
       if (reset) {
-        setLoading(true);
+        if (!silent) {
+          setLoading(true);
+        }
         setPage(0);
         setHasMore(true);
       } else {
@@ -218,7 +220,7 @@ export function PropertyListingsClient({
 
       if (fetchError) {
         setError(fetchError.message);
-        if (reset) {
+        if (reset && !silent) {
           setProperties([]);
         }
         setLoading(false);
@@ -309,10 +311,7 @@ export function PropertyListingsClient({
 
   // Инициализационная загрузка
   useEffect(() => {
-    if (initialProperties.length > 0) {
-      return;
-    }
-    fetchProperties({ reset: true, filters });
+    fetchProperties({ reset: true, filters, silent: initialProperties.length > 0 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

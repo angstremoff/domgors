@@ -493,6 +493,8 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
     : '';
   const addressParts = [districtName, translatedCityName, streetName].filter(Boolean);
   const fullAddress = addressParts.join(', ');
+  const hasAreaValue = property.area !== undefined && property.area !== null;
+  const hasRoomsValue = property.rooms !== undefined && property.rooms !== null;
 
   // Отладочный вывод для всего объекта
   Logger.debug('Детали объявления:', JSON.stringify({
@@ -627,7 +629,7 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
 
           {/* Характеристики */}
           <View style={styles.statsRow}>
-            {property.area && (
+            {hasAreaValue && (
               <View style={styles.statItem}>
                 <Ionicons name="cube-outline" size={18} color={theme.primary} />
                 <Text style={[styles.statValue, { color: theme.text }]}>
@@ -636,7 +638,7 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
               </View>
             )}
 
-            {property.rooms && property.property_type !== 'land' && (
+            {hasRoomsValue && property.property_type !== 'land' && (
               <View style={styles.statItem}>
                 <Ionicons name="bed-outline" size={18} color={theme.primary} />
                 <Text style={[styles.statValue, { color: theme.text }]}>{property.rooms} {t('property.rooms')}</Text>
