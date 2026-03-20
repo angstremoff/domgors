@@ -428,7 +428,7 @@
       "message": "DomGo - это платформа для поиска и размещения объявлений о недвижимости в Сербии."
     },
     "update": {
-      "openGooglePlay": "Открыть DomGo в RuStore",
+      "openRuStore": "Открыть DomGo в RuStore",
       "openAppStore": "Открыть DomGo в App Store",
       "description": "После публикации приложение будет обновляться через магазин приложений.",
       "comingSoonTitle": "Скоро",

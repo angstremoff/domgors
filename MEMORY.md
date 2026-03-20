@@ -41,10 +41,10 @@
 - **ВАЖНО:** Не пытаться собирать release APK через `./gradlew assembleRelease` без keystore файла - упадет с ошибкой. Для релизной сборки использовать скрипты или Metro.
 
 ### 5.2 Процесс публикации
-- Expo OTA отключены. Каждое обновление публикуется через Google Play/App Store.
+- Expo OTA отключены. Каждое обновление публикуется через RuStore/App Store.
 - **ВАЖНО: Google Play требует targetSdkVersion 35 (Android 15)** с августа 2024 года для новых приложений и обновлений. Проверить в `android/app/build.gradle` → `targetSdkVersion 35`.
 - Минимальные разрешения: `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `READ_MEDIA_IMAGES/VIDEO`, `INTERNET`, `VIBRATE`. Чувствительные права (`RECORD_AUDIO`, `SYSTEM_ALERT_WINDOW`, `WRITE_EXTERNAL_STORAGE`) убраны.
-- Настройки -> «Проверить обновления» ведёт в Google Play (`https://play.google.com/store/apps/details?id=com.anonymous.DomGoMobile`). Для iOS добавим ссылку после релиза.
+- Настройки -> «Проверить обновления» ведёт в RuStore (`https://www.rustore.ru/catalog/app/domgo.rs`). Для iOS добавим ссылку после релиза.
 - Release checklist для Play Console:
   1. Подготовить `.aab` (см. выше) и включить Play App Signing.
   2. Опубликовать Privacy Policy (`PRIVACY_POLICY.md`) на публичном URL и указать его в Store Listing.
@@ -125,7 +125,7 @@
 - **Страница настроек** (`/profil/podesavanja/page.tsx`): создана по аналогии с мобильным `SettingsScreen.tsx`. Секции:
   - Уведомления (заглушка с модальным окном)
   - Аккаунт (email + кнопка выхода)
-  - О приложении (версия, помощь, ссылка на Google Play, контакты, условия размещения)
+  - О приложении (версия, помощь, ссылка на RuStore, контакты, условия размещения)
 - Модальные окна для информационных сообщений реализованы inline (без отдельного компонента).
 
 ## 13. UI исправления веб-версии
@@ -173,7 +173,7 @@
 ### 14.3 PWA и прочее
 - **manifest.json**: для добавления на главный экран
 - **Preconnect**: fonts.googleapis.com, mc.yandex.ru, googletagmanager.com
-- **Footer**: SEO-текст на двух языках, ссылка на Google Play, schema.org разметка
+- **Footer**: SEO-текст на двух языках, ссылка на RuStore, schema.org разметка
 
 ### 14.4 Шаринг объявлений
 - Веб-версия использует `https://domgo.rs/property.html?id=<UUID>` (как мобильное)

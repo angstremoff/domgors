@@ -129,7 +129,7 @@ const SettingsScreen = ({ navigation }: any) => {
           <TouchableOpacity style={styles.settingItem} onPress={handleStoreUpdate}>
             <Text style={[styles.settingLabel, { color: theme.text }]}>
               {Platform.OS === 'android'
-                ? t('settings.update.openGooglePlay', 'Открыть DomGo в RuStore')
+                ? t('settings.update.openRuStore', 'Открыть DomGo в RuStore')
                 : t('settings.update.openAppStore', 'Открыть DomGo в App Store')}
             </Text>
             <Ionicons name="open-outline" size={20} color={theme.primary} />

@@ -346,7 +346,7 @@
       "message": "Došlo je do greške prilikom odjavljivanja."
     },
     "update": {
-      "openGooglePlay": "Otvori DomGo u RuStore prodavnici",
+      "openRuStore": "Otvori DomGo u RuStore prodavnici",
       "openAppStore": "Otvori DomGo u App Store-u",
       "description": "Posle objavljivanja aplikacija će se ažurirati preko prodavnice aplikacija.",
       "comingSoonTitle": "Uskoro",
