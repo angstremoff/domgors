@@ -12,13 +12,12 @@ import {
 } from 'react-native';
 import { Logger } from '../utils/logger';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
 
 const RegisterScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -38,72 +37,33 @@ const RegisterScreen = ({ navigation }: any) => {
     setLoading(true);
 
     try {
-      // Регистрация пользователя с настройкой подтверждения email
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          // URL для возврата после подтверждения email с параметром источника (мобильное приложение)
-          emailRedirectTo: 'domgomobile://auth/callback?source=mobile',
-          // Добавляем метаданные для идентификации источника регистрации
-          data: {
-            source: 'mobile_app',
-            platform: 'android'
-          }
-        }
-      });
+      const { user, session, error: authError } = await register(email, password);
 
       if (authError) throw authError;
 
-      if (authData?.user) {
+      if (user) {
         // Проверка статуса подтверждения email
-        if (authData.user.identities && authData.user.identities.length === 0) {
+        if (user.identities && user.identities.length === 0) {
           // Уже существует пользователь с таким email
           showErrorAlert(t('auth.emailAlreadyExists'));
           return;
         }
         
-        if (authData.session === null) {
+        if (session === null) {
           // Email требует подтверждения
           showSuccessAlert(t('auth.confirmEmailSent'));
           navigation.navigate('Login');
           return;
         }
 
-        // Если пользователь сразу создан и авторизован, пытаемся создать профиль
-        try {
-          // Сохраняем базовую информацию в таблицу пользователей
-          const { error: profileError } = await supabase
-            .from('users')
-            .insert([
-              {
-                id: authData.user.id,
-                email,
-                created_at: new Date().toISOString(),
-              },
-            ]);
-
-          if (profileError) {
-            Logger.debug('Профиль будет создан после подтверждения email:', profileError);
-            // Не выбрасываем ошибку, так как пользователь уже создан в auth
-          }
-
-          // Автоматически входим после успешной регистрации
-          await login(email, password);
-          
-          showSuccessAlert(t('auth.registerSuccess'));
-          navigation.navigate('Home');
-        } catch (profileError) {
-          // Ошибка создания профиля, но пользователь создан
-          Logger.debug('Ошибка создания профиля:', profileError);
-          showSuccessAlert(t('auth.confirmEmailSent'));
-          navigation.navigate('Login');
-        }
+        await login(email, password);
+        showSuccessAlert(t('auth.registerSuccess'));
+        navigation.navigate('Home');
       }
-    } catch (error: any) {
-      Logger.error('Registration error:', error);
+    } catch (error: unknown) {
+      Logger.error('Ошибка регистрации:', error);
       // Показываем более конкретную ошибку, если она доступна
-      if (error.message) {
+      if (error instanceof Error && error.message) {
         showErrorAlert(`${t('auth.registerFailed')}: ${error.message}`);
       } else {
         showErrorAlert(t('auth.registerFailed'));

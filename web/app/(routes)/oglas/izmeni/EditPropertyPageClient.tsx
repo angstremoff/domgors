@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Link from 'next/link';
 import type { Database } from '@shared/lib/database.types';
+import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '@shared/utils/propertyRules';
 
 type City = Database['public']['Tables']['cities']['Row'];
 type District = Database['public']['Tables']['districts']['Row'];
@@ -49,6 +50,7 @@ function EditPropertyContent() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const supportsRooms = propertyTypeSupportsRooms(propertyType);
 
     // Загрузка городов
     useEffect(() => {
@@ -78,6 +80,12 @@ function EditPropertyContent() {
         };
         loadDistricts();
     }, [cityId, supabase]);
+
+    useEffect(() => {
+        if (!supportsRooms && rooms) {
+            setRooms('');
+        }
+    }, [supportsRooms, rooms]);
 
     // Загрузка данных объявления
     useEffect(() => {
@@ -196,7 +204,7 @@ function EditPropertyContent() {
 
         if (!user || !propertyId) return;
 
-        if (!title || !cityId || !districtId || !price || !area) {
+        if (!title.trim() || !description.trim() || !location.trim() || !cityId || !districtId || !price || !area || (supportsRooms && !rooms)) {
             setError(t('property.addProperty.validation.fillAllFields'));
             return;
         }
@@ -210,18 +218,27 @@ function EditPropertyContent() {
         setSubmitting(true);
 
         try {
+            const numericPrice = parseFiniteNumberInput(price);
+            const numericArea = parseFiniteNumberInput(area);
+            const numericRooms = normalizePropertyRooms(propertyType, rooms);
+
+            if (numericPrice === null || numericArea === null || (supportsRooms && numericRooms === null)) {
+                setError(t('filters.validation.invalidNumber'));
+                return;
+            }
+
             const newImageUrls = await uploadNewImages();
             const allImages = [...existingImages, ...newImageUrls];
 
             const updatePayload = {
-                title,
-                description,
-                price: Number(price),
-                area: Number(area),
-                rooms: Number(rooms) || null,
+                title: title.trim(),
+                description: description.trim(),
+                price: numericPrice,
+                area: numericArea,
+                rooms: numericRooms ?? 0,
                 city_id: Number(cityId),
                 district_id: districtId,
-                location,
+                location: location.trim(),
                 type: dealType,
                 property_type: propertyType,
                 is_new_building: isNewBuilding,
@@ -333,7 +350,11 @@ function EditPropertyContent() {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <Input type="number" label={t('property.area')} value={area} min={0} onChange={(e) => setArea(e.target.value)} required />
-                                <Input type="number" label={t('property.rooms')} value={rooms} min={0} onChange={(e) => setRooms(e.target.value)} />
+                                {supportsRooms ? (
+                                    <Input type="number" label={t('property.rooms')} value={rooms} min={0} onChange={(e) => setRooms(e.target.value)} required />
+                                ) : (
+                                    <div />
+                                )}
                                 <div className="flex items-center gap-3 pt-6">
                                     <input id="new-building" type="checkbox" checked={isNewBuilding} onChange={(e) => setIsNewBuilding(e.target.checked)} className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
                                     <label htmlFor="new-building" className="text-sm font-medium text-text cursor-pointer">{t('common.newBuildings')}</label>

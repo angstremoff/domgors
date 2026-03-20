@@ -113,20 +113,15 @@ export default function App() {
         const propertyId = parsed.propertyId;
         Logger.debug('Открываем объявление по ID:', propertyId);
         setPendingPropertyId(propertyId);
-        // @ts-ignore — оставляем глобальные флаги для обратной совместимости в других местах
         globalThis.propertyDeepLinkId = propertyId;
-        // @ts-ignore
         globalThis.pendingPropertyNavigation = propertyId;
 
         // Если навигация уже инициализирована (приложение активное), пробуем перейти сразу
         // Запасной механизм через состояние останется, если навигатор ещё не готов
-        // @ts-ignore
         if (globalThis.navigationRef && globalThis.navigationRef.current) {
           try {
-            // @ts-ignore
             globalThis.navigationRef.current.navigate('PropertyDetails', {
               propertyId,
-              id: propertyId
             });
             Logger.debug('Мгновенная навигация к объявлению выполнена');
           } catch (error) {
@@ -140,14 +135,11 @@ export default function App() {
         const agencyId = parsed.agencyId;
         Logger.debug('Открываем агентство по ID:', agencyId);
         setPendingAgencyId(agencyId);
-        // @ts-ignore
         globalThis.pendingAgencyNavigation = agencyId;
 
         // Если навигация готова — пробуем перейти сразу
-        // @ts-ignore
         if (globalThis.navigationRef && globalThis.navigationRef.current) {
           try {
-            // @ts-ignore
             globalThis.navigationRef.current.navigate('Agency', { agencyId });
             Logger.debug('Мгновенная навигация к агентству выполнена');
           } catch (error) {

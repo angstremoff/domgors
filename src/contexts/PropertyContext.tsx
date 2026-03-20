@@ -204,9 +204,9 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data)) {
         setProperties(result.data as Property[]);
         setFilteredProperties(result.data as Property[]);
-        setHasMore({ ...hasMore, all: (result as any).hasMore || false });
-        setTotalCount({ ...totalCount, all: (result as any).totalCount || 0, newBuildings: 0 });
-        setCurrentPage({ ...currentPage, all: 1 });
+        setHasMore(prev => ({ ...prev, all: (result as any).hasMore || false }));
+        setTotalCount(prev => ({ ...prev, all: (result as any).totalCount || 0, newBuildings: 0 }));
+        setCurrentPage(prev => ({ ...prev, all: 1 }));
         lastFetchTime.current.all = Date.now();
         cacheVersionRef.current = getCacheTimestamp();
         
@@ -215,8 +215,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
         // Если result пустой или неправильного формата
         setProperties([]);
         setFilteredProperties([]);
-        setHasMore({ ...hasMore, all: false });
-        setTotalCount({ ...totalCount, all: 0, newBuildings: 0 });
+        setHasMore(prev => ({ ...prev, all: false }));
+        setTotalCount(prev => ({ ...prev, all: 0, newBuildings: 0 }));
         Logger.debug('Получен пустой результат из propertyService.getProperties');
       }
     } catch (error) {
@@ -255,16 +255,16 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
           Logger.debug(`Данные успешно загружены из Supabase: ${result.data.length} из ${(result as any).totalCount || 0}`);
           setProperties(result.data as Property[]);
           setFilteredProperties(result.data as Property[]);
-          setHasMore({ ...hasMore, all: (result as any).hasMore || false });
-          setTotalCount({ ...totalCount, all: (result as any).totalCount || 0, newBuildings: 0 });
-          setCurrentPage({ ...currentPage, all: 1 });
+          setHasMore(prev => ({ ...prev, all: (result as any).hasMore || false }));
+          setTotalCount(prev => ({ ...prev, all: (result as any).totalCount || 0, newBuildings: 0 }));
+          setCurrentPage(prev => ({ ...prev, all: 1 }));
           lastFetchTime.current.all = Date.now();
         } else {
           Logger.debug('Нет данных из Supabase');
           setProperties([]);
           setFilteredProperties([]);
-          setHasMore({ ...hasMore, all: false });
-          setTotalCount({ ...totalCount, all: 0, newBuildings: 0 });
+          setHasMore(prev => ({ ...prev, all: false }));
+          setTotalCount(prev => ({ ...prev, all: 0, newBuildings: 0 }));
           Alert.alert('Внимание', 'Нет доступных объявлений');
         }
       } else {
@@ -382,7 +382,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       if (result && typeof result === 'object' && 'data' in result && Array.isArray(result.data) && result.data.length > 0) {
         // Для первой страницы обновляем состояние приложения
         if (page === 1) {
-          setCurrentPage({ ...currentPage, [type]: 1 });
+          setCurrentPage(prev => ({ ...prev, [type]: 1 }));
           // Проверяем существование ключа в typeCache перед обновлением
           if (!typeCache.current[cacheKey]) {
             typeCache.current[cacheKey] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 };
@@ -397,11 +397,11 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
           };
           cacheVersionRef.current = globalCacheVersion;
         } else {
-          setCurrentPage({ ...currentPage, [type]: page });
+          setCurrentPage(prev => ({ ...prev, [type]: page }));
         }
         
-        setHasMore({ ...hasMore, [type]: (result as any).hasMore || false });
-        setTotalCount({ ...totalCount, [type]: (result as any).totalCount || 0 });
+        setHasMore(prev => ({ ...prev, [type]: (result as any).hasMore || false }));
+        setTotalCount(prev => ({ ...prev, [type]: (result as any).totalCount || 0 }));
         lastFetchTime.current[type === 'newBuildings' ? 'sale' : type] = Date.now();
         cacheVersionRef.current = getCacheTimestamp();
         
@@ -411,8 +411,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
           hasMore: (result as any).hasMore || false
         };
       } else {
-        setHasMore({ ...hasMore, [type]: false });
-        setTotalCount({ ...totalCount, [type]: 0, newBuildings: 0 });
+        setHasMore(prev => ({ ...prev, [type]: false }));
+        setTotalCount(prev => ({ ...prev, [type]: 0, newBuildings: 0 }));
         return { data: [], totalCount: 0, hasMore: false };
       }
     } catch (error) {

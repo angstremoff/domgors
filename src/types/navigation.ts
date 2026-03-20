@@ -1,10 +1,11 @@
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import type { Property } from '../contexts/PropertyContext';
 
 // Типы для всех параметров экранов приложения
 export type RootStackParamList = {
   MainTabs: undefined;
-  PropertyDetails: { propertyId: string };
+  PropertyDetails: { propertyId: string; property?: Property; id?: string };
   Login: undefined;
   Register: undefined;
   AddProperty: undefined;

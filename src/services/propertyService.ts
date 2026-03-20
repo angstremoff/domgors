@@ -9,12 +9,17 @@ import { retry, withTimeout } from '../utils/apiHelpers';
 import { logError } from '../utils/sentry';
 import { Logger } from '../utils/logger';
 import { propertyCache, apiCache } from '../utils/cacheManager';
+import { normalizePropertyRooms } from '../utils/propertyRules';
+import {
+  buildPropertyImagePath,
+  extractPropertyImagePath,
+  PROPERTY_STORAGE_BUCKET,
+} from '../utils/propertyStorage';
 
 const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'] as const;
 type AllowedImageExtension = typeof ALLOWED_IMAGE_EXTENSIONS[number];
 const MAX_IMAGE_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
-const STORAGE_BUCKET = 'properties';
-const STORAGE_FOLDER = 'property-images';
+const STORAGE_BUCKET = PROPERTY_STORAGE_BUCKET;
 
 const ensureAllowedExtension = (ext: string): AllowedImageExtension => {
   const normalized = ext.toLowerCase();
@@ -78,6 +83,31 @@ const activeRequests = {
   sale: false,
   rent: false,
   byId: new Set()
+};
+
+const updateOwnedPropertyStatus = async (propertyId: string, status: 'active' | 'sold' | 'rented') => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Пользователь не авторизован');
+  }
+
+  const { data, error } = await supabase
+    .from('properties')
+    .update({ status })
+    .eq('id', propertyId)
+    .eq('user_id', user.id)
+    .select('id')
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error('Объявление не найдено или нет прав на редактирование');
+  }
+
+  invalidateCache(undefined, propertyId);
 };
 
 
@@ -353,7 +383,7 @@ export const propertyService = {
     }
   },
 
-  async createProperty(propertyData: any) {
+  async createProperty(propertyData: Partial<PropertyInsert>) {
     try {
       // Получение UUID пользователя
       const {
@@ -365,6 +395,14 @@ export const propertyService = {
       // Подготовка данных для вставки
       const propertyForInsert: PropertyInsert = {
         ...propertyData,
+        title: propertyData.title ?? '',
+        description: propertyData.description ?? '',
+        price: propertyData.price ?? 0,
+        type: propertyData.type ?? 'sale',
+        property_type: propertyData.property_type ?? 'apartment',
+        area: propertyData.area ?? 0,
+        rooms: normalizePropertyRooms(propertyData.property_type, propertyData.rooms) ?? 0,
+        location: propertyData.location ?? '',
         user_id: user.id,
         // Добавляем пустой массив изображений, если он не предоставлен
         images: propertyData.images || [],
@@ -392,48 +430,16 @@ export const propertyService = {
   },
   
   async markAsSold(propertyId: string) {
-    // Получаем текущего пользователя для проверки владельца
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Пользователь не авторизован');
-
-    // Обновляем только если пользователь является владельцем объявления
-    const { error, count } = await supabase
-      .from('properties')
-      .update({ status: 'sold' })
-      .eq('id', propertyId)
-      .eq('user_id', user.id);
-
-    if (error) throw error;
-    if (count === 0) throw new Error('Объявление не найдено или нет прав на редактирование');
+    await updateOwnedPropertyStatus(propertyId, 'sold');
   },
 
   async markAsRented(propertyId: string) {
-    // Получаем текущего пользователя для проверки владельца
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Пользователь не авторизован');
-
-    // Обновляем только если пользователь является владельцем объявления
-    const { error, count } = await supabase
-      .from('properties')
-      .update({ status: 'rented' })
-      .eq('id', propertyId)
-      .eq('user_id', user.id);
-
-    if (error) throw error;
-    if (count === 0) throw new Error('Объявление не найдено или нет прав на редактирование');
+    await updateOwnedPropertyStatus(propertyId, 'rented');
   },
   
   async markAsActive(id: string) {
     try {
-      const { error } = await supabase
-        .from('properties')
-        .update({ status: 'active' })
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      // Инвалидируем кэш, т.к. изменился статус объявления
-      invalidateCache(undefined, id);
+      await updateOwnedPropertyStatus(id, 'active');
       
       Logger.debug('Статус объявления успешно обновлен на active:', id);
       return { success: true };
@@ -469,34 +475,25 @@ export const propertyService = {
       // Удаляем фотографии из хранилища, если они есть
       if (property.images && property.images.length > 0) {
         try {
-          // Получаем пути файлов с учетом папки (property-images/filename)
-          const fileNames = property.images.map((imageUrl: string) => {
-            // Извлекаем путь после бакета, если есть (public URL) или используем имя файла
-            try {
-              const url = new URL(imageUrl);
-              const segments = url.pathname.split('/').filter(Boolean);
-              const filename = segments[segments.length - 1];
-              return `${STORAGE_FOLDER}/${filename}`;
-            } catch {
-              const parts = imageUrl.split('/');
-              const filename = parts[parts.length - 1];
-              return `${STORAGE_FOLDER}/${filename}`;
+          const fileNames = property.images
+            .map((imageUrl: string) => extractPropertyImagePath(imageUrl))
+            .filter((value): value is string => Boolean(value));
+          
+          if (fileNames.length > 0) {
+            Logger.debug('Удаление файлов из хранилища:', fileNames);
+            
+            // Удаляем все файлы из бакета с изображениями
+            const { error: storageError } = await supabase
+              .storage
+              .from(STORAGE_BUCKET)
+              .remove(fileNames);
+            
+            if (storageError) {
+              Logger.error('Ошибка при удалении файлов из хранилища:', storageError);
+              // Продолжаем удаление объявления даже если не удалось удалить фото
+            } else {
+              Logger.debug('Все фотографии успешно удалены из хранилища');
             }
-          });
-          
-          Logger.debug('Удаление файлов из хранилища:', fileNames);
-          
-          // Удаляем все файлы из бакета с изображениями
-          const { error: storageError } = await supabase
-            .storage
-            .from(STORAGE_BUCKET)
-            .remove(fileNames);
-          
-          if (storageError) {
-            Logger.error('Ошибка при удалении файлов из хранилища:', storageError);
-            // Продолжаем удаление объявления даже если не удалось удалить фото
-          } else {
-            Logger.debug('Все фотографии успешно удалены из хранилища');
           }
         } catch (storageError) {
           Logger.error('Ошибка при попытке удаления файлов:', storageError);
@@ -677,7 +674,7 @@ export const propertyService = {
       // Проверяем, является ли пользователь владельцем объявления
       const { data: property, error: checkError } = await supabase
         .from('properties')
-        .select('user_id')
+        .select('user_id, property_type')
         .eq('id', id)
         .single();
       
@@ -690,9 +687,14 @@ export const propertyService = {
       }
       
       // Продолжаем обновление, если проверка пройдена
+      const normalizedPropertyData: Partial<PropertyInsert> = {
+        ...propertyData,
+        rooms: normalizePropertyRooms(propertyData.property_type ?? property.property_type, propertyData.rooms) ?? 0,
+      };
+
       const { data, error } = await supabase
         .from('properties')
-        .update(propertyData)
+        .update(normalizedPropertyData)
         .eq('id', id)
         .select();
       
@@ -843,7 +845,7 @@ export const propertyService = {
       Logger.debug('Сжатое изображение URI:', compressed.uri);
 
       const uniqueFileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${STORAGE_FOLDER}/${uniqueFileName}`;
+      const filePath = buildPropertyImagePath(user.id, uniqueFileName);
       Logger.debug('Путь:', filePath);
 
       // Читаем файл как base64 вместо использования fetch
@@ -894,7 +896,7 @@ export const propertyService = {
       // Создаем уникальное имя файла
       const normalizedExt = ensureAllowedExtension(fileExt);
       const uniqueFileName = `${Math.random().toString(36).substring(2)}.${normalizedExt}`;
-      const filePath = `${STORAGE_FOLDER}/${uniqueFileName}`;
+      const filePath = buildPropertyImagePath(user.id, uniqueFileName);
 
       Logger.debug('Загрузка изображения base64...');
       Logger.debug('Путь:', filePath);
@@ -955,7 +957,7 @@ export const propertyService = {
       // Генерируем имя файла как в веб-версии
       const fileExt = ensureAllowedExtension(fileName.split('.').pop() || '');
       const uniqueFileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${STORAGE_FOLDER}/${uniqueFileName}`;
+      const filePath = buildPropertyImagePath(user.id, uniqueFileName);
 
       Logger.debug('Загрузка через простой метод...');
       Logger.debug('Путь:', filePath);

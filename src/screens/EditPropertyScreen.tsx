@@ -22,6 +22,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useProperties, District } from '../contexts/PropertyContext';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
 import type { Database } from '../lib/database.types';
+import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '../utils/propertyRules';
 
 type Property = Database['public']['Tables']['properties']['Row'];
 type PropertyInsert = Database['public']['Tables']['properties']['Insert'];
@@ -66,6 +67,7 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
   const [propertyCategory, setPropertyCategory] = useState<PropertyInsert['property_type']>('apartment');
   const [images, setImages] = useState<string[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const supportsRooms = propertyTypeSupportsRooms(propertyCategory);
 
   // Инициализация
   useEffect(() => {
@@ -179,6 +181,12 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
     }
   }, [cityId, selectedDistrict, loadDistrictOptions]);
 
+  useEffect(() => {
+    if (!supportsRooms && rooms) {
+      setRooms('');
+    }
+  }, [supportsRooms, rooms]);
+
   const toggleFeature = (featureId: string) => {
     setSelectedFeatures(prev => {
       if (prev.includes(featureId)) {
@@ -285,7 +293,7 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
       Logger.debug('ID объявления:', propertyId);
       
       // Проверяем обязательные поля
-      if (!title || !price || !cityId || !address) {
+      if (!title.trim() || !description.trim() || !price || !cityId || !address.trim() || !area || (supportsRooms && !rooms)) {
         showErrorAlert(t('property.requiredFields'));
         setSaving(false);
         return;
@@ -296,15 +304,25 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
         setSaving(false);
         return;
       }
+
+      const numericPrice = parseFiniteNumberInput(price);
+      const numericArea = parseFiniteNumberInput(area);
+      const numericRooms = normalizePropertyRooms(propertyCategory, rooms);
+
+      if (numericPrice === null || numericArea === null || (supportsRooms && numericRooms === null)) {
+        showErrorAlert(t('filters.validation.invalidNumber'));
+        setSaving(false);
+        return;
+      }
       
       // Собираем данные для обновления
       const updatedProperty: Partial<PropertyInsert> = {
         title: title.trim(),
         description: description.trim(),
-        price: parseFloat(price.trim()),
+        price: numericPrice,
         location: address.trim(), // В API используется поле location вместо address
-        area: area ? parseFloat(area.trim()) : undefined,
-        rooms: rooms ? parseInt(rooms.trim(), 10) : undefined,
+        area: numericArea,
+        rooms: numericRooms ?? 0,
         city_id: parseInt(cityId.trim(), 10),
         district_id: districtId,
         type: propertyType,
@@ -470,15 +488,19 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
             placeholderTextColor={darkMode ? "#6B7280" : "#9CA3AF"}
           />
           
-          <Text style={[styles.label, darkMode && styles.darkText]}>{t('property.rooms')}</Text>
-          <TextInput
-            style={[styles.input, darkMode && styles.darkInput]}
-            value={rooms}
-            onChangeText={setRooms}
-            keyboardType="numeric"
-            placeholder={t('property.roomsPlaceholder')}
-            placeholderTextColor={darkMode ? "#6B7280" : "#9CA3AF"}
-          />
+          {supportsRooms && (
+            <>
+              <Text style={[styles.label, darkMode && styles.darkText]}>{t('property.rooms')}</Text>
+              <TextInput
+                style={[styles.input, darkMode && styles.darkInput]}
+                value={rooms}
+                onChangeText={setRooms}
+                keyboardType="numeric"
+                placeholder={t('property.roomsPlaceholder')}
+                placeholderTextColor={darkMode ? "#6B7280" : "#9CA3AF"}
+              />
+            </>
+          )}
           
           <Text style={[styles.label, darkMode && styles.darkText]}>{t('property.description')}</Text>
           <TextInput

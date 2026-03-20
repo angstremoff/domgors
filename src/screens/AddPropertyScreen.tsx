@@ -27,6 +27,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Colors from '../constants/colors';
 import MapCoordinateSelector from '../components/MapCoordinateSelector';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
+import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '../utils/propertyRules';
 
 // Используем интерфейс City из PropertyContext
 
@@ -92,6 +93,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
   
   const [propertyCategoryModalVisible, setPropertyCategoryModalVisible] = useState(false);
   const [selectedPropertyCategoryName, setSelectedPropertyCategoryName] = useState(t('property.apartment'));
+  const supportsRooms = propertyTypeSupportsRooms(propertyCategory);
 
   useEffect(() => {
     // Загружаем города только по необходимости при открытии модального окна,
@@ -150,6 +152,12 @@ const AddPropertyScreen = ({ navigation }: any) => {
       setDistrictOptions([]);
     }
   }, [cityId, t, loadDistrictOptions]);
+
+  useEffect(() => {
+    if (!supportsRooms && rooms) {
+      setRooms('');
+    }
+  }, [supportsRooms, rooms]);
 
   // Проверяем, авторизован ли пользователь
   if (!user) {
@@ -238,7 +246,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
 
   const handleSubmit = async () => {
     // Проверка на обязательные поля
-    if (!title || !price || !area || !rooms || !location || !description) {
+    if (!title.trim() || !price || !area || !location.trim() || !description.trim() || (supportsRooms && !rooms)) {
       showErrorAlert(t('addProperty.validation.fillAllFields'));
       return;
     }
@@ -274,6 +282,15 @@ const AddPropertyScreen = ({ navigation }: any) => {
     // Проверка на наличие хотя бы одного изображения
     if (images.length === 0) {
       showErrorAlert(t('addProperty.validation.addAtLeastOnePhoto'));
+      return;
+    }
+
+    const numericPrice = parseFiniteNumberInput(price);
+    const numericArea = parseFiniteNumberInput(area);
+    const numericRooms = normalizePropertyRooms(propertyCategory, rooms);
+
+    if (numericPrice === null || numericArea === null || (supportsRooms && numericRooms === null)) {
+      showErrorAlert(t('filters.validation.invalidNumber'));
       return;
     }
 
@@ -375,14 +392,14 @@ const AddPropertyScreen = ({ navigation }: any) => {
       
       // Создаем объект с данными объявления
       const result = await propertyService.createProperty({
-        title,
-        description,
-        price: Number(price),
+        title: title.trim(),
+        description: description.trim(),
+        price: numericPrice,
         type: propertyType,
         property_type: propertyCategory,
-        area: Number(area),
-        rooms: Number(rooms),
-        location,
+        area: numericArea,
+        rooms: numericRooms ?? 0,
+        location: location.trim(),
         city_id: cityId !== '0' ? Number(cityId) : undefined,
         district_id: districtId,
         features: selectedFeatures,
@@ -916,20 +933,24 @@ const AddPropertyScreen = ({ navigation }: any) => {
             keyboardType="numeric"
           />
 
-          <Text style={[styles.label, { color: theme.text }]}>{t('addProperty.form.rooms')}</Text>
-          <TextInput
-            style={[styles.input, { 
-              backgroundColor: theme.cardBackground,
-              color: theme.text,
-              borderColor: theme.border,
-              borderWidth: 1
-            }]}
-            value={rooms}
-            onChangeText={handleRoomsChange}
-            placeholder={t('addProperty.form.roomsPlaceholder')}
-            placeholderTextColor={theme.secondary}
-            keyboardType="numeric"
-          />
+          {supportsRooms && (
+            <>
+              <Text style={[styles.label, { color: theme.text }]}>{t('addProperty.form.rooms')}</Text>
+              <TextInput
+                style={[styles.input, { 
+                  backgroundColor: theme.cardBackground,
+                  color: theme.text,
+                  borderColor: theme.border,
+                  borderWidth: 1
+                }]}
+                value={rooms}
+                onChangeText={handleRoomsChange}
+                placeholder={t('addProperty.form.roomsPlaceholder')}
+                placeholderTextColor={theme.secondary}
+                keyboardType="numeric"
+              />
+            </>
+          )}
 
           <Text style={[styles.label, { color: theme.text }]}>{t('addProperty.form.description')}</Text>
           <TextInput

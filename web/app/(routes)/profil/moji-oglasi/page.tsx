@@ -9,7 +9,8 @@ import { Plus, Edit2, Trash2, CheckCircle, XCircle, RotateCcw, MapPin } from 'lu
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
-import type { Database } from '@shared/lib/database.types';
+import type { Database, TablesUpdate } from '@shared/lib/database.types';
+import { extractPropertyImagePath } from '@shared/utils/propertyStorage';
 
 type PropertyWithRelations = Database['public']['Tables']['properties']['Row'] & {
   city?: { name: string } | null;
@@ -49,28 +50,34 @@ export default function MojiOglasiPage() {
     loadProperties();
   }, [loadProperties]);
 
-  const handleMarkAsSold = async (propertyId: string) => {
+  const updatePropertyStatus = async (propertyId: string, status: 'active' | 'sold' | 'rented') => {
+    if (!user) {
+      return;
+    }
+
+    const updatePayload: TablesUpdate<'properties'> = { status };
+
     setActionLoading(propertyId);
-    // @ts-expect-error - Supabase types issue
-    await supabase.from('properties').update({ status: 'sold' }).eq('id', propertyId);
+    await supabase
+      .from('properties')
+      // @ts-expect-error - drift between generated DB types and Supabase update typing
+      .update(updatePayload)
+      .eq('id', propertyId)
+      .eq('user_id', user.id);
     await loadProperties();
     setActionLoading(null);
+  };
+
+  const handleMarkAsSold = async (propertyId: string) => {
+    await updatePropertyStatus(propertyId, 'sold');
   };
 
   const handleMarkAsRented = async (propertyId: string) => {
-    setActionLoading(propertyId);
-    // @ts-expect-error - Supabase types issue
-    await supabase.from('properties').update({ status: 'rented' }).eq('id', propertyId);
-    await loadProperties();
-    setActionLoading(null);
+    await updatePropertyStatus(propertyId, 'rented');
   };
 
   const handleMarkAsActive = async (propertyId: string) => {
-    setActionLoading(propertyId);
-    // @ts-expect-error - Supabase types issue
-    await supabase.from('properties').update({ status: 'active' }).eq('id', propertyId);
-    await loadProperties();
-    setActionLoading(null);
+    await updatePropertyStatus(propertyId, 'active');
   };
 
   const handleDelete = async (propertyId: string) => {
@@ -84,16 +91,15 @@ export default function MojiOglasiPage() {
     // Удаляем фото из Storage
     if (property?.images && Array.isArray(property.images)) {
       for (const imageUrl of property.images as string[]) {
-        // Извлекаем путь из URL: .../properties/property-images/userId/filename.jpg
-        const match = imageUrl.match(/property-images\/[^?]+/);
-        if (match) {
-          await supabase.storage.from('properties').remove([match[0]]);
+        const storagePath = extractPropertyImagePath(imageUrl);
+        if (storagePath) {
+          await supabase.storage.from('properties').remove([storagePath]);
         }
       }
     }
 
     // Удаляем запись из базы
-    await supabase.from('properties').delete().eq('id', propertyId);
+    await supabase.from('properties').delete().eq('id', propertyId).eq('user_id', user?.id ?? '');
     await loadProperties();
     setActionLoading(null);
   };
@@ -288,4 +294,3 @@ export default function MojiOglasiPage() {
     </div>
   );
 }
-

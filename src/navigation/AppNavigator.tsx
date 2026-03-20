@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme, type NavigationContainerRef } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Platform, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -13,13 +13,6 @@ import WebHeaderBar from '../components/WebHeaderBar';
 import Colors from '../constants/colors';
 import { Logger } from '../utils/logger';
 import { RootStackParamList } from '../types/navigation';
-
-// Расширяем тип globalThis для наших глобальных переменных
-declare global {
-  var propertyDeepLinkId: string | null;
-  var pendingPropertyNavigation: string | null;
-  var navigationRef: React.RefObject<any> | null;
-}
 
 // Импорт экранов
 import HomeScreen from '../screens/HomeScreen';
@@ -445,62 +438,79 @@ const AppNavigator = ({ pendingPropertyId, clearPendingPropertyId, pendingAgency
 
   // Создаем реф для доступа к навигационному контейнеру извне
   // Делаем его глобально доступным для использования в App.tsx
-  const navigationRef = React.useRef(null);
-  // Устанавливаем глобальный доступ к navigationRef
-  // @ts-ignore - Игнорируем ошибку для глобальных переменных
-  globalThis.navigationRef = navigationRef;
+  const navigationRef = React.useRef<NavigationContainerRef<RootStackParamList> | null>(null);
+
+  React.useEffect(() => {
+    globalThis.navigationRef = navigationRef;
+
+    return () => {
+      globalThis.navigationRef = null;
+    };
+  }, []);
+
+  const navigateWithRetry = React.useCallback(
+    (
+      onNavigate: (navigator: NavigationContainerRef<RootStackParamList>) => void,
+      onFailure: () => void,
+      maxAttempts = 15
+    ) => {
+      let attempts = 0;
+
+      const tryNavigate = () => {
+        attempts += 1;
+
+        if (navigationRef.current) {
+          onNavigate(navigationRef.current);
+          return;
+        }
+
+        if (attempts < maxAttempts) {
+          Logger.debug('Навигация ещё не готова, повторяем попытку...');
+          setTimeout(tryNavigate, 200);
+          return;
+        }
+
+        onFailure();
+      };
+
+      setTimeout(tryNavigate, 300);
+    },
+    []
+  );
 
   // Обработка глубоких ссылок на объявления
   const navigateToPendingProperty = React.useCallback(async (propertyId: string) => {
     Logger.debug('Обнаружена ссылка на объявление, готовим навигацию. ID:', propertyId);
-    let propertyData: any = null;
+    let propertyData: RootStackParamList['PropertyDetails']['property'];
 
     try {
-      propertyData = await fetchPropertyById(propertyId);
+      propertyData = (await fetchPropertyById(propertyId)) ?? undefined;
     } catch (error) {
       Logger.error('Ошибка при загрузке объявления по deep link, продолжим с отложенной загрузкой на экране:', error);
     }
 
-    let attempts = 0;
-    const tryNavigate = () => {
-      attempts += 1;
-
-      if (!navigationRef.current) {
-        if (attempts < 15) {
-          Logger.debug('Навигация ещё не готова, повторяем попытку...');
-          setTimeout(tryNavigate, 200);
-        } else {
-          Logger.error('Не удалось открыть объявление: навигация не инициализировалась');
-          clearPendingPropertyId();
-          // @ts-ignore
-          globalThis.pendingPropertyNavigation = null;
-          // @ts-ignore
-          globalThis.propertyDeepLinkId = null;
-        }
-        return;
+    navigateWithRetry(
+      (navigator) => {
+        navigator.navigate('PropertyDetails', {
+          propertyId,
+          ...(propertyData ? { property: propertyData } : {})
+        });
+        Logger.debug('Отложенная навигация к объявлению выполнена');
+        clearPendingPropertyId();
+        globalThis.pendingPropertyNavigation = null;
+        globalThis.propertyDeepLinkId = null;
+      },
+      () => {
+        Logger.error('Не удалось открыть объявление: навигация не инициализировалась');
+        clearPendingPropertyId();
+        globalThis.pendingPropertyNavigation = null;
+        globalThis.propertyDeepLinkId = null;
       }
-
-      // @ts-ignore - Игнорируем ошибку для метода navigate
-      navigationRef.current.navigate('PropertyDetails', {
-        propertyId,
-        id: propertyId,
-        ...(propertyData ? { property: propertyData } : {})
-      });
-      Logger.debug('Отложенная навигация к объявлению выполнена');
-      clearPendingPropertyId();
-      // @ts-ignore
-      globalThis.pendingPropertyNavigation = null;
-      // @ts-ignore
-      globalThis.propertyDeepLinkId = null;
-    };
-
-    // Даем навигации инициализироваться перед переходом
-    setTimeout(tryNavigate, 300);
-  }, [clearPendingPropertyId, fetchPropertyById]);
+    );
+  }, [clearPendingPropertyId, fetchPropertyById, navigateWithRetry]);
 
   React.useEffect(() => {
     // Используем state из App + глобальные флаги как запасной вариант
-    // @ts-ignore
     const fallbackId = globalThis.pendingPropertyNavigation || globalThis.propertyDeepLinkId;
     const targetId = pendingPropertyId || fallbackId;
 
@@ -513,28 +523,25 @@ const AppNavigator = ({ pendingPropertyId, clearPendingPropertyId, pendingAgency
 
   React.useEffect(() => {
     // Обработка отложенного перехода к агентству
-    // @ts-ignore
     const fallbackAgencyId = globalThis.pendingAgencyNavigation;
     const targetAgencyId = pendingAgencyId || fallbackAgencyId;
 
     if (!targetAgencyId) return;
 
-    const tryNavigateAgency = () => {
-      // @ts-ignore
-      if (navigationRef?.current) {
-        // @ts-ignore
-        navigationRef.current.navigate('Agency', { agencyId: targetAgencyId });
+    navigateWithRetry(
+      (navigator) => {
+        navigator.navigate('Agency', { agencyId: targetAgencyId });
         Logger.debug('Отложенная навигация к агентству выполнена');
         clearPendingAgencyId?.();
-        // @ts-ignore
         globalThis.pendingAgencyNavigation = null;
-      } else {
-        setTimeout(tryNavigateAgency, 200);
+      },
+      () => {
+        Logger.error('Не удалось открыть агентство: навигация не инициализировалась');
+        clearPendingAgencyId?.();
+        globalThis.pendingAgencyNavigation = null;
       }
-    };
-
-    tryNavigateAgency();
-  }, [pendingAgencyId, clearPendingAgencyId]);
+    );
+  }, [pendingAgencyId, clearPendingAgencyId, navigateWithRetry]);
 
   return (
     <NavigationContainer

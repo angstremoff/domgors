@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import type { Database, TablesInsert } from '@shared/lib/database.types';
+import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '@shared/utils/propertyRules';
 
 type City = Database['public']['Tables']['cities']['Row'];
 type District = Database['public']['Tables']['districts']['Row'];
@@ -44,6 +45,7 @@ export function AddPropertyForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const previewsRef = useRef<string[]>([]);
+  const supportsRooms = propertyTypeSupportsRooms(propertyType);
 
   useEffect(() => {
     previewsRef.current = files.map((f) => f.preview);
@@ -54,6 +56,12 @@ export function AddPropertyForm() {
       previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
+
+  useEffect(() => {
+    if (!supportsRooms && rooms) {
+      setRooms('');
+    }
+  }, [supportsRooms, rooms]);
 
   useEffect(() => {
     const loadCities = async () => {
@@ -207,7 +215,7 @@ export function AddPropertyForm() {
       return;
     }
 
-    if (!title || !description || !location || !cityId || !districtId || !price || !area || !rooms) {
+    if (!title.trim() || !description.trim() || !location.trim() || !cityId || !districtId || !price || !area || (supportsRooms && !rooms)) {
       setError(t('property.addProperty.validation.fillAllFields'));
       return;
     }
@@ -217,11 +225,11 @@ export function AddPropertyForm() {
       return;
     }
 
-    const numericPrice = Number(price);
-    const numericArea = Number(area);
-    const numericRooms = Number(rooms);
+    const numericPrice = parseFiniteNumberInput(price);
+    const numericArea = parseFiniteNumberInput(area);
+    const numericRooms = normalizePropertyRooms(propertyType, rooms);
 
-    if (!Number.isFinite(numericPrice) || !Number.isFinite(numericArea) || !Number.isFinite(numericRooms)) {
+    if (numericPrice === null || numericArea === null || (supportsRooms && numericRooms === null)) {
       setError(t('filters.validation.invalidNumber'));
       return;
     }
@@ -231,14 +239,14 @@ export function AddPropertyForm() {
     try {
       const imageUrls = await uploadImages();
       const payload: TablesInsert<'properties'> = {
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         price: numericPrice,
         area: numericArea,
-        rooms: numericRooms,
+        rooms: numericRooms ?? 0,
         city_id: Number(cityId),
         district_id: districtId,
-        location,
+        location: location.trim(),
         type: dealType,
         property_type: propertyType,
         is_new_building: isNewBuilding,
@@ -400,15 +408,19 @@ export function AddPropertyForm() {
                   onChange={(e) => setArea(e.target.value)}
                   required
                 />
-                <Input
-                  type="number"
-                  label={t('property.rooms')}
-                  placeholder={t('property.roomsPlaceholder')}
-                  value={rooms}
-                  min={0}
-                  onChange={(e) => setRooms(e.target.value)}
-                  required
-                />
+                {supportsRooms ? (
+                  <Input
+                    type="number"
+                    label={t('property.rooms')}
+                    placeholder={t('property.roomsPlaceholder')}
+                    value={rooms}
+                    min={0}
+                    onChange={(e) => setRooms(e.target.value)}
+                    required
+                  />
+                ) : (
+                  <div />
+                )}
                 <div className="flex items-center gap-3 pt-6">
                   <input
                     id="new-building"
