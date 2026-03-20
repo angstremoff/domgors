@@ -41,20 +41,21 @@
 - **ВАЖНО:** Не пытаться собирать release APK через `./gradlew assembleRelease` без keystore файла - упадет с ошибкой. Для релизной сборки использовать скрипты или Metro.
 
 ### 5.2 Процесс публикации
-- Expo OTA отключены. Каждое обновление публикуется через RuStore/App Store.
+- Expo OTA отключены. Android-релизы сейчас публикуются через RuStore, iOS — через App Store после релиза.
 - **ВАЖНО: Google Play требует targetSdkVersion 35 (Android 15)** с августа 2024 года для новых приложений и обновлений. Проверить в `android/app/build.gradle` → `targetSdkVersion 35`.
 - Минимальные разрешения: `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `READ_MEDIA_IMAGES/VIDEO`, `INTERNET`, `VIBRATE`. Чувствительные права (`RECORD_AUDIO`, `SYSTEM_ALERT_WINDOW`, `WRITE_EXTERNAL_STORAGE`) убраны.
-- Настройки -> «Проверить обновления» ведёт в RuStore (`https://www.rustore.ru/catalog/app/domgo.rs`). Для iOS добавим ссылку после релиза.
-- Release checklist для Play Console:
-  1. Подготовить `.aab` (см. выше) и включить Play App Signing.
-  2. Опубликовать Privacy Policy (`PRIVACY_POLICY.md`) на публичном URL и указать его в Store Listing.
-  3. Заполнить Data Safety (собираем email, фото/контент объявлений, избранное, логи ошибок/Sentry, геолокацию по запросу пользователя).
-  4. Заполнить раздел App Content → User Generated Content: правила модерации из `RULES.md`, контакты для жалоб.
-  5. Добавить скриншоты ≥1080px, иконку 512×512, описания, контактный e-mail/сайт.
-  6. Пройти Internal testing (получить Pre-launch report) и после проверки выкатывать Production.
+- Настройки mobile/web и footer ведут в RuStore: `https://www.rustore.ru/catalog/app/domgo.rs`.
+- Android release checklist:
+  1. Подготовить подписанный `.aab` через `./build-release-bundle.sh`.
+  2. Использовать `android/app/release.keystore` и env-переменные `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`.
+  3. Опубликовать `PRIVACY_POLICY.md` на публичном URL и указать в store listing.
+  4. Подготовить скриншоты ≥1080px, иконку 512×512, описания, контакты и ссылку на сайт.
+  5. Для Android-store с UGC держать под рукой правила модерации из `RULES.md` и контакты для жалоб.
+  6. Если параллельно готовится Google Play релиз, отдельно заполнить Data Safety, App Content и использовать Play App Signing.
 - GitHub CLI `gh` авторизован (user `angstremoff`, scopes `repo`,`workflow`). Команда для перезаливки APK: `gh release upload v<версия> releases/domgo.apk --clobber`.
 
 ## 6. Документация и инструменты
+- Документы первого старта: `MEMORY.md` — краткая оперативная память проекта, `all.md` — полное описание архитектуры, потоков и релизного состояния.
 - README, WIKI (+ `wiki/*.md`), `AUDIT_REPORT.md`, `IMPLEMENTATION_REPORT.md`, `DATABASE_SCHEMA.md`, `OPTIMIZATION_REPORT.md`, `FIXES_REPORT.md`, `CODE_REVIEW_REPORT.md`, `FINAL_SUMMARY.md`, `FULL_OPTIMIZATION_COMPLETE.md`, `TESTING_CHECKLIST.md`.
 - `EXPO_UPDATES_SETUP.md` и `GITHUB_ACTIONS_SETUP.md` помечены как архивные (OTA больше не используются).
 - Для диагностики доступен MCP Context7 (`docs/context7-setup.md`).
@@ -65,7 +66,7 @@
 - При шаринге объявлений используем `https://domgo.rs/property.html?id=<UUID>` — страница `noindex`, пытается открыть приложение, иначе ведёт на `https://domgo.rs/oglas?id=<UUID>` и показывает кнопку установки.
 - В репозитории есть **две веб-сборки**: Next.js сайт в `/web` (сборка в `web/out`) и Expo Web (React Native Web) экспорт в `dist` (см. `netlify.toml`: `npx expo export -p web`) — не путать.
 - TypeScript: корневой `npm run typecheck` проверяет mobile и **исключает `web/`**; web проверяем через `cd web && npm run build` (Next делает проверку типов на сборке).
-- Любые новые задачи, связанные с публикацией, должны учитывать требования Google Play и наличие AAB; APK используется только для локального тестирования.
+- Любые новые задачи, связанные с публикацией, должны учитывать текущий Android-канал RuStore, наличие AAB и release keystore; APK используется только для локального тестирования.
 - iOS нюансы: симулятор не умеет `tel:` — в PropertyDetails показываем алерт и копируем номер в буфер; фильтры имеют safe-area паддинг и расширенный hitSlop для кнопки закрытия; заголовок DomGo.rs на iOS выровнен влево, а блок выбора города сдвинут для предотвращения наложения.
 - Supabase агенты: `agency_profiles.user_id` 1:1 к `users.id`, `properties.agency_id` → `agency_profiles.id`. Есть триггер на `agency_profiles` (after insert/update) для заполнения `agency_id` у объявлений по `user_id`, и триггер на `properties` (before insert/update user_id) для автоподстановки `agency_id`. Разовая синхронизация: `update properties p set agency_id = ap.id from agency_profiles ap where p.user_id = ap.user_id and p.agency_id is null`.
 - При достижении остатка контекста ~5% нужно сжимать контекст (конспект, выжимка последних шагов).
@@ -77,8 +78,10 @@
 - Версия приложения (отображается в настройках и в store): `package.json` → `version`, синхронизирована с `package-lock.json` (поле `version` в корне и в корневом пакете).
 - Android: `android/app/build.gradle` → `defaultConfig.versionCode` (целое, растёт) и `versionName` (строка, совпадает с версией приложения).
 - iOS: `app.config.js` → `ios.buildNumber` (строка) и `version` берётся из `APP_VERSION`/`package.json` (настроено через `APP_VERSION` env или pkg.version).
+- Актуальное релизное состояние: `version = 1.0.11`, `android.versionCode = 16`, `android.versionName = 1.0.11`, `ios.buildNumber = 16`.
 - Runtime остаётся фиксированным: `app.config.js` → `runtimeVersion` (не менять без миграции обновлений), сейчас 1.0.4.
-- Fallback версии в коде: `src/services/AppVersionManager.ts` хранит запасное значение (держать в актуальной версии приложения).
+- `AppVersionManager` берёт версию из `Constants.expoConfig.version` с фолбеком на `package.json`, а номер сборки — из `expoConfig.android.versionCode` / `expoConfig.ios.buildNumber`.
+- Веб-страница настроек профиля хранит отображаемую версию вручную в `web/app/(routes)/profil/podesavanja/page.tsx`; при смене версии её нужно синхронизировать с `package.json`.
 - Сборка AAB: `./build-release-bundle.sh` (использует версию из package.json, кладёт на Desktop `DomGoMobile-<версия>-release.aab`). Перед запуском убедиться, что `release.keystore` актуальный.
 - Keystore release: `android/app/release.keystore` (секреты берём из 1Password/секретного хранилища; в сборке использовать env: `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`).
 
@@ -105,6 +108,8 @@
 - Фичи в деталях объявления переводятся через i18n (`features.*`). Карточки **не показывают дату** публикации (убрано для чистоты UI).
 - Избранное на веб: карточки имеют активное сердце, добавление/удаление идёт через таблицу `favorites`; в разделе избранного карточки остаются кликабельны, а при снятии лайка карточка удаляется из списка.
 - Списки Продажа/Аренда/Новостройки/Агентства: бесконечная подгрузка по 50 штук, фильтрация работает при выборе города даже без района, догрузка через IntersectionObserver. **Объявления со статусом sold/rented тоже отображаются** — фильтр `.eq('status', 'active')` убран.
+- `PropertyListingsClient` при наличии `initialProperties` всё равно делает тихое обновление из Supabase при первом монтировании, чтобы страницы `/prodaja`, `/izdavanje`, `/novogradnja` не показывали устаревший статический список.
+- Для типа недвижимости `land` фильтр по комнатам не применяется: UI показывает `filters.roomsNotApplicable`, а карточки и детали объявления не должны рендерить комнаты для участков.
 - Профиль: "Настройки" ведёт на `/profil/podesavanja`, "Добавить объявление" из "Мои объявления" ведёт на `/oglas/novi`.
 - Деплой Render: обязательно `Root Directory = web`, иначе Next берёт корневой lockfile; очищать build cache перед сборкой при смене root.
 - Веб-форма создания объявлений: страница `/oglas/novi` (доступна из профиля). Авторизация обязательна; город и район обязательны; минимум 1 фото (до 10, ≤5 МБ, jpg/jpeg/png/webp). Фото грузятся в Supabase Storage `properties/property-images/<userId>/...`; после сохранения редирект на `/oglas/?id=<id>`. `/oglas` без `id` теперь показывает not-found вместо бесконечной загрузки.
@@ -127,10 +132,12 @@
   - Аккаунт (email + кнопка выхода)
   - О приложении (версия, помощь, ссылка на RuStore, контакты, условия размещения)
 - Модальные окна для информационных сообщений реализованы inline (без отдельного компонента).
+- Контактная почта в настройках и footer: `admin@domgo.rs`. Android-store ключ переводов: `settings.update.openRuStore` (старый `openGooglePlay` удалён из mobile/web i18n).
 
 ## 13. UI исправления веб-версии
 - **Hero-секция** (`web/components/home/HomePageClient.tsx`): убран дублирующийся заголовок "DomGo.rs", уменьшены вертикальные отступы `py-16` → `py-6`. **CTA секция теперь учитывает авторизацию** — для залогиненных показывает кнопку "Добавить объявление" → `/oglas/novi`, для гостей — "Регистрация".
 - **Header** (`web/components/layout/Header.tsx`): добавлен `flex-shrink-0` к логотипу для предотвращения сжатия на мобильных; уменьшены отступы `space-x-4` → `space-x-2 sm:space-x-4` для предотвращения наезда переключателя языка на логотип.
+- **Карусель последних объявлений** (`web/components/ui/AutoScrollCarousel.tsx`): интерактивные элементы внутри карточек (`a`, `button`, `input` и т.д.) исключены из pointer-drag логики; обычный клик по карточке обязан открывать объявление, а не только ставить карусель на паузу.
 
 ## 14. SEO и Аналитика (Web)
 
@@ -173,7 +180,7 @@
 ### 14.3 PWA и прочее
 - **manifest.json**: для добавления на главный экран
 - **Preconnect**: fonts.googleapis.com, mc.yandex.ru, googletagmanager.com
-- **Footer**: SEO-текст на двух языках, ссылка на RuStore, schema.org разметка
+- **Footer**: SEO-текст на двух языках, ссылка на RuStore, schema.org разметка, бейдж `web/public/badges/rustore-badge.svg`, контакт `admin@domgo.rs`
 
 ### 14.4 Шаринг объявлений
 - Веб-версия использует `https://domgo.rs/property.html?id=<UUID>` (как мобильное)
@@ -211,3 +218,11 @@
 - Web (главная): добавлен список “Последние объявления” — 10 последних активных объявлений (клиентская загрузка из Supabase), карточка `PropertyCardCompact` с выравниванием высоты (`web/components/home/HomePageClient.tsx`, `web/components/property/PropertyCardCompact.tsx`)
 - Web (главная): карусель “Последние объявления” — авто‑прокрутка по кругу (включая desktop через накопление дробных пикселей `scrollLeft`), скрытый скроллбар, ручное листание (тач/мышь) (`web/components/ui/AutoScrollCarousel.tsx`, `web/styles/globals.css`)
 - Переводы: добавлены ключи `web.homeRentShort`, `web.latestPropertiesTitle`, `web.latestPropertiesEmpty` в `src/translations/ru.json` и `src/translations/sr.json`
+
+## 17. Изменения 2026‑03‑20 (важное)
+- Mobile: `PropertyDetailsScreen` больше не использует truthy-проверки для числовых полей `area/rooms`; значения `0` и `null` не должны приводить к RN-ошибке `Text strings must be rendered within a <Text> component.`
+- Web: регистрация через `AuthProvider.signUp()` передаёт `emailRedirectTo = window.location.origin` и metadata `source=web_app`, `platform=web`; `RegisterForm` не редиректит в профиль, если Supabase вернул `session = null`, а показывает `auth.confirmEmailSent`.
+- Auth/Supabase: для production нельзя полагаться на built-in email service Supabase; нужен custom SMTP. Это инфраструктурная настройка вне репозитория, но web-код уже подготовлен к подтверждению email.
+- Web: страницы листингов после static export должны подтягивать свежие объявления из Supabase на клиенте; последнее объявление не должно зависеть от ручного применения фильтра.
+- Web/Mobile: участки (`property_type = land`) — отдельный кейс. Для них не показываем комнаты, не применяем rooms filter и используем явные проверки `null/undefined` для числовых значений.
+- Контакты и store-ссылки унифицированы: Android-store везде RuStore, контактная почта в UI `admin@domgo.rs`, в footer используется бейдж `rustore-badge.svg`.
