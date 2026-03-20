@@ -33,6 +33,11 @@ export function PropertyCard({ property, onFavoriteToggle, isFavorite }: Propert
   const translatedDistrict = property.district?.name
     ? t(`districts.${property.district.name}`, { defaultValue: property.district.name })
     : '';
+  const hasAreaValue = property.area !== null && property.area !== undefined;
+  const hasRoomsValue =
+    property.property_type !== 'land' &&
+    property.rooms !== null &&
+    property.rooms !== undefined;
 
   // URL для деталей объявления (query params для static export)
   const detailsUrl = `/oglas/?id=${property.id}`;
@@ -132,13 +137,13 @@ export function PropertyCard({ property, onFavoriteToggle, isFavorite }: Propert
 
         {/* Характеристики */}
         <div className="flex items-center gap-4 text-sm text-textSecondary pt-4 border-t border-border">
-          {property.area && (
+          {hasAreaValue && (
             <div className="flex items-center gap-1.5">
               <Maximize className="h-4 w-4" />
               <span className="font-medium">{property.area} {t('property.sqm')}</span>
             </div>
           )}
-          {property.rooms && (
+          {hasRoomsValue && (
             <div className="flex items-center gap-1.5">
               <Bed className="h-4 w-4" />
               <span className="font-medium">{property.rooms} {t('property.rooms')}</span>

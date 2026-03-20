@@ -206,7 +206,7 @@ export function PropertyListingsClient({
         query = query.lte('area', filterState.maxArea);
       }
 
-      if (filterState.rooms) {
+      if (filterState.rooms && filterState.propertyType !== 'land') {
         query = query.eq('rooms', filterState.rooms);
       }
 

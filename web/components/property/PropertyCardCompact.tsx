@@ -33,6 +33,11 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
   const translatedDistrict = property.district?.name
     ? t(`districts.${property.district.name}`, { defaultValue: property.district.name })
     : '';
+  const hasAreaValue = property.area !== null && property.area !== undefined;
+  const hasRoomsValue =
+    property.property_type !== 'land' &&
+    property.rooms !== null &&
+    property.rooms !== undefined;
 
   const detailsUrl = `/oglas/?id=${property.id}`;
 
@@ -111,13 +116,13 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
         </div>
 
         <div className="flex items-center gap-4 text-xs text-textSecondary mt-auto pt-3 border-t border-border min-h-[28px]">
-          <div className={cn('flex items-center gap-1.5', property.area ? '' : 'invisible')}>
+          <div className={cn('flex items-center gap-1.5', hasAreaValue ? '' : 'invisible')}>
             <Maximize className="h-4 w-4" />
             <span className="font-medium">
               {property.area ?? 0} {t('property.sqm')}
             </span>
           </div>
-          <div className={cn('flex items-center gap-1.5', property.rooms ? '' : 'invisible')}>
+          <div className={cn('flex items-center gap-1.5', hasRoomsValue ? '' : 'invisible')}>
             <Bed className="h-4 w-4" />
             <span className="font-medium">
               {property.rooms ?? 0} {t('property.rooms')}

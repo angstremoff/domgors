@@ -30,6 +30,11 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
   const translatedDistrict = property.district?.name
     ? t(`districts.${property.district.name}`, { defaultValue: property.district.name })
     : '';
+  const hasAreaValue = property.area !== null && property.area !== undefined;
+  const hasRoomsValue =
+    property.property_type !== 'land' &&
+    property.rooms !== null &&
+    property.rooms !== undefined;
 
   const getPropertyTypeLabel = (type: string) => {
     const typeMap: Record<string, string> = {
@@ -117,14 +122,14 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
 
           {/* Характеристики */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {property.rooms && (
+            {hasRoomsValue && (
               <div className="text-center p-4 bg-surface rounded-lg">
                 <Bed className="h-6 w-6 mx-auto mb-2 text-primary" />
                 <p className="text-sm text-textSecondary">{t('property.rooms')}</p>
                 <p className="text-lg font-semibold text-text">{property.rooms}</p>
               </div>
             )}
-            {property.area && (
+            {hasAreaValue && (
               <div className="text-center p-4 bg-surface rounded-lg">
                 <Maximize className="h-6 w-6 mx-auto mb-2 text-primary" />
                 <p className="text-sm text-textSecondary">{t('property.area')}</p>

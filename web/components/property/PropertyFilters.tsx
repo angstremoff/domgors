@@ -39,6 +39,7 @@ export function PropertyFilters({
   const [isOpen, setIsOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({});
   const { t } = useTranslation();
+  const isLandSelected = filters.propertyType === 'land';
 
   const propertyTypes = [
     { value: 'apartment', label: t('property.apartment') },
@@ -65,6 +66,23 @@ export function PropertyFilters({
       districtId: selectedDistrictId || undefined,
     }));
   }, [cityId, selectedDistrictId]);
+
+  useEffect(() => {
+    if (!isLandSelected) {
+      return;
+    }
+
+    setFilters((prev) => {
+      if (prev.rooms === undefined) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        rooms: undefined,
+      };
+    });
+  }, [isLandSelected]);
 
   return (
     <div className="relative">
@@ -105,7 +123,11 @@ export function PropertyFilters({
               className="w-full px-4 py-2 bg-surface border border-border rounded-md text-text focus:outline-none focus:ring-2 focus:ring-primary"
               value={filters.propertyType || ''}
               onChange={(e) =>
-                setFilters({ ...filters, propertyType: e.target.value || undefined })
+                setFilters({
+                  ...filters,
+                  propertyType: e.target.value || undefined,
+                  rooms: e.target.value === 'land' ? undefined : filters.rooms,
+                })
               }
             >
               <option value="">{t('common.allTypes')}</option>
@@ -214,26 +236,32 @@ export function PropertyFilters({
             <label className="block text-sm font-medium text-text mb-2">
               {t('filters.rooms')}
             </label>
-            <div className="grid grid-cols-5 gap-2">
-              {[1, 2, 3, 4, 5].map((num) => (
-                <button
-                  key={num}
-                  onClick={() =>
-                    setFilters({
-                      ...filters,
-                      rooms: filters.rooms === num ? undefined : num,
-                    })
-                  }
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    filters.rooms === num
-                      ? 'bg-primary text-white'
-                      : 'bg-surface text-text hover:bg-border'
-                  }`}
-                >
-                  {num === 5 ? t('filters.5plusRooms') : num}
-                </button>
-              ))}
-            </div>
+            {isLandSelected ? (
+              <div className="text-sm text-textSecondary">
+                {t('filters.roomsNotApplicable', 'Для участков фильтр по комнатам не применяется')}
+              </div>
+            ) : (
+              <div className="grid grid-cols-5 gap-2">
+                {[1, 2, 3, 4, 5].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() =>
+                      setFilters({
+                        ...filters,
+                        rooms: filters.rooms === num ? undefined : num,
+                      })
+                    }
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      filters.rooms === num
+                        ? 'bg-primary text-white'
+                        : 'bg-surface text-text hover:bg-border'
+                    }`}
+                  >
+                    {num === 5 ? t('filters.5plusRooms') : num}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}

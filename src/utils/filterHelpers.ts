@@ -42,6 +42,10 @@ export const applyPropertyFilters = (
     );
   }
 
+  const isLandCategory =
+    propertyCategory === 'land' ||
+    activeFilters.propertyTypes.includes('land');
+
   // Фильтрация по городу - с улучшенной защитой от ошибок
   if (selectedCity && selectedCity?.id !== undefined && selectedCity?.id !== null) {
     // Для избежания многократного преобразования, сохраняем ID города в строку один раз
@@ -106,7 +110,7 @@ export const applyPropertyFilters = (
     }
     
     // Фильтр по количеству комнат (учёт варианта "5+")
-    if (activeFilters.rooms.length > 0) {
+    if (activeFilters.rooms.length > 0 && !isLandCategory) {
       filtered = filtered.filter(prop => {
         const r = prop.rooms;
         if (r === undefined || r === null) return false;
