@@ -111,6 +111,13 @@ export function AutoScrollCarousel({
 
     if (e.button !== 0) return;
 
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('a, button, input, textarea, select, label')) {
+      pause();
+      scheduleResume();
+      return;
+    }
+
     const container = e.currentTarget;
 
     pause();

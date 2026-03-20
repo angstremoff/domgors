@@ -76,7 +76,7 @@ export function Footer() {
               Telegram: @Angstremoff
             </p>
             <p className="text-sm text-textSecondary">
-              Email: angstremoff@ya.ru
+              Email: admin@domgo.rs
             </p>
           </div>
         </div>
