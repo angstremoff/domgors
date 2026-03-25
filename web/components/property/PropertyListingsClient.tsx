@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Filter, MapPin, List, Map as MapIcon } from 'lucide-react';
+import { Filter, List, Map as MapIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { PropertyGrid } from './PropertyGrid';
 import { PropertyFilters, FilterState } from './PropertyFilters';
@@ -10,12 +10,14 @@ import { PropertyMap } from './PropertyMap';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/providers/AuthProvider';
 import type { Database, TablesInsert } from '@shared/lib/database.types';
-
-type PropertyRow = Database['public']['Tables']['properties']['Row'];
-type PropertyWithRelations = PropertyRow & {
-  city?: { name: string } | null;
-  district?: { name: string } | null;
-};
+import {
+  PROPERTY_LISTINGS_PAGE_SIZE,
+  dedupePropertyListings,
+  fetchPropertyListingsPage,
+  mergePropertyListings,
+  type PropertyListingFilters,
+  type PropertyWithRelations,
+} from '@/lib/property-listings';
 type City = Database['public']['Tables']['cities']['Row'];
 type District = Database['public']['Tables']['districts']['Row'];
 
@@ -32,18 +34,25 @@ export function PropertyListingsClient({
 }: PropertyListingsClientProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const PAGE_SIZE = 50;
-  const [properties, setProperties] = useState<PropertyWithRelations[]>(initialProperties);
+  const initialListings = useMemo(
+    () => dedupePropertyListings(initialProperties),
+    [initialProperties]
+  );
+  const [properties, setProperties] = useState<PropertyWithRelations[]>(initialListings);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(initialProperties.length === PAGE_SIZE);
+  const [hasMore, setHasMore] = useState(initialListings.length === PROPERTY_LISTINGS_PAGE_SIZE);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [filters, setFilters] = useState<FilterState>({});
-  const [page, setPage] = useState(initialProperties.length > 0 ? 1 : 0);
+  const [page, setPage] = useState(initialListings.length > 0 ? 1 : 0);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [initialRefreshComplete, setInitialRefreshComplete] = useState(false);
+  const resetInFlightRef = useRef(false);
+  const resetRequestIdRef = useRef(0);
+  const loadMoreInFlightRef = useRef(false);
 
   // Быстрые фильтры
   const [selectedCity, setSelectedCity] = useState<number | undefined>();
@@ -134,135 +143,135 @@ export function PropertyListingsClient({
     }
   }, [fetchDistricts, selectedCity]);
 
-  const fetchProperties = useCallback(
-    async (options: { reset?: boolean; filters?: FilterState; silent?: boolean } = {}) => {
-      const { reset = false, filters: overrideFilters, silent = false } = options;
-      const filterState = overrideFilters ?? filters;
-      if (loading || loadingMore) {
-        if (!reset) {
-          return;
-        }
-      }
-
-      if (reset) {
-        if (!silent) {
-          setLoading(true);
-        }
-        setPage(0);
-        setHasMore(true);
-      } else {
-        if (!hasMore) return;
-        setLoadingMore(true);
-      }
-
-      setError(null);
-      const supabase = createClient();
-
-      const districtFilter = filterState.districtId ?? selectedDistrict;
-      const cityFilter =
+  const buildListingFilters = useCallback(
+    (filterState: FilterState): PropertyListingFilters => {
+      const districtId = filterState.districtId ?? selectedDistrict;
+      const cityId =
         filterState.cityId !== undefined && filterState.cityId !== ''
           ? Number(filterState.cityId)
           : selectedCity;
 
-      let query = supabase
-        .from('properties')
-        .select(`
-          *,
-          city:cities(name),
-          district:districts(name)
-        `)
-        .eq('type', type);
+      return {
+        cityId,
+        districtId,
+        propertyType: filterState.propertyType,
+        minPrice: filterState.minPrice,
+        maxPrice: filterState.maxPrice,
+        minArea: filterState.minArea,
+        maxArea: filterState.maxArea,
+        rooms: filterState.rooms,
+      };
+    },
+    [selectedCity, selectedDistrict]
+  );
 
-      if (isNewBuilding) {
-        query = query.eq('is_new_building', true);
+  const refreshProperties = useCallback(
+    async (filterState: FilterState, options: { silent?: boolean } = {}) => {
+      const { silent = false } = options;
+      const requestId = ++resetRequestIdRef.current;
+
+      resetInFlightRef.current = true;
+      setError(null);
+
+      if (!silent) {
+        setLoading(true);
       }
 
-      // Применяем фильтры
-      if (cityFilter !== undefined) {
-        query = query.eq('city_id', cityFilter);
-      }
+      const supabase = createClient();
 
-      if (districtFilter) {
-        query = query.eq('district_id', districtFilter);
-      }
+      try {
+        const fetched = await fetchPropertyListingsPage(supabase, {
+          ...buildListingFilters(filterState),
+          type,
+          isNewBuilding,
+          page: 0,
+          pageSize: PROPERTY_LISTINGS_PAGE_SIZE,
+        });
 
-      if (filterState.propertyType) {
-        query = query.eq('property_type', filterState.propertyType);
-      }
-
-      if (filterState.minPrice) {
-        query = query.gte('price', filterState.minPrice);
-      }
-
-      if (filterState.maxPrice) {
-        query = query.lte('price', filterState.maxPrice);
-      }
-
-      if (filterState.minArea) {
-        query = query.gte('area', filterState.minArea);
-      }
-
-      if (filterState.maxArea) {
-        query = query.lte('area', filterState.maxArea);
-      }
-
-      if (filterState.rooms && filterState.propertyType !== 'land') {
-        query = query.eq('rooms', filterState.rooms);
-      }
-
-      const currentPage = reset ? 0 : page;
-      const rangeFrom = currentPage * PAGE_SIZE;
-      const rangeTo = rangeFrom + PAGE_SIZE - 1;
-
-      const { data, error: fetchError } = await query
-        .order('created_at', { ascending: false })
-        .range(rangeFrom, rangeTo);
-
-      if (fetchError) {
-        setError(fetchError.message);
-        if (reset && !silent) {
-          setProperties([]);
+        if (requestId !== resetRequestIdRef.current) {
+          return;
         }
-        setLoading(false);
-        setLoadingMore(false);
-        return;
-      }
 
-      const fetched = (data as PropertyWithRelations[]) || [];
-      setHasMore(fetched.length === PAGE_SIZE);
-
-      if (reset) {
         setProperties(fetched);
-        setPage(1);
-        setLoading(false);
-      } else {
-        setProperties((prev) => [...prev, ...fetched]);
-        setPage((prev) => prev + 1);
-        setLoadingMore(false);
+        setPage(fetched.length > 0 ? 1 : 0);
+        setHasMore(fetched.length === PROPERTY_LISTINGS_PAGE_SIZE);
+      } catch (refreshError) {
+        if (requestId !== resetRequestIdRef.current) {
+          return;
+        }
+
+        const message =
+          refreshError instanceof Error ? refreshError.message : t('common.errorLoadingData');
+
+        setError(message);
+
+        if (!silent) {
+          setProperties([]);
+          setPage(0);
+          setHasMore(false);
+        }
+      } finally {
+        if (requestId === resetRequestIdRef.current) {
+          resetInFlightRef.current = false;
+          setLoading(false);
+        }
       }
     },
-    [filters, hasMore, isNewBuilding, loading, loadingMore, page, selectedCity, selectedDistrict, type]
+    [buildListingFilters, isNewBuilding, t, type]
   );
+
+  const loadMoreProperties = useCallback(async () => {
+    if (resetInFlightRef.current || loadMoreInFlightRef.current || loading || loadingMore || !hasMore) {
+      return;
+    }
+
+    loadMoreInFlightRef.current = true;
+    setLoadingMore(true);
+    setError(null);
+
+    const currentPage = page;
+    const supabase = createClient();
+
+    try {
+      const fetched = await fetchPropertyListingsPage(supabase, {
+        ...buildListingFilters(filters),
+        type,
+        isNewBuilding,
+        page: currentPage,
+        pageSize: PROPERTY_LISTINGS_PAGE_SIZE,
+      });
+
+      setProperties((prev) => mergePropertyListings(prev, fetched));
+      setPage(currentPage + 1);
+      setHasMore(fetched.length === PROPERTY_LISTINGS_PAGE_SIZE);
+    } catch (loadMoreError) {
+      const message =
+        loadMoreError instanceof Error ? loadMoreError.message : t('common.errorLoadingData');
+
+      setError(message);
+    } finally {
+      loadMoreInFlightRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [buildListingFilters, filters, hasMore, isNewBuilding, loading, loadingMore, page, t, type]);
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
     setSelectedDistrict(newFilters.districtId || undefined);
-    fetchProperties({ reset: true, filters: newFilters });
+    void refreshProperties(newFilters);
   };
 
   const handleCityChange = (cityId: string) => {
     setSelectedCity(cityId ? Number(cityId) : undefined);
     setSelectedDistrict(undefined);
-    setPage(0);
-    setHasMore(true);
-    fetchProperties({ reset: true, filters: { ...filters, cityId: cityId || undefined, districtId: undefined } });
+    void refreshProperties({ ...filters, cityId: cityId || undefined, districtId: undefined });
   };
 
   const handleDistrictChange = (districtId: string) => {
     const value = districtId || undefined;
     setSelectedDistrict(value);
     setFilters((prev) => ({ ...prev, districtId: value }));
-    fetchProperties({ reset: true, filters: { ...filters, districtId: value } });
+    void refreshProperties({ ...filters, districtId: value });
   };
 
   const handleFavoriteToggle = async (id: string) => {
@@ -286,14 +295,14 @@ export function PropertyListingsClient({
   };
 
   useEffect(() => {
-    if (viewMode !== 'list') {
+    if (viewMode !== 'list' || !initialRefreshComplete || !hasMore) {
       return;
     }
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          fetchProperties({ reset: false });
+          void loadMoreProperties();
         }
       },
       { root: null, rootMargin: '200px', threshold: 0 }
@@ -307,11 +316,13 @@ export function PropertyListingsClient({
     return () => {
       observer.disconnect();
     };
-  }, [fetchProperties, viewMode]);
+  }, [hasMore, initialRefreshComplete, loadMoreProperties, viewMode]);
 
   // Инициализационная загрузка
   useEffect(() => {
-    fetchProperties({ reset: true, filters, silent: initialProperties.length > 0 });
+    void refreshProperties(filters, { silent: initialListings.length > 0 }).finally(() => {
+      setInitialRefreshComplete(true);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
