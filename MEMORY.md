@@ -15,8 +15,9 @@
 
 ## 3. Что проверять после изменений
 - Mobile: `npm run check`
+- Shared/unit tests: `npm test`
 - Web: `cd web && npm run build`
-- Актуальное состояние: обе проверки проходят; в mobile остаётся исторический lint-хвост `71 warnings`, в основном старые `any`.
+- Последние подтверждённые проверки `2026-03-25`: `npm test`, `cd web && npm run build`.
 
 ## 4. Ключевые инварианты данных
 - Основные таблицы: `users`, `properties`, `agency_profiles`, `favorites`, `cities`, `districts`.
@@ -55,6 +56,12 @@
 
 ## 8. Web-специфика
 - Web-листинги после static export обязаны тихо обновлять объявления из Supabase после монтирования; нельзя полагаться только на `initialProperties`.
+- Для `/prodaja`, `/izdavanje`, `/novogradnja` initial fetch и client pagination должны использовать общий helper `web/lib/property-listings.ts`, а не копии query по страницам.
+- В `web/components/property/PropertyListingsClient.tsx` initial refresh и infinite scroll должны быть разделены: `IntersectionObserver` нельзя включать до завершения первого refresh, иначе короткие desktop-списки могут задвоить первую страницу.
+- Любое слияние web-листингов делать только с дедупликацией по `property.id`.
+- Web-фильтры листингов должны иметь один источник правды: canonical state живёт в `PropertyListingsClient`, а `PropertyFilters` синхронизируется через `value`, без отдельного постоянного state для city/district.
+- Смена города на web всегда сбрасывает район; сброс на `Все города`/`Все районы` обязан реально убирать фильтр из query, а не оставлять старый state.
+- Семантика комнат на web: `5+` означает `rooms >= 5`; для `property_type = land` rooms filter автоматически очищается и в query не уходит.
 - Web Supabase client/server теперь fail-fast: без `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` web должен падать явно, а не работать на mock/placeholder.
 - Карусель последних объявлений на главной не должна ломать обычный клик по карточке.
 - Web i18n в рантайме использует shared `src/translations/{ru,sr}.json`; зеркала в `web/public/locales/*` держать синхронно.
@@ -82,8 +89,12 @@
 - `src/services/propertyService.ts` — CRUD объявлений, storage, статусные операции, кэши.
 - `src/contexts/PropertyContext.tsx` — списки, пагинация, города/районы, загрузка по id.
 - `src/utils/propertyRules.ts` — общие правила для `rooms/land`.
+- `src/utils/propertyListingFilters.ts` — shared helper для sanitize/reset/filter transitions и семантики rooms (`5+`, `land`) в web-листингах.
 - `src/utils/propertyStorage.ts` — единый контракт storage path.
 - `src/utils/agencyProfile.ts` — нормализация агентств и форматирование ссылок.
 - `src/contexts/AuthContext.tsx` и `web/providers/AuthProvider.tsx` — auth/signup flow.
+- `web/lib/property-listings.ts` — единый web-helper для initial fetch, пагинации и дедупликации листингов.
+- `web/components/property/PropertyListingsClient.tsx` — client refresh, infinite scroll и canonical filter state на web.
+- `web/components/property/PropertyFilters.tsx` — controlled sidebar filters; не должен расходиться с быстрыми фильтрами.
 - `src/services/AppVersionManager.ts` — инвалидация кэшей по версии/сборке.
 - `MEMORY.md` — краткая оперативная память, `all.md` — полный onboarding.

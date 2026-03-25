@@ -7,37 +7,36 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import type { Database } from '@shared/lib/database.types';
+import {
+  applyDistrictFilterChange,
+  applyPropertyTypeFilterChange,
+  parsePropertyListingNumberInput,
+  resetPropertyListingFilters,
+  sanitizePropertyListingFilters,
+  type PropertyListingFilterState,
+} from '@shared/utils/propertyListingFilters';
 
 interface PropertyFiltersProps {
   onFilterChange: (filters: FilterState) => void;
+  value: FilterState;
   cityId?: number;
   districts?: District[];
   districtsLoading?: boolean;
-  selectedDistrictId?: string;
 }
 
-export interface FilterState {
-  propertyType?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  minArea?: number;
-  maxArea?: number;
-  rooms?: number;
-  cityId?: string;
-  districtId?: string;
-}
+export type FilterState = PropertyListingFilterState;
 
 type District = Database['public']['Tables']['districts']['Row'];
 
 export function PropertyFilters({
   onFilterChange,
+  value,
   cityId,
   districts = [],
   districtsLoading,
-  selectedDistrictId,
 }: PropertyFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({});
+  const [filters, setFilters] = useState<FilterState>(sanitizePropertyListingFilters(value));
   const { t } = useTranslation();
   const isLandSelected = filters.propertyType === 'land';
 
@@ -49,23 +48,20 @@ export function PropertyFilters({
   ];
 
   const handleApplyFilters = () => {
-    onFilterChange(filters);
+    onFilterChange(sanitizePropertyListingFilters(filters));
     setIsOpen(false);
   };
 
   const handleResetFilters = () => {
-    setFilters({});
-    onFilterChange({});
+    const resetFilters = resetPropertyListingFilters();
+    setFilters(resetFilters);
+    onFilterChange(resetFilters);
     setIsOpen(false);
   };
 
   useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      cityId: cityId ? String(cityId) : undefined,
-      districtId: selectedDistrictId || undefined,
-    }));
-  }, [cityId, selectedDistrictId]);
+    setFilters(sanitizePropertyListingFilters(value));
+  }, [value]);
 
   useEffect(() => {
     if (!isLandSelected) {
@@ -122,13 +118,7 @@ export function PropertyFilters({
             <select
               className="w-full px-4 py-2 bg-surface border border-border rounded-md text-text focus:outline-none focus:ring-2 focus:ring-primary"
               value={filters.propertyType || ''}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  propertyType: e.target.value || undefined,
-                  rooms: e.target.value === 'land' ? undefined : filters.rooms,
-                })
-              }
+              onChange={(e) => setFilters(applyPropertyTypeFilterChange(filters, e.target.value))}
             >
               <option value="">{t('common.allTypes')}</option>
               {propertyTypes.map((type) => (
@@ -153,9 +143,7 @@ export function PropertyFilters({
                 <select
                   className="w-full px-4 py-2 bg-surface border border-border rounded-md text-text focus:outline-none focus:ring-2 focus:ring-primary"
                   value={filters.districtId || ''}
-                  onChange={(e) =>
-                    setFilters({ ...filters, districtId: e.target.value || undefined })
-                  }
+                  onChange={(e) => setFilters(applyDistrictFilterChange(filters, e.target.value))}
                   disabled={districtsLoading}
                 >
                   <option value="">{t('filters.allDistricts')}</option>
@@ -178,22 +166,22 @@ export function PropertyFilters({
               <Input
                 type="number"
                 placeholder={t('common.from')}
-                value={filters.minPrice || ''}
+                value={filters.minPrice ?? ''}
                 onChange={(e) =>
                   setFilters({
                     ...filters,
-                    minPrice: e.target.value ? Number(e.target.value) : undefined,
+                    minPrice: parsePropertyListingNumberInput(e.target.value),
                   })
                 }
               />
               <Input
                 type="number"
                 placeholder={t('common.to')}
-                value={filters.maxPrice || ''}
+                value={filters.maxPrice ?? ''}
                 onChange={(e) =>
                   setFilters({
                     ...filters,
-                    maxPrice: e.target.value ? Number(e.target.value) : undefined,
+                    maxPrice: parsePropertyListingNumberInput(e.target.value),
                   })
                 }
               />
@@ -209,22 +197,22 @@ export function PropertyFilters({
               <Input
                 type="number"
                 placeholder={t('common.from')}
-                value={filters.minArea || ''}
+                value={filters.minArea ?? ''}
                 onChange={(e) =>
                   setFilters({
                     ...filters,
-                    minArea: e.target.value ? Number(e.target.value) : undefined,
+                    minArea: parsePropertyListingNumberInput(e.target.value),
                   })
                 }
               />
               <Input
                 type="number"
                 placeholder={t('common.to')}
-                value={filters.maxArea || ''}
+                value={filters.maxArea ?? ''}
                 onChange={(e) =>
                   setFilters({
                     ...filters,
-                    maxArea: e.target.value ? Number(e.target.value) : undefined,
+                    maxArea: parsePropertyListingNumberInput(e.target.value),
                   })
                 }
               />

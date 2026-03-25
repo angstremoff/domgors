@@ -63,6 +63,9 @@ Web сейчас живёт в режиме static export.
 
 Важные файлы:
 - [PropertyListingsClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyListingsClient.tsx)
+- [PropertyFilters.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyFilters.tsx)
+- [property-listings.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/property-listings.ts)
+- [propertyListingFilters.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/propertyListingFilters.ts)
 - [AuthProvider.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/providers/AuthProvider.tsx)
 - [AgencyPageClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/agency/AgencyPageClient.tsx)
 - [client.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/supabase/client.ts)
@@ -111,6 +114,24 @@ Web сейчас живёт в режиме static export.
 
 ### 6.3 Списки и обновление данных
 - Web-листинги после static export обязаны делать тихое клиентское обновление из Supabase после монтирования.
+- `/prodaja`, `/izdavanje` и `/novogradnja` должны брать initial page и последующие страницы через единый helper:
+  - [property-listings.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/property-listings.ts)
+- Нормализация и переходы состояний фильтров для web вынесены в shared helper:
+  - [propertyListingFilters.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/propertyListingFilters.ts)
+- В web-листингах нельзя смешивать reset и infinite scroll в один незащищённый поток:
+  - `PropertyListingsClient` сначала синхронизирует первую страницу;
+  - только после этого можно подключать `IntersectionObserver` для догрузки.
+- Любое объединение страниц объявлений на web должно идти только через дедупликацию по `property.id`.
+- Если дубли видны только на web desktop и только в коротких категориях, сначала проверять гонку гидрации/observer, а не БД: первая страница может задвоиться, если `loader` сразу попадает в viewport.
+- Для фильтров city/district на web действует жёсткий контракт:
+  - canonical state живёт в `PropertyListingsClient`;
+  - sidebar `PropertyFilters` controlled и получает `value` от родителя;
+  - смена города всегда сбрасывает район;
+  - выбор `Все города`/`Все районы` обязан реально удалять соответствующий фильтр из query, а не только из UI.
+- Семантика rooms на web должна совпадать с остальным проектом:
+  - `5+` это `rooms >= 5`, а не `rooms = 5`;
+  - для `land` rooms filter очищается и не уходит в query;
+  - numeric `0` нельзя терять из-за truthy-проверок.
 - Последние объявления не должны зависеть от ручного применения фильтров.
 - Проданные и сданные объявления на web не скрываются полностью, а показываются со статусом.
 
@@ -210,7 +231,24 @@ Web Supabase client/server теперь работают в fail-fast-режим
 - без `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` web должен падать явно;
 - mock/placeholder-клиенты больше не считаются допустимой архитектурой.
 
-### 11.3 Главная страница
+### 11.3 Листинги и гидрация
+- [PropertyListingsClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyListingsClient.tsx) отвечает не только за UI фильтров, но и за безопасную синхронизацию списка после static export.
+- Актуальный архитектурный контракт:
+  - первая клиентская синхронизация и пагинация разделены;
+  - `IntersectionObserver` стартует только после первого refresh;
+  - merge страниц идёт через helper с дедупликацией;
+  - быстрые фильтры и sidebar не имеют независимых canonical state.
+- Это защищает web от задвоения карточек при коротких списках, что уже проявлялось в desktop-версиях `Аренда` и `Новостройки`.
+
+### 11.4 Web-фильтры
+- [PropertyFilters.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyFilters.tsx) хранит только локальный draft для UI, но синхронизируется с parent `value`; долговременная правда о фильтрах живёт в `PropertyListingsClient`.
+- [propertyListingFilters.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/propertyListingFilters.ts) задаёт общие правила reset/sanitize:
+  - пустые `cityId`/`districtId` становятся `undefined`;
+  - смена `propertyType` на `land` очищает `rooms`;
+  - helper для rooms query возвращает `gte 5` для варианта `5+`.
+- Это было введено после реального бага, когда быстрый select `Все города` визуально сбрасывался, но старый `city_id` оставался в web-query из-за рассинхрона state.
+
+### 11.5 Главная страница
 На главной есть карусель последних объявлений:
 - автопрокрутка;
 - drag-scroll;
@@ -265,14 +303,16 @@ APK в проекте нужен в основном для локального
 ## 16. Текущие проверки и техдолг
 
 ### 16.1 Что уже в зелёном состоянии
-- `npm run check` проходит
-- `cd web && npm run build` проходит
+- Последняя подтверждённая web-проверка: `cd web && npm run build` проходит (`2026-03-25`)
+- Последняя подтверждённая shared/unit-проверка: `npm test` проходит (`2026-03-25`)
+- `npm run check` остаётся обязательной проверкой для mobile-изменений
 - Тесты сейчас покрывают:
   - deep link parsing
   - agency profile normalization
+  - property listing filter helpers
 
 ### 16.2 Что остаётся проблемой
-- В mobile остаётся `71` lint warning, в основном старые `any` и техдолг в старых экранах/утилитах.
+- В mobile остаётся исторический lint-хвост, в основном старые `any` и техдолг в старых экранах/утилитах.
 - Полноценный аудит БД/RLS по-прежнему нельзя считать завершённым, пока не выгружена живая схема Supabase.
 - Web-приватность и detail SEO всё ещё ограничены текущей архитектурой static export.
 
@@ -282,6 +322,11 @@ APK в проекте нужен в основном для локального
 - `land` — отдельный кейс во всём: create/edit, фильтры, карточки, детали.
 - `agency_profiles` typed-схема ограничена `email/site/location`; не придумывать новые колонки в запросах.
 - Storage path фото должен быть единым для web и mobile.
+- Web-листинги нельзя склеивать сырыми массивами; только merge с дедупликацией по `property.id`.
+- В web-листингах сначала завершать initial refresh, потом включать infinite scroll.
+- Быстрые web-фильтры и sidebar должны писать в один canonical filter state.
+- `Все города`/`Все районы` на web должны удалять фильтр из query, а не только менять UI.
+- `5+` комнат на web это `>= 5`.
 - Web signup зависит и от кода, и от внешней SMTP-настройки Supabase.
 - Без актуального экспорта live-схемы нельзя безопасно делать серьёзные DB/RLS-рефакторы.
 

@@ -11,6 +11,12 @@ import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/providers/AuthProvider';
 import type { Database, TablesInsert } from '@shared/lib/database.types';
 import {
+  applyCityFilterChange,
+  applyDistrictFilterChange,
+  getSelectedCityIdFromFilters,
+  sanitizePropertyListingFilters,
+} from '@shared/utils/propertyListingFilters';
+import {
   PROPERTY_LISTINGS_PAGE_SIZE,
   dedupePropertyListings,
   fetchPropertyListingsPage,
@@ -45,7 +51,7 @@ export function PropertyListingsClient({
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [filters, setFilters] = useState<FilterState>({});
+  const [filters, setFilters] = useState<FilterState>(sanitizePropertyListingFilters({}));
   const [page, setPage] = useState(initialListings.length > 0 ? 1 : 0);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -55,11 +61,11 @@ export function PropertyListingsClient({
   const loadMoreInFlightRef = useRef(false);
 
   // Быстрые фильтры
-  const [selectedCity, setSelectedCity] = useState<number | undefined>();
   const [cities, setCities] = useState<City[]>([]);
-  const [selectedDistrict, setSelectedDistrict] = useState<string | undefined>();
   const [districts, setDistricts] = useState<District[]>([]);
   const [districtsLoading, setDistrictsLoading] = useState(false);
+  const selectedCity = useMemo(() => getSelectedCityIdFromFilters(filters), [filters]);
+  const selectedDistrict = filters.districtId || undefined;
 
   const selectedDistrictData = useMemo(
     () => districts.find((district) => district.id === selectedDistrict),
@@ -133,27 +139,21 @@ export function PropertyListingsClient({
 
   useEffect(() => {
     if (selectedCity !== undefined) {
-      fetchDistricts(selectedCity);
-      setSelectedDistrict(undefined);
-      setFilters((prev) => ({ ...prev, cityId: String(selectedCity), districtId: undefined }));
+      setDistricts([]);
+      void fetchDistricts(selectedCity);
     } else {
       setDistricts([]);
-      setSelectedDistrict(undefined);
-      setFilters((prev) => ({ ...prev, cityId: undefined, districtId: undefined }));
     }
   }, [fetchDistricts, selectedCity]);
 
   const buildListingFilters = useCallback(
     (filterState: FilterState): PropertyListingFilters => {
-      const districtId = filterState.districtId ?? selectedDistrict;
-      const cityId =
-        filterState.cityId !== undefined && filterState.cityId !== ''
-          ? Number(filterState.cityId)
-          : selectedCity;
-
       return {
-        cityId,
-        districtId,
+        cityId:
+          filterState.cityId !== undefined && filterState.cityId !== ''
+            ? Number(filterState.cityId)
+            : undefined,
+        districtId: filterState.districtId || undefined,
         propertyType: filterState.propertyType,
         minPrice: filterState.minPrice,
         maxPrice: filterState.maxPrice,
@@ -162,7 +162,7 @@ export function PropertyListingsClient({
         rooms: filterState.rooms,
       };
     },
-    [selectedCity, selectedDistrict]
+    []
   );
 
   const refreshProperties = useCallback(
@@ -256,22 +256,23 @@ export function PropertyListingsClient({
   }, [buildListingFilters, filters, hasMore, isNewBuilding, loading, loadingMore, page, t, type]);
 
   const handleFilterChange = (newFilters: FilterState) => {
-    setFilters(newFilters);
-    setSelectedDistrict(newFilters.districtId || undefined);
-    void refreshProperties(newFilters);
+    const nextFilters = sanitizePropertyListingFilters(newFilters);
+    setFilters(nextFilters);
+    void refreshProperties(nextFilters);
   };
 
   const handleCityChange = (cityId: string) => {
-    setSelectedCity(cityId ? Number(cityId) : undefined);
-    setSelectedDistrict(undefined);
-    void refreshProperties({ ...filters, cityId: cityId || undefined, districtId: undefined });
+    const nextFilters = applyCityFilterChange(filters, cityId);
+
+    setFilters(nextFilters);
+    void refreshProperties(nextFilters);
   };
 
   const handleDistrictChange = (districtId: string) => {
-    const value = districtId || undefined;
-    setSelectedDistrict(value);
-    setFilters((prev) => ({ ...prev, districtId: value }));
-    void refreshProperties({ ...filters, districtId: value });
+    const nextFilters = applyDistrictFilterChange(filters, districtId);
+
+    setFilters(nextFilters);
+    void refreshProperties(nextFilters);
   };
 
   const handleFavoriteToggle = async (id: string) => {
@@ -413,10 +414,10 @@ export function PropertyListingsClient({
           <aside className="lg:w-80 flex-shrink-0">
             <PropertyFilters
               onFilterChange={handleFilterChange}
+              value={filters}
               cityId={selectedCity}
               districts={districts}
               districtsLoading={districtsLoading}
-              selectedDistrictId={selectedDistrict}
             />
           </aside>
         )}

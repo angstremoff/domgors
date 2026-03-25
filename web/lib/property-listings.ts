@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@shared/lib/database.types';
+import { getRoomsFilterQuery } from '@shared/utils/propertyListingFilters';
 import { getSupabasePublicEnv } from './supabase/env';
 
 export const PROPERTY_LISTINGS_PAGE_SIZE = 50;
@@ -99,8 +100,12 @@ function buildPropertyListingsQuery(
     query = query.lte('area', options.maxArea);
   }
 
-  if (options.rooms !== undefined && options.propertyType !== 'land') {
-    query = query.eq('rooms', options.rooms);
+  const roomsFilter = getRoomsFilterQuery(options.rooms, options.propertyType);
+
+  if (roomsFilter) {
+    query = roomsFilter.operator === 'gte'
+      ? query.gte('rooms', roomsFilter.value)
+      : query.eq('rooms', roomsFilter.value);
   }
 
   return query.order('created_at', { ascending: false });
