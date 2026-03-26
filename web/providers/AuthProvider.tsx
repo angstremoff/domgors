@@ -14,6 +14,73 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const RESEND_MAX_ATTEMPTS = 3;
+const DEFAULT_WEB_EMAIL_REDIRECT = 'https://domgo.rs';
+
+const wait = (ms: number) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+const stripTrailingSlash = (url: string) => url.endsWith('/') ? url.slice(0, -1) : url;
+
+const getWebEmailRedirectTo = () => {
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configuredSiteUrl) {
+    return stripTrailingSlash(configuredSiteUrl);
+  }
+
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return stripTrailingSlash(window.location.origin);
+  }
+
+  return DEFAULT_WEB_EMAIL_REDIRECT;
+};
+
+const isRecoverableSignUpError = (error: AuthError | null) => {
+  if (!error) {
+    return false;
+  }
+
+  const normalizedMessage = error.message.toLowerCase();
+  return normalizedMessage.includes('error sending confirmation email')
+    || normalizedMessage.includes('failed to send confirmation email')
+    || normalizedMessage.includes('user already registered')
+    || normalizedMessage.includes('email not confirmed')
+    || normalizedMessage.includes('email rate limit')
+    || normalizedMessage.includes('smtp');
+};
+
+const tryResendSignupConfirmation = async (
+  supabase: ReturnType<typeof createClient>,
+  email: string,
+  emailRedirectTo: string
+) => {
+  let lastResendError: AuthError | null = null;
+
+  for (let attempt = 1; attempt <= RESEND_MAX_ATTEMPTS; attempt += 1) {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo,
+      },
+    });
+
+    lastResendError = error;
+
+    if (!lastResendError) {
+      return null;
+    }
+
+    if (attempt !== RESEND_MAX_ATTEMPTS) {
+      await wait(attempt * 500);
+    }
+  }
+
+  return lastResendError;
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -72,12 +139,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string) => {
-    const emailRedirectTo = typeof window !== 'undefined'
-      ? window.location.origin
-      : undefined;
+    const normalizedEmail = normalizeEmail(email);
+    const emailRedirectTo = getWebEmailRedirectTo();
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
         emailRedirectTo,
@@ -90,6 +156,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (data.session?.user) {
       await ensureUserProfile(data.session.user);
+    }
+
+    if (error && isRecoverableSignUpError(error)) {
+      const resendError = await tryResendSignupConfirmation(supabase, normalizedEmail, emailRedirectTo);
+      if (!resendError) {
+        return { error: null, user: data.user, session: null };
+      }
+
+      return { error: resendError, user: data.user, session: data.session };
     }
 
     return { error, user: data.user, session: data.session };

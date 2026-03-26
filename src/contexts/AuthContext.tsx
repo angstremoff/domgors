@@ -24,6 +24,53 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const RESEND_MAX_ATTEMPTS = 3;
+
+const wait = (ms: number) => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+const isRecoverableSignUpError = (error: AuthError | null) => {
+  if (!error) {
+    return false;
+  }
+
+  const normalizedMessage = error.message.toLowerCase();
+  return normalizedMessage.includes('error sending confirmation email')
+    || normalizedMessage.includes('failed to send confirmation email')
+    || normalizedMessage.includes('user already registered')
+    || normalizedMessage.includes('email not confirmed')
+    || normalizedMessage.includes('email rate limit')
+    || normalizedMessage.includes('smtp');
+};
+
+const tryResendSignupConfirmation = async (email: string, emailRedirectTo: string) => {
+  let lastResendError: AuthError | null = null;
+
+  for (let attempt = 1; attempt <= RESEND_MAX_ATTEMPTS; attempt += 1) {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo,
+      },
+    });
+
+    lastResendError = error;
+
+    if (!lastResendError) {
+      return null;
+    }
+
+    if (attempt !== RESEND_MAX_ATTEMPTS) {
+      await wait(attempt * 500);
+    }
+  }
+
+  return lastResendError;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -87,11 +134,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (email: string, password: string) => {
+    const emailRedirectTo = 'domgomobile://auth/callback?source=mobile';
+    const normalizedEmail = normalizeEmail(email);
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: 'domgomobile://auth/callback?source=mobile',
+        emailRedirectTo,
         data: {
           source: 'mobile_app',
           platform: Platform.OS,
@@ -101,6 +150,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (data.session?.user) {
       await ensureUserProfile(data.session.user);
+    }
+
+    if (error && isRecoverableSignUpError(error)) {
+      const resendError = await tryResendSignupConfirmation(normalizedEmail, emailRedirectTo);
+      if (!resendError) {
+        return { error: null, user: data.user, session: null };
+      }
+
+      return { error: resendError, user: data.user, session: data.session };
     }
 
     return { error, user: data.user, session: data.session };
