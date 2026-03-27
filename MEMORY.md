@@ -18,6 +18,7 @@
 - Shared/unit tests: `npm test`
 - Web: `cd web && npm run build`
 - Последние подтверждённые проверки `2026-03-27`: `npm run check`, `npm test`, `cd web && npm run build`.
+- Автотесты пока не покрывают e2e-критические сценарии `signup/login/reset password` и `create/edit property`; зелёный `check/build` = smoke-проверка кода, а не полное пользовательское e2e.
 
 ## 4. Ключевые инварианты данных
 - Основные таблицы: `users`, `properties`, `agency_profiles`, `favorites`, `cities`, `districts`.
@@ -27,6 +28,7 @@
   - rooms filter не применяем;
   - `rooms` не должен требоваться в create/edit;
   - числовые поля нельзя рендерить через truthy-проверки, если возможен `0`.
+- `properties.district_id` nullable; create/edit на web и mobile должны требовать район только если у выбранного города реально есть районы, иначе сохранять `district_id = null`.
 - Фото объявлений должны жить единообразно:
   - bucket: `properties`
   - path: `property-images/<userId>/<filename>`
@@ -80,6 +82,7 @@
 - Web Supabase client/server теперь fail-fast: без `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` web должен падать явно, а не работать на mock/placeholder.
 - Карусель последних объявлений на главной не должна ломать обычный клик по карточке.
 - Web i18n в рантайме использует shared `src/translations/{ru,sr}.json`; зеркала в `web/public/locales/*` держать синхронно.
+- Продуктовый UI на `domgo.rs` по умолчанию должен быть на сербской латинице; русские hardcoded/fallback-строки в публичных web-flow считаются багом.
 
 ## 9. Актуальный релизный контекст
 - Текущая версия: `1.0.11`
@@ -103,6 +106,7 @@
 ## 11. Ключевые файлы
 - `src/services/propertyService.ts` — CRUD объявлений, storage, статусные операции, кэши.
 - `src/contexts/PropertyContext.tsx` — списки, пагинация, города/районы, загрузка по id.
+- `src/screens/AddPropertyScreen.tsx` и `src/screens/EditPropertyScreen.tsx` — mobile create/edit property, district/null logic, image upload order.
 - `src/utils/propertyRules.ts` — общие правила для `rooms/land`.
 - `src/utils/propertyListingFilters.ts` — shared helper для sanitize/reset/filter transitions и семантики rooms (`5+`, `land`) в web-листингах.
 - `src/utils/propertyStorage.ts` — единый контракт storage path.
@@ -112,6 +116,7 @@
 - `src/utils/authErrorMessage.ts` — безопасное отображение auth-ошибок без утечки внутренних текстов Supabase.
 - `src/screens/ForgotPasswordScreen.tsx`, `src/screens/ResetPasswordScreen.tsx`, `web/components/forms/ForgotPasswordForm.tsx`, `web/components/forms/ResetPasswordForm.tsx`, `web/components/forms/AuthCallbackClient.tsx` — email reset/callback flow.
 - `web/lib/property-listings.ts` — единый web-helper для initial fetch, пагинации и дедупликации листингов.
+- `web/components/property/AddPropertyForm.tsx` и `web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx` — web create/edit property, district/null logic, sr-localized validation.
 - `web/components/property/PropertyListingsClient.tsx` — client refresh, infinite scroll и canonical filter state на web.
 - `web/components/property/PropertyFilters.tsx` — controlled sidebar filters; не должен расходиться с быстрыми фильтрами.
 - `src/services/AppVersionManager.ts` — инвалидация кэшей по версии/сборке.

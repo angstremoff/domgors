@@ -135,6 +135,20 @@ Web сейчас живёт в режиме static export.
 - Последние объявления не должны зависеть от ручного применения фильтров.
 - Проданные и сданные объявления на web не скрываются полностью, а показываются со статусом.
 
+### 6.4 Create/Edit форм объявлений
+- `properties.district_id` по typed-схеме nullable.
+- Для create/edit объявлений на web и mobile действует единый контракт:
+  - если у выбранного города есть районы, `district` обязателен;
+  - если у города районов нет, форма должна позволять publish/save с `district_id = null`;
+  - пока список районов грузится, submit/save должен быть заблокирован;
+  - старая validation-ошибка не должна висеть после изменения полей.
+- Это особенно важно для городов без наполненной таблицы `districts`: форма не должна становиться непроходимой только из-за отсутствия районов в БД.
+- Ключевые create/edit файлы:
+  - [AddPropertyForm.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/AddPropertyForm.tsx)
+  - [EditPropertyPageClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx)
+  - [AddPropertyScreen.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/src/screens/AddPropertyScreen.tsx)
+  - [EditPropertyScreen.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/src/screens/EditPropertyScreen.tsx)
+
 ## 7. Агентства
 
 ### 7.1 Реальная typed-схема
@@ -326,7 +340,13 @@ Web Supabase client/server теперь работают в fail-fast-режим
 - без `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` web должен падать явно;
 - mock/placeholder-клиенты больше не считаются допустимой архитектурой.
 
-### 11.3 Листинги и гидрация
+### 11.3 Локализация public web UI
+- Продуктовый default для `domgo.rs` — сербская латиница.
+- Общий источник правды для строк: `src/translations/ru.json` и `src/translations/sr.json`.
+- `web/public/locales/*` — только зеркала; их нужно держать синхронно с shared-переводами.
+- Русские hardcoded/fallback-строки в публичных web-flow (`auth`, `create/edit property`, metadata route pages) считаются багом, а не допустимым fallback.
+
+### 11.4 Листинги и гидрация
 - [PropertyListingsClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyListingsClient.tsx) отвечает не только за UI фильтров, но и за безопасную синхронизацию списка после static export.
 - Актуальный архитектурный контракт:
   - первая клиентская синхронизация и пагинация разделены;
@@ -335,7 +355,7 @@ Web Supabase client/server теперь работают в fail-fast-режим
   - быстрые фильтры и sidebar не имеют независимых canonical state.
 - Это защищает web от задвоения карточек при коротких списках, что уже проявлялось в desktop-версиях `Аренда` и `Новостройки`.
 
-### 11.4 Web-фильтры
+### 11.5 Web-фильтры
 - [PropertyFilters.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyFilters.tsx) хранит только локальный draft для UI, но синхронизируется с parent `value`; долговременная правда о фильтрах живёт в `PropertyListingsClient`.
 - [propertyListingFilters.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/propertyListingFilters.ts) задаёт общие правила reset/sanitize:
   - пустые `cityId`/`districtId` становятся `undefined`;
@@ -343,7 +363,7 @@ Web Supabase client/server теперь работают в fail-fast-режим
   - helper для rooms query возвращает `gte 5` для варианта `5+`.
 - Это было введено после реального бага, когда быстрый select `Все города` визуально сбрасывался, но старый `city_id` оставался в web-query из-за рассинхрона state.
 
-### 11.5 Главная страница
+### 11.6 Главная страница
 На главной есть карусель последних объявлений:
 - автопрокрутка;
 - drag-scroll;
@@ -411,6 +431,10 @@ APK в проекте нужен в основном для локального
 - В mobile остаётся исторический lint-хвост, в основном старые `any` и техдолг в старых экранах/утилитах.
 - Полноценный аудит БД/RLS по-прежнему нельзя считать завершённым, пока не выгружена живая схема Supabase.
 - Web-приватность и detail SEO всё ещё ограничены текущей архитектурой static export.
+- Полноценного автоматического e2e-покрытия для критических пользовательских сценариев пока нет:
+  - `signup/login/reset password`
+  - `create/edit property`
+  - текущие зелёные проверки подтверждают lint/type/unit smoke, но не весь пользовательский путь.
 
 ## 17. Самые важные практические инварианты для новых агентов
 - Это два разных фронтенда в одном репозитории, а не “одно приложение + web-оболочка”.
@@ -423,6 +447,8 @@ APK в проекте нужен в основном для локального
 - Быстрые web-фильтры и sidebar должны писать в один canonical filter state.
 - `Все города`/`Все районы` на web должны удалять фильтр из query, а не только менять UI.
 - `5+` комнат на web это `>= 5`.
+- `district_id` в объявлениях nullable; не делать район безусловно обязательным в create/edit.
+- `domgo.rs` должен отдавать сербскую латиницу по умолчанию; русские fallback-строки в public UI — это регресс.
 - Web signup зависит и от кода, и от внешней SMTP-настройки Supabase.
 - Auth-ошибки signup/reset могут идти не только из фронта, но и из live Supabase schema/trigger drift.
 - Без актуального экспорта live-схемы нельзя безопасно делать серьёзные DB/RLS-рефакторы.
