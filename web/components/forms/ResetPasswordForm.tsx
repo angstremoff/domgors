@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
-import { buildMobileAuthCallbackUrl, extractAuthSessionLinkData } from '@shared/utils/authSessionUrl';
+import { resolveAuthSessionFromUrl } from '@/lib/authSession';
+import { buildMobileAuthCallbackUrl, extractAuthCallbackLinkData } from '@shared/utils/authSessionUrl';
 
 type ResetState = 'preparing' | 'ready' | 'success' | 'error';
 
@@ -23,44 +24,28 @@ export function ResetPasswordForm() {
 
   useEffect(() => {
     const prepareRecoverySession = async () => {
-      const sessionLinkData = extractAuthSessionLinkData(window.location.href);
+      const callbackLinkData = extractAuthCallbackLinkData(window.location.href);
 
-      if (sessionLinkData?.authType && sessionLinkData.authType !== 'recovery') {
+      if (callbackLinkData?.authType && callbackLinkData.authType !== 'recovery') {
         setStatus('error');
         setError(t('auth.invalidAuthLink'));
         return;
       }
 
-      if (sessionLinkData) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: sessionLinkData.accessToken,
-          refresh_token: sessionLinkData.refreshToken,
-        });
+      const { sessionData, errorMessage } = await resolveAuthSessionFromUrl(supabase, window.location.href);
 
-        if (sessionError) {
-          setStatus('error');
-          setError(sessionError.message || t('auth.authCallbackError'));
-          return;
-        }
-
-        setAppLink(buildMobileAuthCallbackUrl(sessionLinkData));
+      if (sessionData) {
+        setAppLink(buildMobileAuthCallbackUrl(sessionData));
         setStatus('ready');
         return;
       }
 
-      const { data } = await supabase.auth.getSession();
-
-      if (!data.session) {
-        setStatus('error');
-        setError(t('auth.invalidAuthLink'));
-        return;
-      }
-
-      setStatus('ready');
+      setStatus('error');
+      setError(errorMessage || t('auth.invalidAuthLink'));
     };
 
     void prepareRecoverySession();
-  }, [supabase.auth, t]);
+  }, [supabase, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

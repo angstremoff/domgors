@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { createClient } from '@/lib/supabase/client';
+import { resolveAuthSessionFromUrl } from '@/lib/authSession';
 import {
   buildMobileAuthCallbackUrl,
   buildWebResetPasswordUrl,
-  extractAuthSessionLinkData,
+  extractAuthCallbackLinkData,
 } from '@shared/utils/authSessionUrl';
 
 type CallbackState = 'loading' | 'success' | 'error';
@@ -21,36 +22,30 @@ export function AuthCallbackClient() {
 
   useEffect(() => {
     const completeAuth = async () => {
-      const sessionLinkData = extractAuthSessionLinkData(window.location.href);
+      const callbackLinkData = extractAuthCallbackLinkData(window.location.href);
 
-      if (!sessionLinkData) {
+      if (callbackLinkData?.authType === 'recovery') {
+        const resetPasswordUrl = new URL(buildWebResetPasswordUrl());
+        resetPasswordUrl.search = window.location.search;
+        resetPasswordUrl.hash = window.location.hash;
+        window.location.replace(resetPasswordUrl.toString());
+        return;
+      }
+
+      const { sessionData, errorMessage } = await resolveAuthSessionFromUrl(supabase, window.location.href);
+
+      if (!sessionData) {
         setStatus('error');
-        setErrorMessage(t('auth.invalidAuthLink'));
+        setErrorMessage(errorMessage || t('auth.invalidAuthLink'));
         return;
       }
 
-      if (sessionLinkData.authType === 'recovery') {
-        window.location.replace(`${buildWebResetPasswordUrl()}${window.location.hash}`);
-        return;
-      }
-
-      const { error } = await supabase.auth.setSession({
-        access_token: sessionLinkData.accessToken,
-        refresh_token: sessionLinkData.refreshToken,
-      });
-
-      if (error) {
-        setStatus('error');
-        setErrorMessage(error.message || t('auth.authCallbackError'));
-        return;
-      }
-
-      setAppLink(buildMobileAuthCallbackUrl(sessionLinkData));
+      setAppLink(buildMobileAuthCallbackUrl(sessionData));
       setStatus('success');
     };
 
     void completeAuth();
-  }, [supabase.auth, t]);
+  }, [supabase, t]);
 
   if (status === 'loading') {
     return <p className="text-sm text-textSecondary">{t('common.loading')}</p>;

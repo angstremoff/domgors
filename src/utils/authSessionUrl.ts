@@ -4,11 +4,20 @@ export type AuthFlowType =
   | 'magiclink'
   | 'invite'
   | 'email_change'
+  | 'email'
   | 'unknown';
 
 export interface AuthSessionLinkData {
   accessToken: string;
   refreshToken: string;
+  authType: AuthFlowType | null;
+}
+
+export interface AuthCallbackLinkData {
+  accessToken: string | null;
+  refreshToken: string | null;
+  code: string | null;
+  tokenHash: string | null;
   authType: AuthFlowType | null;
 }
 
@@ -30,6 +39,7 @@ function normalizeAuthType(value: string | null): AuthFlowType | null {
     case 'magiclink':
     case 'invite':
     case 'email_change':
+    case 'email':
       return value;
     default:
       return 'unknown';
@@ -49,24 +59,43 @@ function getCombinedParams(url: string) {
   return combinedParams;
 }
 
-export function extractAuthSessionLinkData(url: string): AuthSessionLinkData | null {
+export function extractAuthCallbackLinkData(url: string): AuthCallbackLinkData | null {
   try {
     const params = getCombinedParams(url);
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
+    const code = params.get('code');
+    const tokenHash = params.get('token_hash');
+    const authType = normalizeAuthType(params.get('type'));
 
-    if (!accessToken || !refreshToken) {
+    if (!accessToken && !refreshToken && !code && !tokenHash) {
       return null;
     }
 
     return {
       accessToken,
       refreshToken,
-      authType: normalizeAuthType(params.get('type')),
+      code,
+      tokenHash,
+      authType,
     };
   } catch {
     return null;
   }
+}
+
+export function extractAuthSessionLinkData(url: string): AuthSessionLinkData | null {
+  const callbackLinkData = extractAuthCallbackLinkData(url);
+
+  if (!callbackLinkData?.accessToken || !callbackLinkData.refreshToken) {
+    return null;
+  }
+
+  return {
+    accessToken: callbackLinkData.accessToken,
+    refreshToken: callbackLinkData.refreshToken,
+    authType: callbackLinkData.authType,
+  };
 }
 
 export function resolveWebAppOrigin(origin?: string) {
