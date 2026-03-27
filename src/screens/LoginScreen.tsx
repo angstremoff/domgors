@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { showErrorAlert, showAlert } from '../utils/alertUtils';
+import { showErrorAlert } from '../utils/alertUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import Colors from '../constants/colors';
 import { Logger } from '../utils/logger';
@@ -85,7 +85,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
 
       <TouchableOpacity
         style={styles.forgotPassword}
-        onPress={() => showAlert(t('auth.info'), t('auth.resetPasswordInstructions'))}
+        onPress={() => navigation.navigate('ForgotPassword')}
       >
         <Text style={[styles.forgotPasswordText, { color: theme.primary }]}>{t('auth.forgotPassword')}</Text>
       </TouchableOpacity>

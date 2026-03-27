@@ -36,24 +36,29 @@ export function RegisterForm() {
 
     setLoading(true);
 
-    const { error, session } = await signUp(email, password);
+    try {
+      const { error, session } = await signUp(email, password);
 
-    if (error) {
-      setError(error.message || t('auth.registerError'));
-      setLoading(false);
-    } else {
-      setLoading(false);
+      if (error) {
+        setError(error.message || t('auth.registerError'));
+        setLoading(false);
+      } else {
+        setLoading(false);
 
-      if (session) {
-        router.push('/profil');
-        router.refresh();
-        return;
+        if (session) {
+          router.push('/profil');
+          router.refresh();
+          return;
+        }
+
+        setSuccess(t('auth.confirmEmailSent'));
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
       }
-
-      setSuccess(t('auth.confirmEmailSent'));
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
+    } catch {
+      setError(t('auth.registerError'));
+      setLoading(false);
     }
   };
 

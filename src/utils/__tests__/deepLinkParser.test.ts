@@ -12,6 +12,20 @@ describe('parseDeepLink', () => {
       type: 'auth',
       accessToken: 'abc123',
       refreshToken: 'ref456',
+      authType: 'signup',
+      raw: url,
+    });
+  });
+
+  it('parses auth callback with hash tokens', () => {
+    const url =
+      'domgomobile://auth/callback#access_token=abc123&refresh_token=ref456&type=recovery';
+    const parsed = parseDeepLink(url);
+    expect(parsed).toEqual({
+      type: 'auth',
+      accessToken: 'abc123',
+      refreshToken: 'ref456',
+      authType: 'recovery',
       raw: url,
     });
   });

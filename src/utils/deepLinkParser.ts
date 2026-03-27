@@ -1,5 +1,7 @@
+import { extractAuthSessionLinkData, type AuthFlowType } from './authSessionUrl';
+
 export type ParsedDeepLink =
-  | { type: 'auth'; accessToken: string; refreshToken: string; raw: string }
+  | { type: 'auth'; accessToken: string; refreshToken: string; authType: AuthFlowType | null; raw: string }
   | { type: 'property'; propertyId: string; raw: string }
   | { type: 'agency'; agencyId: string; raw: string }
   | { type: 'unknown'; raw: string };
@@ -37,15 +39,9 @@ export function parseDeepLink(url: string): ParsedDeepLink {
 
   // Auth callback
   if (url.includes('domgomobile://auth/callback')) {
-    try {
-      const params = new URL(url).searchParams;
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token');
-      if (accessToken && refreshToken) {
-        return { type: 'auth', accessToken, refreshToken, raw };
-      }
-    } catch {
-      /* ignore parse errors */
+    const sessionLinkData = extractAuthSessionLinkData(url);
+    if (sessionLinkData) {
+      return { type: 'auth', ...sessionLinkData, raw };
     }
   }
 

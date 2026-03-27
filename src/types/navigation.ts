@@ -8,6 +8,8 @@ export type RootStackParamList = {
   PropertyDetails: { propertyId: string; property?: Property; id?: string };
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: undefined;
   AddProperty: undefined;
   Settings: undefined;
   Map: undefined;
@@ -41,4 +43,12 @@ export type LoginScreenProps = {
 
 export type RegisterScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Register'>;
+};
+
+export type ForgotPasswordScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'ForgotPassword'>;
+};
+
+export type ResetPasswordScreenProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'ResetPassword'>;
 };

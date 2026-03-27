@@ -22,14 +22,19 @@ export function LoginForm() {
     setError('');
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      const { error } = await signIn(email, password);
 
-    if (error) {
-      setError(error.message || t('auth.loginError'));
+      if (error) {
+        setError(error.message || t('auth.loginError'));
+        setLoading(false);
+      } else {
+        router.push('/profil');
+        router.refresh();
+      }
+    } catch {
+      setError(t('auth.loginError'));
       setLoading(false);
-    } else {
-      router.push('/profil');
-      router.refresh();
     }
   };
 
@@ -64,6 +69,12 @@ export function LoginForm() {
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? t('common.loading') : t('auth.login')}
       </Button>
+
+      <div className="text-right">
+        <Link href="/zaboravljena-lozinka" className="text-sm text-primary hover:underline">
+          {t('auth.forgotPassword')}
+        </Link>
+      </div>
 
       <p className="text-center text-sm text-textSecondary">
         {t('auth.noAccount')}{' '}

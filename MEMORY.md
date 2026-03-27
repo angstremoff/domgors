@@ -33,8 +33,11 @@
   - удаление только через извлечение storage path из URL, а не по одному filename.
 
 ## 5. Auth, email и deep links
-- Mobile регистрация централизована в `AuthContext`; `signUp` использует `emailRedirectTo = domgomobile://auth/callback?source=mobile`.
-- Web регистрация централизована в `web/providers/AuthProvider.tsx`; `signUp` использует `emailRedirectTo = window.location.origin`.
+- Auth-канал продуктово только один: `email + password`; phone/SMS auth в текущей архитектуре не используется.
+- Mobile регистрация централизована в `AuthContext`; `signUp` использует web callback `https://domgo.rs/auth/callback/`.
+- Web регистрация централизована в `web/providers/AuthProvider.tsx`; `signUp` использует `/auth/callback/`.
+- Восстановление пароля идёт через `/zaboravljena-lozinka/` -> `/auth/reset-password/`.
+- Mobile app умеет принимать handoff через `domgomobile://auth/callback?...` для подтверждения email и recovery.
 - Если web `signUp` вернул `session = null`, нельзя редиректить пользователя в профиль; нужно показывать `auth.confirmEmailSent`.
 - Для production нельзя полагаться на built-in email service Supabase; нужен custom SMTP вне репозитория.
 - Deep links:

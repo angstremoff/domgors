@@ -24,6 +24,8 @@ import AddPropertyScreen from '../screens/AddPropertyScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import MapScreen from '../screens/MapScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import MyPropertiesScreen from '../screens/MyPropertiesScreen';
 import EditPropertyScreen from '../screens/EditPropertyScreen';
 import AgencyScreen from '../screens/AgencyScreen';
@@ -33,6 +35,8 @@ type AppNavigatorProps = {
   clearPendingPropertyId: () => void;
   pendingAgencyId?: string | null;
   clearPendingAgencyId?: () => void;
+  pendingAuthScreen?: 'MainTabs' | 'ResetPassword' | null;
+  clearPendingAuthScreen?: () => void;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -194,6 +198,16 @@ const MainStack = () => {
         name="Register"
         component={RegisterScreen}
         options={{ title: t('auth.register') }}
+      />
+      <Stack.Screen
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+        options={{ title: t('auth.resetPassword') }}
+      />
+      <Stack.Screen
+        name="ResetPassword"
+        component={ResetPasswordScreen}
+        options={{ title: t('auth.setNewPassword') }}
       />
       <Stack.Screen
         name="AddProperty"
@@ -417,7 +431,14 @@ const MainTabs = () => {
   );
 };
 
-const AppNavigator = ({ pendingPropertyId, clearPendingPropertyId, pendingAgencyId, clearPendingAgencyId }: AppNavigatorProps) => {
+const AppNavigator = ({
+  pendingPropertyId,
+  clearPendingPropertyId,
+  pendingAgencyId,
+  clearPendingAgencyId,
+  pendingAuthScreen,
+  clearPendingAuthScreen,
+}: AppNavigatorProps) => {
   const { darkMode } = useTheme();
   const { fetchPropertyById } = useProperties();
 
@@ -542,6 +563,24 @@ const AppNavigator = ({ pendingPropertyId, clearPendingPropertyId, pendingAgency
       }
     );
   }, [pendingAgencyId, clearPendingAgencyId, navigateWithRetry]);
+
+  React.useEffect(() => {
+    if (!pendingAuthScreen) {
+      return;
+    }
+
+    navigateWithRetry(
+      (navigator) => {
+        navigator.navigate(pendingAuthScreen);
+        Logger.debug('Отложенная auth-навигация выполнена:', pendingAuthScreen);
+        clearPendingAuthScreen?.();
+      },
+      () => {
+        Logger.error('Не удалось выполнить auth-навигацию: навигация не инициализировалась');
+        clearPendingAuthScreen?.();
+      }
+    );
+  }, [pendingAuthScreen, clearPendingAuthScreen, navigateWithRetry]);
 
   return (
     <NavigationContainer

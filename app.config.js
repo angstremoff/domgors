@@ -10,6 +10,7 @@ export default ({ config }) => {
   const expoConfig = {
     name: 'DomGoMobile',
     slug: 'DomGoMobile',
+    scheme: 'domgomobile',
     version: APP_VERSION,
     orientation: 'portrait',
     icon: './assets/icon.png',
@@ -64,6 +65,18 @@ export default ({ config }) => {
               scheme: 'domgomobile',
               host: 'agency',
               pathPrefix: '/'
+            }
+          ],
+          category: ['BROWSABLE', 'DEFAULT']
+        },
+        {
+          action: 'VIEW',
+          autoVerify: false,
+          data: [
+            {
+              scheme: 'domgomobile',
+              host: 'auth',
+              pathPrefix: '/callback'
             }
           ],
           category: ['BROWSABLE', 'DEFAULT']

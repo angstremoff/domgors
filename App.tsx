@@ -16,6 +16,7 @@ import { logError } from './src/utils/sentry';
 import { Logger } from './src/utils/logger';
 import { supabase } from './src/lib/supabaseClient';
 import { parseDeepLink } from './src/utils/deepLinkParser';
+import type { RootStackParamList } from './src/types/navigation';
 import { destroyAllCaches } from './src/utils/cacheManager';
 import './src/translations';
 
@@ -24,6 +25,8 @@ export default function App() {
   const clearPendingPropertyId = React.useCallback(() => setPendingPropertyId(null), []);
   const [pendingAgencyId, setPendingAgencyId] = React.useState<string | null>(null);
   const clearPendingAgencyId = React.useCallback(() => setPendingAgencyId(null), []);
+  const [pendingAuthScreen, setPendingAuthScreen] = React.useState<'MainTabs' | 'ResetPassword' | null>(null);
+  const clearPendingAuthScreen = React.useCallback(() => setPendingAuthScreen(null), []);
 
   // Очистка кэшей при завершении приложения для предотвращения утечек памяти
   React.useEffect(() => {
@@ -96,15 +99,18 @@ export default function App() {
       const parsed = parseDeepLink(url);
 
       if (parsed.type === 'auth') {
-        Logger.debug('Обработка подтверждения email');
+        Logger.debug('Обработка auth callback');
         const { error } = await supabase.auth.setSession({
           access_token: parsed.accessToken,
-          refresh_token: parsed.refreshToken
+          refresh_token: parsed.refreshToken,
         });
         if (error) {
           Logger.error('Ошибка установки сессии:', error);
         } else {
           Logger.debug('Сессия установлена успешно');
+          const targetScreen: Extract<keyof RootStackParamList, 'MainTabs' | 'ResetPassword'> =
+            parsed.authType === 'recovery' ? 'ResetPassword' : 'MainTabs';
+          setPendingAuthScreen(targetScreen);
         }
         return;
       }
@@ -232,6 +238,8 @@ export default function App() {
                       clearPendingPropertyId={clearPendingPropertyId}
                       pendingAgencyId={pendingAgencyId}
                       clearPendingAgencyId={clearPendingAgencyId}
+                      pendingAuthScreen={pendingAuthScreen}
+                      clearPendingAuthScreen={clearPendingAuthScreen}
                     />
                     <StatusBar style="auto" />
                   </PropertyProvider>

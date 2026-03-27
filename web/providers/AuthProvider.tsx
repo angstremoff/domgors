@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { AuthError, Session, User } from '@supabase/supabase-js';
+import { buildWebAuthCallbackUrl, buildWebResetPasswordUrl } from '@shared/utils/authSessionUrl';
 
 interface AuthContextType {
   user: User | null;
@@ -10,83 +11,19 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null; user: User | null; session: Session | null }>;
+  requestPasswordReset: (email: string) => Promise<{ error: AuthError | null }>;
+  updatePassword: (password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const RESEND_MAX_ATTEMPTS = 3;
-const DEFAULT_WEB_EMAIL_REDIRECT = 'https://domgo.rs';
-
-const wait = (ms: number) => new Promise((resolve) => {
-  setTimeout(resolve, ms);
-});
-
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
-
-const stripTrailingSlash = (url: string) => url.endsWith('/') ? url.slice(0, -1) : url;
-
-const getWebEmailRedirectTo = () => {
-  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (configuredSiteUrl) {
-    return stripTrailingSlash(configuredSiteUrl);
-  }
-
-  if (typeof window !== 'undefined' && window.location.origin) {
-    return stripTrailingSlash(window.location.origin);
-  }
-
-  return DEFAULT_WEB_EMAIL_REDIRECT;
-};
-
-const isRecoverableSignUpError = (error: AuthError | null) => {
-  if (!error) {
-    return false;
-  }
-
-  const normalizedMessage = error.message.toLowerCase();
-  return normalizedMessage.includes('error sending confirmation email')
-    || normalizedMessage.includes('failed to send confirmation email')
-    || normalizedMessage.includes('user already registered')
-    || normalizedMessage.includes('email not confirmed')
-    || normalizedMessage.includes('email rate limit')
-    || normalizedMessage.includes('smtp');
-};
-
-const tryResendSignupConfirmation = async (
-  supabase: ReturnType<typeof createClient>,
-  email: string,
-  emailRedirectTo: string
-) => {
-  let lastResendError: AuthError | null = null;
-
-  for (let attempt = 1; attempt <= RESEND_MAX_ATTEMPTS; attempt += 1) {
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-      options: {
-        emailRedirectTo,
-      },
-    });
-
-    lastResendError = error;
-
-    if (!lastResendError) {
-      return null;
-    }
-
-    if (attempt !== RESEND_MAX_ATTEMPTS) {
-      await wait(attempt * 500);
-    }
-  }
-
-  return lastResendError;
-};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const ensureUserProfile = useCallback(async (authUser: User | null) => {
     if (!authUser) {
@@ -110,7 +47,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase]);
 
   useEffect(() => {
-    // Получение текущей сессии
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -118,7 +54,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    // Подписка на изменения auth
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
@@ -132,18 +67,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: normalizeEmail(email),
       password,
     });
     return { error };
   };
 
   const signUp = async (email: string, password: string) => {
-    const normalizedEmail = normalizeEmail(email);
-    const emailRedirectTo = getWebEmailRedirectTo();
+    const emailRedirectTo = buildWebAuthCallbackUrl();
 
     const { data, error } = await supabase.auth.signUp({
-      email: normalizedEmail,
+      email: normalizeEmail(email),
       password,
       options: {
         emailRedirectTo,
@@ -158,16 +92,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await ensureUserProfile(data.session.user);
     }
 
-    if (error && isRecoverableSignUpError(error)) {
-      const resendError = await tryResendSignupConfirmation(supabase, normalizedEmail, emailRedirectTo);
-      if (!resendError) {
-        return { error: null, user: data.user, session: null };
-      }
-
-      return { error: resendError, user: data.user, session: data.session };
-    }
-
     return { error, user: data.user, session: data.session };
+  };
+
+  const requestPasswordReset = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizeEmail(email), {
+      redirectTo: buildWebResetPasswordUrl(),
+    });
+
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error };
   };
 
   const signOut = async () => {
@@ -182,6 +120,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         signIn,
         signUp,
+        requestPasswordReset,
+        updatePassword,
         signOut,
       }}
     >
