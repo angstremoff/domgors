@@ -60,7 +60,7 @@ export default function MojiOglasiPage() {
     setActionLoading(propertyId);
     await supabase
       .from('properties')
-      // @ts-expect-error - drift between generated DB types and Supabase update typing
+      // @ts-expect-error - Supabase update typing resolves payload to never in this route
       .update(updatePayload)
       .eq('id', propertyId)
       .eq('user_id', user.id);

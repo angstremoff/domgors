@@ -248,7 +248,7 @@ function EditPropertyContent() {
 
             const { error: updateError } = await supabase
                 .from('properties')
-                // @ts-expect-error - Supabase types issue with update payload
+                // @ts-expect-error - Supabase update typing resolves payload to never in this route
                 .update(updatePayload)
                 .eq('id', propertyId);
 
