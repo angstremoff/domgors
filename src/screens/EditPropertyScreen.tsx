@@ -68,6 +68,7 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
   const [images, setImages] = useState<string[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const supportsRooms = propertyTypeSupportsRooms(propertyCategory);
+  const districtRequired = districtOptions.length > 0;
 
   // Инициализация
   useEffect(() => {
@@ -299,8 +300,14 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
         return;
       }
 
-      if (!districtId) {
-        showErrorAlert(t('property.validation.districtRequired', 'Пожалуйста, выберите район'));
+      if (districtsLoading) {
+        showErrorAlert(t('common.loading'));
+        setSaving(false);
+        return;
+      }
+
+      if (districtRequired && !districtId) {
+        showErrorAlert(t('property.validation.districtRequired'));
         setSaving(false);
         return;
       }
@@ -324,7 +331,7 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
         area: numericArea,
         rooms: numericRooms ?? 0,
         city_id: parseInt(cityId.trim(), 10),
-        district_id: districtId,
+        district_id: districtId || null,
         type: propertyType,
         property_type: propertyCategory,
         features: selectedFeatures,
@@ -433,7 +440,9 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
             </Picker>
           </View>
 
-          <Text style={[styles.label, darkMode && styles.darkText]}>{`${t('property.district', 'Район')} *`}</Text>
+          <Text style={[styles.label, darkMode && styles.darkText]}>
+            {districtRequired ? `${t('property.district')} *` : t('property.districtOptional')}
+          </Text>
           <View style={[
             styles.pickerContainer,
             darkMode && styles.darkPickerContainer,
@@ -465,6 +474,11 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
             <View style={styles.districtLoaderRow}>
               <ActivityIndicator size="small" color={darkMode ? "#FFFFFF" : "#1E3A8A"} />
             </View>
+          )}
+          {cityId !== '0' && !districtsLoading && districtOptions.length === 0 && (
+            <Text style={[styles.label, { color: darkMode ? '#9CA3AF' : '#6B7280', marginTop: -6, marginBottom: 12 }]}>
+              {t('addProperty.form.noDistricts')}
+            </Text>
           )}
           
           <Text style={[styles.label, darkMode && styles.darkText]}>{t('property.address')}</Text>
@@ -611,10 +625,10 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
             <TouchableOpacity 
               style={[
                 styles.saveButton, 
-                (saving || uploadingImages || images.length === 0 || !districtId || cityId === '0') && styles.disabledButton
+                (saving || uploadingImages || districtsLoading || images.length === 0 || (districtRequired && !districtId) || cityId === '0') && styles.disabledButton
               ]} 
               onPress={handleSave}
-              disabled={saving || uploadingImages || images.length === 0 || !districtId || cityId === '0'}
+              disabled={saving || uploadingImages || districtsLoading || images.length === 0 || (districtRequired && !districtId) || cityId === '0'}
             >
               {saving ? (
                 <ActivityIndicator size="small" color="#fff" />

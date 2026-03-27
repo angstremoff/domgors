@@ -94,6 +94,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
   const [propertyCategoryModalVisible, setPropertyCategoryModalVisible] = useState(false);
   const [selectedPropertyCategoryName, setSelectedPropertyCategoryName] = useState(t('property.apartment'));
   const supportsRooms = propertyTypeSupportsRooms(propertyCategory);
+  const districtRequired = districtOptions.length > 0;
 
   useEffect(() => {
     // Загружаем города только по необходимости при открытии модального окна,
@@ -252,12 +253,17 @@ const AddPropertyScreen = ({ navigation }: any) => {
     }
 
     if (!cityId || cityId === '0') {
-      showErrorAlert(t('property.validation.cityRequired', 'Пожалуйста, выберите город'));
+      showErrorAlert(t('property.validation.cityRequired'));
       return;
     }
 
-    if (!districtId) {
-      showErrorAlert(t('property.validation.districtRequired', 'Пожалуйста, выберите район'));
+    if (districtsLoading) {
+      showErrorAlert(t('common.loading'));
+      return;
+    }
+
+    if (districtRequired && !districtId) {
+      showErrorAlert(t('property.validation.districtRequired'));
       return;
     }
 
@@ -401,7 +407,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
         rooms: numericRooms ?? 0,
         location: location.trim(),
         city_id: cityId !== '0' ? Number(cityId) : undefined,
-        district_id: districtId,
+        district_id: districtId || null,
         features: selectedFeatures,
         images: uploadedImageUrls,
         status: 'active', // по умолчанию активно
@@ -810,7 +816,9 @@ const AddPropertyScreen = ({ navigation }: any) => {
             </View>
           </Modal>
 
-          <Text style={[styles.label, { color: theme.text }]}>{`${t('property.district', 'Район')} *`}</Text>
+          <Text style={[styles.label, { color: theme.text }]}>
+            {districtRequired ? `${t('property.district')} *` : t('property.districtOptional')}
+          </Text>
           <TouchableOpacity 
             style={[styles.pickerButton, { 
               backgroundColor: theme.cardBackground,
@@ -845,7 +853,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
             <View style={styles.modalOverlay}>
               <View style={[styles.modalContent, { backgroundColor: darkMode ? '#333333' : '#FFFFFF' }]}>
                 <Text style={[styles.modalTitle, { color: theme.text }]}>
-                  {t('addProperty.form.selectDistrict', 'Выберите район')}
+                  {t('addProperty.form.selectDistrict')}
                 </Text>
 
                 {districtsLoading ? (
@@ -854,7 +862,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
                   </View>
                 ) : districtOptions.length === 0 ? (
                   <Text style={[styles.cityItemText, { color: theme.secondary }]}>
-                    {t('addProperty.form.noDistricts', 'Для этого города пока нет районов')}
+                    {t('addProperty.form.noDistricts')}
                   </Text>
                 ) : (
                   <FlatList
@@ -1057,10 +1065,10 @@ const AddPropertyScreen = ({ navigation }: any) => {
           <TouchableOpacity 
             style={[
               styles.submitButton, 
-              (loading || uploadingImages || images.length === 0 || !districtId || cityId === '0') && styles.disabledButton
+              (loading || uploadingImages || districtsLoading || images.length === 0 || (districtRequired && !districtId) || cityId === '0') && styles.disabledButton
             ]} 
             onPress={handleSubmit}
-            disabled={loading || uploadingImages || images.length === 0 || !districtId || cityId === '0'}
+            disabled={loading || uploadingImages || districtsLoading || images.length === 0 || (districtRequired && !districtId) || cityId === '0'}
           >
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />

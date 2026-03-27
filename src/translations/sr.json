@@ -246,13 +246,19 @@
       "locationOnMap": "Lokacija na mapi",
       "confirmLocation": "Potvrdi lokaciju",
       "youCanAddUpTo": "Možete dodati do",
+      "photosCount": "fotografija",
       "photos": "fotografija",
       "added": "dodato",
       "publish": "Objavi",
       "addSuccess": "Oglas je uspešno objavljen",
       "addError": "Greška prilikom objavljivanja oglasa",
       "updateSuccess": "Oglas je uspešno ažuriran",
-      "deleteSuccess": "Oglas je uspešno obrisan"
+      "deleteSuccess": "Oglas je uspešno obrisan",
+      "validation": {
+        "fillAllFields": "Popunite sva obavezna polja",
+        "waitForPhotos": "Sačekajte da se sve fotografije učitaju",
+        "addAtLeastOnePhoto": "Dodajte bar jednu fotografiju"
+      }
     },
     "status": {
       "active": "Aktivno",

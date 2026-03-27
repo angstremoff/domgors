@@ -45,7 +45,9 @@ export function AddPropertyForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const previewsRef = useRef<string[]>([]);
+  const formStateRef = useRef('');
   const supportsRooms = propertyTypeSupportsRooms(propertyType);
+  const districtRequired = districts.length > 0;
 
   useEffect(() => {
     previewsRef.current = files.map((f) => f.preview);
@@ -62,6 +64,43 @@ export function AddPropertyForm() {
       setRooms('');
     }
   }, [supportsRooms, rooms]);
+
+  useEffect(() => {
+    const nextFormState = JSON.stringify({
+      dealType,
+      propertyType,
+      title,
+      description,
+      price,
+      area,
+      rooms,
+      cityId,
+      districtId,
+      location,
+      selectedFeaturesLength: selectedFeatures.length,
+      filesLength: files.length,
+    });
+
+    if (formStateRef.current && formStateRef.current !== nextFormState && error) {
+      setError(null);
+    }
+
+    formStateRef.current = nextFormState;
+  }, [
+    error,
+    dealType,
+    propertyType,
+    title,
+    description,
+    price,
+    area,
+    rooms,
+    cityId,
+    districtId,
+    location,
+    selectedFeatures.length,
+    files.length,
+  ]);
 
   useEffect(() => {
     const loadCities = async () => {
@@ -215,7 +254,21 @@ export function AddPropertyForm() {
       return;
     }
 
-    if (!title.trim() || !description.trim() || !location.trim() || !cityId || !districtId || !price || !area || (supportsRooms && !rooms)) {
+    if (districtsLoading) {
+      setError(t('common.loading'));
+      return;
+    }
+
+    if (
+      !title.trim() ||
+      !description.trim() ||
+      !location.trim() ||
+      !cityId ||
+      !price ||
+      !area ||
+      (supportsRooms && !rooms) ||
+      (districtRequired && !districtId)
+    ) {
       setError(t('property.addProperty.validation.fillAllFields'));
       return;
     }
@@ -245,7 +298,7 @@ export function AddPropertyForm() {
         area: numericArea,
         rooms: numericRooms ?? 0,
         city_id: Number(cityId),
-        district_id: districtId,
+        district_id: districtId || null,
         location: location.trim(),
         type: dealType,
         property_type: propertyType,
@@ -469,7 +522,7 @@ export function AddPropertyForm() {
                     className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
                     value={districtId}
                     onChange={(e) => setDistrictId(e.target.value)}
-                    disabled={!cityId || districtsLoading}
+                    disabled={!cityId || districtsLoading || districts.length === 0}
                   >
                     <option value="">{districtsLoading ? t('common.loading') : t('common.selectDistrict')}</option>
                     {districts.map((district) => (
@@ -478,6 +531,11 @@ export function AddPropertyForm() {
                       </option>
                     ))}
                   </select>
+                  {cityId && !districtsLoading && districts.length === 0 ? (
+                    <p className="mt-2 text-sm text-textSecondary">
+                      {t('addProperty.form.noDistricts')}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
@@ -591,7 +649,7 @@ export function AddPropertyForm() {
           </Card>
 
           <div className="flex justify-end">
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" disabled={submitting || districtsLoading}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t('property.addProperty.publish')}
             </Button>

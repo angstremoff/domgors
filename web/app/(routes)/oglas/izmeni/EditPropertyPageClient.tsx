@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Upload, X, Check, MapPin, ArrowLeft } from 'lucide-react';
@@ -50,7 +50,9 @@ function EditPropertyContent() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const formStateRef = useRef('');
     const supportsRooms = propertyTypeSupportsRooms(propertyType);
+    const districtRequired = districts.length > 0;
 
     // Загрузка городов
     useEffect(() => {
@@ -65,6 +67,7 @@ function EditPropertyContent() {
     useEffect(() => {
         if (!cityId) {
             setDistricts([]);
+            setDistrictId('');
             return;
         }
         const loadDistricts = async () => {
@@ -75,17 +78,62 @@ function EditPropertyContent() {
                 .eq('city_id', Number(cityId))
                 .eq('is_active', true)
                 .order('name');
-            setDistricts((data as District[]) || []);
+            const districtList = (data as District[]) || [];
+            setDistricts(districtList);
+            if (districtList.length === 0) {
+                setDistrictId('');
+            } else if (!districtList.some((district) => district.id === districtId)) {
+                setDistrictId(districtList[0].id);
+            }
             setDistrictsLoading(false);
         };
         loadDistricts();
-    }, [cityId, supabase]);
+    }, [cityId, supabase, districtId]);
 
     useEffect(() => {
         if (!supportsRooms && rooms) {
             setRooms('');
         }
     }, [supportsRooms, rooms]);
+
+    useEffect(() => {
+        const nextFormState = JSON.stringify({
+            dealType,
+            propertyType,
+            title,
+            description,
+            price,
+            area,
+            rooms,
+            cityId,
+            districtId,
+            location,
+            selectedFeaturesLength: selectedFeatures.length,
+            existingImagesLength: existingImages.length,
+            newFilesLength: newFiles.length,
+        });
+
+        if (formStateRef.current && formStateRef.current !== nextFormState && error) {
+            setError(null);
+        }
+
+        formStateRef.current = nextFormState;
+    }, [
+        error,
+        dealType,
+        propertyType,
+        title,
+        description,
+        price,
+        area,
+        rooms,
+        cityId,
+        districtId,
+        location,
+        selectedFeatures.length,
+        existingImages.length,
+        newFiles.length,
+    ]);
 
     // Загрузка данных объявления
     useEffect(() => {
@@ -204,7 +252,21 @@ function EditPropertyContent() {
 
         if (!user || !propertyId) return;
 
-        if (!title.trim() || !description.trim() || !location.trim() || !cityId || !districtId || !price || !area || (supportsRooms && !rooms)) {
+        if (districtsLoading) {
+            setError(t('common.loading'));
+            return;
+        }
+
+        if (
+            !title.trim() ||
+            !description.trim() ||
+            !location.trim() ||
+            !cityId ||
+            !price ||
+            !area ||
+            (supportsRooms && !rooms) ||
+            (districtRequired && !districtId)
+        ) {
             setError(t('property.addProperty.validation.fillAllFields'));
             return;
         }
@@ -237,7 +299,7 @@ function EditPropertyContent() {
                 area: numericArea,
                 rooms: numericRooms ?? 0,
                 city_id: Number(cityId),
-                district_id: districtId,
+                district_id: districtId || null,
                 location: location.trim(),
                 type: dealType,
                 property_type: propertyType,
@@ -378,12 +440,17 @@ function EditPropertyContent() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-text mb-2">{t('property.district')}</label>
-                                    <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary" value={districtId} onChange={(e) => setDistrictId(e.target.value)} disabled={!cityId || districtsLoading}>
+                                    <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary" value={districtId} onChange={(e) => setDistrictId(e.target.value)} disabled={!cityId || districtsLoading || districts.length === 0}>
                                         <option value="">{districtsLoading ? t('common.loading') : t('common.selectDistrict')}</option>
                                         {districts.map((district) => (
                                             <option key={district.id} value={district.id}>{t(`districts.${district.name}`, { defaultValue: district.name })}</option>
                                         ))}
                                     </select>
+                                    {cityId && !districtsLoading && districts.length === 0 ? (
+                                        <p className="mt-2 text-sm text-textSecondary">
+                                            {t('addProperty.form.noDistricts')}
+                                        </p>
+                                    ) : null}
                                 </div>
                             </div>
                             <Input label={t('property.address')} value={location} onChange={(e) => setLocation(e.target.value)} />
@@ -454,7 +521,7 @@ function EditPropertyContent() {
                         <Link href="/profil/moji-oglasi">
                             <Button type="button" variant="outline">{t('common.cancel')}</Button>
                         </Link>
-                        <Button type="submit" disabled={submitting}>
+                        <Button type="submit" disabled={submitting || districtsLoading}>
                             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {t('common.save')}
                         </Button>

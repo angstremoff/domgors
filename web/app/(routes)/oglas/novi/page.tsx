@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import { AddPropertyForm } from '@/components/property/AddPropertyForm';
 
 export const metadata: Metadata = {
-  title: 'Добавить объявление - DomGo.rs',
-  description: 'Публикация нового объявления о недвижимости на DomGo.rs',
+  title: 'Dodaj oglas - DomGo.rs',
+  description: 'Objava novog oglasa za nekretninu na DomGo.rs',
   robots: { index: false, follow: true },
 };
 
