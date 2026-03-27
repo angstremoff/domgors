@@ -379,10 +379,10 @@ Web Supabase client/server теперь работают в fail-fast-режим
 
 ## 13. Версии и релизное состояние
 Актуальное состояние:
-- версия приложения: `1.0.11`
-- Android `versionCode`: `16`
-- Android `versionName`: `1.0.11`
-- iOS `buildNumber`: `16`
+- версия приложения: `1.0.12`
+- Android `versionCode`: `17`
+- Android `versionName`: `1.0.12`
+- iOS `buildNumber`: `17`
 - `runtimeVersion`: `1.0.4`
 
 Где это хранится:

@@ -85,9 +85,9 @@
 - Продуктовый UI на `domgo.rs` по умолчанию должен быть на сербской латинице; русские hardcoded/fallback-строки в публичных web-flow считаются багом.
 
 ## 9. Актуальный релизный контекст
-- Текущая версия: `1.0.11`
-- Android `versionCode`: `16`
-- iOS `buildNumber`: `16`
+- Текущая версия: `1.0.12`
+- Android `versionCode`: `17`
+- iOS `buildNumber`: `17`
 - `runtimeVersion`: `1.0.4` — не менять без отдельной причины.
 - Android-store сейчас только RuStore:
   - ссылка: `https://www.rustore.ru/catalog/app/domgo.rs`
