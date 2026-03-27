@@ -36,7 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {
         id: authUser.id,
         email: authUser.email || '',
-        created_at: new Date().toISOString(),
       },
       { onConflict: 'id' }
     );

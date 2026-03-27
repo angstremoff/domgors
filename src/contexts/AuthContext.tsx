@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {
         id: authUser.id,
         email: authUser.email || '',
-        created_at: new Date().toISOString(),
       },
       { onConflict: 'id' }
     );

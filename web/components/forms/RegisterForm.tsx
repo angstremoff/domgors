@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTranslation } from 'react-i18next';
+import { getAuthErrorMessage } from '@shared/utils/authErrorMessage';
 
 export function RegisterForm() {
   const [email, setEmail] = useState('');
@@ -40,7 +41,7 @@ export function RegisterForm() {
       const { error, session } = await signUp(email, password);
 
       if (error) {
-        setError(error.message || t('auth.registerError'));
+        setError(getAuthErrorMessage(error.message, t, 'register'));
         setLoading(false);
       } else {
         setLoading(false);
@@ -57,7 +58,7 @@ export function RegisterForm() {
         setConfirmPassword('');
       }
     } catch {
-      setError(t('auth.registerError'));
+      setError(getAuthErrorMessage(null, t, 'register'));
       setLoading(false);
     }
   };

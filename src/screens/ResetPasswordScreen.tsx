@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Colors from '../constants/colors';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
 import { Logger } from '../utils/logger';
+import { getAuthErrorMessage } from '../utils/authErrorMessage';
 import type { ResetPasswordScreenProps } from '../types/navigation';
 
 const ResetPasswordScreen = ({ navigation }: ResetPasswordScreenProps) => {
@@ -45,7 +46,7 @@ const ResetPasswordScreen = ({ navigation }: ResetPasswordScreenProps) => {
       const { error } = await updatePassword(password);
 
       if (error) {
-        showErrorAlert(error.message || t('auth.passwordUpdateError'));
+        showErrorAlert(getAuthErrorMessage(error.message, t, 'password-update'));
         return;
       }
 
@@ -57,7 +58,7 @@ const ResetPasswordScreen = ({ navigation }: ResetPasswordScreenProps) => {
       });
     } catch (error) {
       Logger.error('Ошибка обновления пароля:', error);
-      showErrorAlert(t('auth.passwordUpdateError'));
+      showErrorAlert(getAuthErrorMessage(null, t, 'password-update'));
     } finally {
       setLoading(false);
     }

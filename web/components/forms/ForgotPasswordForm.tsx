@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/providers/AuthProvider';
+import { getAuthErrorMessage } from '@shared/utils/authErrorMessage';
 
 export function ForgotPasswordForm() {
   const { t } = useTranslation();
@@ -25,7 +26,7 @@ export function ForgotPasswordForm() {
       const { error: resetError } = await requestPasswordReset(email.trim());
 
       if (resetError) {
-        setError(resetError.message || t('auth.resetPasswordError'));
+        setError(getAuthErrorMessage(resetError.message, t, 'reset-request'));
         setLoading(false);
         return;
       }
@@ -34,7 +35,7 @@ export function ForgotPasswordForm() {
       setEmail('');
       setLoading(false);
     } catch {
-      setError(t('auth.resetPasswordError'));
+      setError(getAuthErrorMessage(null, t, 'reset-request'));
       setLoading(false);
     }
   };

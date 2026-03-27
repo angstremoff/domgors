@@ -6,6 +6,7 @@ import { showErrorAlert } from '../utils/alertUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import Colors from '../constants/colors';
 import { Logger } from '../utils/logger';
+import { getAuthErrorMessage } from '../utils/authErrorMessage';
 import type { LoginScreenProps } from '../types/navigation';
 
 const LoginScreen = ({ navigation }: LoginScreenProps) => {
@@ -29,7 +30,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
       
       if (error) {
         Logger.debug('Ошибка входа:', error.message);
-        showErrorAlert(error.message || t('auth.loginFailed'));
+        showErrorAlert(getAuthErrorMessage(error.message, t, 'login'));
         return;
       }
       

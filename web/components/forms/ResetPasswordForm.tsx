@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
 import { resolveAuthSessionFromUrl } from '@/lib/authSession';
+import { getAuthErrorMessage } from '@shared/utils/authErrorMessage';
 import { buildMobileAuthCallbackUrl, extractAuthCallbackLinkData } from '@shared/utils/authSessionUrl';
 
 type ResetState = 'preparing' | 'ready' | 'success' | 'error';
@@ -28,7 +29,7 @@ export function ResetPasswordForm() {
 
       if (callbackLinkData?.authType && callbackLinkData.authType !== 'recovery') {
         setStatus('error');
-        setError(t('auth.invalidAuthLink'));
+        setError(getAuthErrorMessage(null, t, 'auth-link'));
         return;
       }
 
@@ -41,7 +42,7 @@ export function ResetPasswordForm() {
       }
 
       setStatus('error');
-      setError(errorMessage || t('auth.invalidAuthLink'));
+      setError(getAuthErrorMessage(errorMessage, t, 'auth-link'));
     };
 
     void prepareRecoverySession();
@@ -70,7 +71,7 @@ export function ResetPasswordForm() {
       });
 
       if (updateError) {
-        setError(updateError.message || t('auth.passwordUpdateError'));
+        setError(getAuthErrorMessage(updateError.message, t, 'password-update'));
         setLoading(false);
         return;
       }
@@ -81,7 +82,7 @@ export function ResetPasswordForm() {
       setConfirmPassword('');
       setLoading(false);
     } catch {
-      setError(t('auth.passwordUpdateError'));
+      setError(getAuthErrorMessage(null, t, 'password-update'));
       setLoading(false);
     }
   };

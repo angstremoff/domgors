@@ -170,29 +170,124 @@ Web сейчас живёт в режиме static export.
 
 ## 8. Auth и email-потоки
 
-### 8.1 Mobile
-Регистрация централизована в `AuthContext`.
+### 8.1 Общий продуктовый контракт
+Auth в проекте сейчас только один:
+- `email + password`
+- подтверждение регистрации по email
+- восстановление пароля по email
+
+Что не используется продуктово:
+- phone/SMS auth
+- `magic link`
+- passwordless login
+
+Auth-логика централизована:
+- mobile: [AuthContext.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/src/contexts/AuthContext.tsx)
+- web: [AuthProvider.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/providers/AuthProvider.tsx)
+
+### 8.2 Web auth-flow
+Обязательные маршруты web-версии:
+- `/prijava`
+- `/registracija`
+- `/zaboravljena-lozinka/`
+- `/auth/callback/`
+- `/auth/reset-password/`
 
 Ключевое поведение:
-- `signUp` использует `emailRedirectTo = domgomobile://auth/callback?source=mobile`
-- профиль пользователя синхронизируется через upsert
-- экран регистрации не должен дублировать auth-логику напрямую
+- web `signUp` использует `emailRedirectTo = https://domgo.rs/auth/callback/`
+- forgot password использует `redirectTo = https://domgo.rs/auth/reset-password/`
+- если `signUp` вернул `session = null`, это нормальный сценарий подтверждения email, а не ошибка логина
+- в этом случае UI должен показывать `confirmEmailSent`, а не редиректить в профиль
 
-### 8.2 Web
-Регистрация централизована в `web/providers/AuthProvider.tsx`.
+Важный архитектурный нюанс:
+- browser auth на web нельзя строить на browser-клиенте `@supabase/ssr`
+- его PKCE-flow уже давал ошибку `invalid request: both auth code and code verifier should be non-empty`
+- рабочая схема: обычный `@supabase/supabase-js` browser client c `flowType: 'implicit'` и `detectSessionInUrl: false`
+- завершение callback/recovery обрабатывается вручную в [authSession.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/authSession.ts)
 
-Ключевое поведение:
-- `signUp` использует `emailRedirectTo = window.location.origin`
-- если Supabase возвращает `session = null`, это не ошибка логина, а кейс подтверждения email
-- в этом случае UI показывает `confirmEmailSent`, а не редиректит пользователя в профиль
+Web callback обязан поддерживать все реальные варианты ссылок Supabase:
+- `access_token + refresh_token`
+- `code`
+- `token_hash`
+- уже установленную session после callback
 
-### 8.3 SMTP
+Ключевые файлы web auth:
+- [client.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/supabase/client.ts)
+- [authSession.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/authSession.ts)
+- [AuthCallbackClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/forms/AuthCallbackClient.tsx)
+- [ForgotPasswordForm.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/forms/ForgotPasswordForm.tsx)
+- [ResetPasswordForm.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/forms/ResetPasswordForm.tsx)
+
+### 8.3 Mobile auth-flow
+Mobile не отправляет пользователя в `domgomobile://...` прямо из email.
+
+Рабочая схема такая:
+- signup/reset письма ведут на web callback/reset routes
+- web после успешного callback может сделать handoff в приложение через `domgomobile://auth/callback?...`
+- приложение принимает этот deep link, ставит session и маршрутизирует пользователя либо в `MainTabs`, либо в `ResetPassword`
+
+Это реализовано в:
+- [App.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/App.tsx)
+- [AppNavigator.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/src/navigation/AppNavigator.tsx)
+- [deepLinkParser.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/deepLinkParser.ts)
+- [authSessionUrl.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/authSessionUrl.ts)
+- [ForgotPasswordScreen.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/src/screens/ForgotPasswordScreen.tsx)
+- [ResetPasswordScreen.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/src/screens/ResetPasswordScreen.tsx)
+
+Практически это означает:
+- web auth-изменения начинают работать после деплоя сайта
+- mobile auth-изменения доходят до пользователей только после нового build/release приложения
+
+### 8.4 `auth.users` vs `public.users`
+В проекте есть два разных слоя пользователя:
+- `Authentication -> Users` в Supabase (`auth.users`)
+- прикладной профиль в таблице `public.users`
+
+Это критично:
+- они не взаимозаменяемы;
+- удаление пользователя из `Authentication`, если строка в `public.users` осталась, может ломать повторную регистрацию;
+- реальный симптом такого рассинхрона: `Database error saving new user`
+
+Текущий клиентский контракт:
+- при появлении auth session приложение пытается гарантировать наличие строки в `public.users`
+- этот sync должен upsert’ить только `id/email`
+- `created_at` нельзя перетирать на каждом входе/обновлении сессии
+
+### 8.5 SMTP, Supabase Dashboard и письма
 Для production встроенный email service Supabase использовать нельзя.
 
-Нужно:
-- включить custom SMTP в Supabase Dashboard;
-- отправлять письма с реального адреса проекта, сейчас в UI используется `admin@domgo.rs`;
-- не считать проблему доставки писем чисто кодовой, если SMTP не настроен.
+Что должно быть в Supabase:
+- `Email provider = enabled`
+- `Confirm email = enabled`
+- `Auth Hooks` пустые, если hooks не настроены намеренно
+- `Site URL = https://domgo.rs`
+- redirect URLs включают:
+  - `https://domgo.rs/auth/callback`
+  - `https://domgo.rs/auth/callback/`
+  - `https://domgo.rs/auth/reset-password`
+  - `https://domgo.rs/auth/reset-password/`
+
+Что важно про SMTP:
+- built-in SMTP Supabase допустим только как временная диагностика
+- production требует custom SMTP
+- если используется Adriahost/cPanel, host в Supabase должен совпадать с реальным `Outgoing Server` из панели
+- красивый host вроде `mail.domgo.rs` нельзя считать рабочим, пока он реально не резолвится в DNS
+- если vanity-host не настроен, нужно использовать server host из панели, например `budo31.adriahost.com`
+
+Email templates живут не в репозитории, а в Supabase Dashboard:
+- как минимум `Confirm sign up` и `Reset password` должны быть приведены к сербской латинице
+- это часть продукта, но не часть кода
+
+### 8.6 Отображение auth-ошибок
+Пользовательские auth-ошибки не должны показывать внутренние тексты Supabase.
+
+Нельзя светить в UI:
+- `Database error saving new user`
+- SMTP/internal errors
+- сырые technical messages callback/recovery
+
+Вместо этого UI должен показывать безопасные продуктовые сообщения через shared helper:
+- [authErrorMessage.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/authErrorMessage.ts)
 
 ## 9. Storage и изображения
 - Bucket для фото объявлений: `properties`
@@ -303,10 +398,11 @@ APK в проекте нужен в основном для локального
 ## 16. Текущие проверки и техдолг
 
 ### 16.1 Что уже в зелёном состоянии
-- Последняя подтверждённая web-проверка: `cd web && npm run build` проходит (`2026-03-25`)
-- Последняя подтверждённая shared/unit-проверка: `npm test` проходит (`2026-03-25`)
-- `npm run check` остаётся обязательной проверкой для mobile-изменений
+- Последняя подтверждённая mobile-проверка: `npm run check` проходит (`2026-03-27`)
+- Последняя подтверждённая shared/unit-проверка: `npm test` проходит (`2026-03-27`)
+- Последняя подтверждённая web-проверка: `cd web && npm run build` проходит (`2026-03-27`)
 - Тесты сейчас покрывают:
+  - auth callback param parsing
   - deep link parsing
   - agency profile normalization
   - property listing filter helpers
@@ -328,6 +424,7 @@ APK в проекте нужен в основном для локального
 - `Все города`/`Все районы` на web должны удалять фильтр из query, а не только менять UI.
 - `5+` комнат на web это `>= 5`.
 - Web signup зависит и от кода, и от внешней SMTP-настройки Supabase.
+- Auth-ошибки signup/reset могут идти не только из фронта, но и из live Supabase schema/trigger drift.
 - Без актуального экспорта live-схемы нельзя безопасно делать серьёзные DB/RLS-рефакторы.
 
 ## 18. Навигация по документации

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { createClient } from '@/lib/supabase/client';
 import { resolveAuthSessionFromUrl } from '@/lib/authSession';
+import { getAuthErrorMessage } from '@shared/utils/authErrorMessage';
 import {
   buildMobileAuthCallbackUrl,
   buildWebResetPasswordUrl,
@@ -36,7 +37,7 @@ export function AuthCallbackClient() {
 
       if (!sessionData) {
         setStatus('error');
-        setErrorMessage(errorMessage || t('auth.invalidAuthLink'));
+        setErrorMessage(getAuthErrorMessage(errorMessage, t, 'auth-link'));
         return;
       }
 

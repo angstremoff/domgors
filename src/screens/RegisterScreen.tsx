@@ -14,6 +14,7 @@ import { Logger } from '../utils/logger';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
+import { getAuthErrorMessage } from '../utils/authErrorMessage';
 import type { RegisterScreenProps } from '../types/navigation';
 
 const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
@@ -63,11 +64,10 @@ const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
       }
     } catch (error: unknown) {
       Logger.error('Ошибка регистрации:', error);
-      // Показываем более конкретную ошибку, если она доступна
       if (error instanceof Error && error.message) {
-        showErrorAlert(`${t('auth.registerFailed')}: ${error.message}`);
+        showErrorAlert(getAuthErrorMessage(error.message, t, 'register'));
       } else {
-        showErrorAlert(t('auth.registerFailed'));
+        showErrorAlert(getAuthErrorMessage(null, t, 'register'));
       }
     } finally {
       setLoading(false);

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTranslation } from 'react-i18next';
+import { getAuthErrorMessage } from '@shared/utils/authErrorMessage';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -26,14 +27,14 @@ export function LoginForm() {
       const { error } = await signIn(email, password);
 
       if (error) {
-        setError(error.message || t('auth.loginError'));
+        setError(getAuthErrorMessage(error.message, t, 'login'));
         setLoading(false);
       } else {
         router.push('/profil');
         router.refresh();
       }
     } catch {
-      setError(t('auth.loginError'));
+      setError(getAuthErrorMessage(null, t, 'login'));
       setLoading(false);
     }
   };

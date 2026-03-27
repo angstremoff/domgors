@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Colors from '../constants/colors';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
 import { Logger } from '../utils/logger';
+import { getAuthErrorMessage } from '../utils/authErrorMessage';
 import type { ForgotPasswordScreenProps } from '../types/navigation';
 
 const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) => {
@@ -34,14 +35,14 @@ const ForgotPasswordScreen = ({ navigation }: ForgotPasswordScreenProps) => {
       const { error } = await requestPasswordReset(email.trim());
 
       if (error) {
-        showErrorAlert(error.message || t('auth.resetPasswordError'));
+        showErrorAlert(getAuthErrorMessage(error.message, t, 'reset-request'));
         return;
       }
 
       showSuccessAlert(t('auth.resetPasswordSent'), () => navigation.navigate('Login'));
     } catch (error) {
       Logger.error('Ошибка запроса восстановления пароля:', error);
-      showErrorAlert(t('auth.resetPasswordError'));
+      showErrorAlert(getAuthErrorMessage(null, t, 'reset-request'));
     } finally {
       setLoading(false);
     }
