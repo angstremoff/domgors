@@ -1,163 +1,74 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   ActivityIndicator,
   ScrollView,
   Image
 } from 'react-native';
-import { Logger } from '../utils/logger';
-import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { useTheme } from '../contexts/ThemeContext';
 import Colors from '../constants/colors';
-import { showSuccessAlert, showErrorAlert } from '../utils/alertUtils';
+import { showErrorAlert } from '../utils/alertUtils';
+import { fetchContactProfile, type ContactProfileClient, type ContactProfile } from '../utils/contactProfile';
 
-interface Profile {
-  name: string;
-  phone: string;
-  avatar_url: string | null;
-}
+const EMPTY_CONTACT_PROFILE: ContactProfile = {
+  name: '',
+  phone: '',
+  email: '',
+  avatar_url: null,
+};
 
 const ProfileScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [editMode, setEditMode] = useState(false);
   const { darkMode } = useTheme();
   const theme = darkMode ? Colors.dark : Colors.light;
-  const [profile, setProfile] = useState<Profile>({
-    name: '',
-    phone: '',
-    avatar_url: null
-  });
+  const contactSupabase = supabase as unknown as ContactProfileClient;
+  const [profile, setProfile] = useState<ContactProfile>(EMPTY_CONTACT_PROFILE);
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
+  const loadProfile = useCallback(async () => {
+    if (!user) {
+      setProfile(EMPTY_CONTACT_PROFILE);
+      return;
     }
-  }, [user]);
 
-  const fetchProfile = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('users')
-        .select('name, phone, avatar_url')
-        .eq('id', user?.id || '')
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        setProfile({
-          name: data.name || '',
-          phone: data.phone || '',
-          avatar_url: data.avatar_url
-        });
-      }
-    } catch (error) {
-      Logger.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateProfile = async () => {
-    try {
-      // Проверяем, что имена и телефон не пустые
-      if (!profile.name || profile.name.trim() === '') {
-        showErrorAlert(t('profile.errors.nameRequired'));
-        return;
-      }
-      
-      if (!profile.phone || profile.phone.trim() === '') {
-        showErrorAlert(t('profile.errors.phoneRequired'));
-        return;
-      }
-
-      // Показываем индикатор загрузки
-      setLoading(true);
-      
-      Logger.debug('Updating profile with data:', {
-        id: user?.id,
-        name: profile.name,
-        phone: profile.phone
-      });
-      
-      // Шаг 1: Обновляем данные в таблице users используя upsert вместо update
-      const { data, error } = await supabase
-        .from('users')
-        .upsert({
-          id: user?.id || '',
-          name: profile.name,
-          phone: profile.phone,
-          email: user?.email || ''
-        })
-        .select(); // Получаем обновленные данные
-      
-      Logger.debug('Supabase upsert response:', { data, error });
-
-      if (error) {
-        Logger.error('Error details:', error);
-        throw error;
-      }
-      
-      // Шаг 2: Обновляем метаданные пользователя в Auth (важно для синхронизации)
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          name: profile.name,
-          phone: profile.phone
-        }
-      });
-      
-      if (authError) {
-        Logger.error('Error updating auth metadata:', authError);
-        throw authError;
-      }
-
-      // Обновляем локальное состояние профиля
-      if (data && data.length > 0) {
-        const updatedProfile = data[0];
-        setProfile({
-          name: updatedProfile.name || '',
-          phone: updatedProfile.phone || '',
-          avatar_url: updatedProfile.avatar_url
-        });
-        Logger.debug('Profile updated successfully:', updatedProfile);
-      }
-
-      // Сбрасываем кеш профиля, принудительно запрашивая новые данные
-      await fetchProfile();
-      
-      setEditMode(false);
-      showSuccessAlert(t('common.profileUpdated'));
-    } catch (error) {
-      Logger.error('Error updating profile:', error);
+      const data = await fetchContactProfile(contactSupabase, user.id, user.email || '');
+      setProfile(data);
+    } catch {
       showErrorAlert(t('profile.errors.saveFailed'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [contactSupabase, t, user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadProfile();
+    }, [loadProfile])
+  );
 
   const handleLogout = async () => {
     try {
       setLoading(true);
       await logout();
       navigation.navigate('Home');
-    } catch (error) {
-      Logger.error('Error logging out:', error);
+    } catch {
       showErrorAlert(t('auth.logoutFailed'));
     } finally {
       setLoading(false);
     }
   };
 
-  // Если пользователь не авторизован, показываем экран входа
   if (!user) {
     return (
       <View style={[styles.centeredContainer, { backgroundColor: theme.background }]}>
@@ -195,132 +106,93 @@ const ProfileScreen = ({ navigation }: any) => {
         </View>
       </View>
 
-      {/* Глобальный индикатор загрузки отображается только при первой загрузке профиля */}
-      {loading && !profile.name && (
+      {loading && !profile.name ? (
         <View style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
           <ActivityIndicator size="large" color={theme.primary} />
         </View>
-      )}
-
-      {!loading && (
+      ) : (
         <View style={styles.content}>
-          {editMode ? (
-            <View style={[styles.editForm, { backgroundColor: theme.card }]}>
-              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('profile.editProfile')}</Text>
-              
-              <Text style={[styles.fieldLabel, { color: theme.text }]}>{t('profile.name')}</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: theme.card, color: theme.text, borderColor: theme.border }]}
-                value={profile.name}
-                onChangeText={(text) => setProfile({ ...profile, name: text })}
-                placeholder={t('profile.name')}
-                placeholderTextColor={theme.secondary}
-                selectTextOnFocus
-              />
-              
-              <Text style={[styles.fieldLabel, { color: theme.text }]}>{t('profile.phone')}</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: theme.card, color: theme.text, borderColor: theme.border }]}
-                value={profile.phone}
-                onChangeText={(text) => setProfile({ ...profile, phone: text })}
-                placeholder={t('profile.phone')}
-                placeholderTextColor={theme.secondary}
-                keyboardType="phone-pad"
-                selectTextOnFocus
-              />
-              
-              <View style={styles.buttonsRow}>
-                <TouchableOpacity 
-                  style={[styles.button, styles.cancelButton, 
-                    { borderColor: theme.border, backgroundColor: darkMode ? '#2A3441' : '#F3F4F6' }]} 
-                  onPress={() => setEditMode(false)}
-                  disabled={loading}
-                >
-                  <Text style={[styles.buttonText, { color: theme.text }]}>{t('common.cancel')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.button, styles.saveButton, { backgroundColor: theme.primary }]} 
-                  onPress={updateProfile}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.saveButtonText}>{t('common.save')}</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <>
-              <View style={[styles.section, { backgroundColor: theme.card }]}>
-                <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('common.personalInfo')}</Text>
-                <TouchableOpacity 
-                  style={styles.editButton} 
-                  onPress={() => setEditMode(true)}
-                >
-                  <Ionicons name="create-outline" size={20} color={theme.primary} />
-                  <Text style={[styles.editButtonText, { color: theme.primary }]}>{t('common.edit')}</Text>
-                </TouchableOpacity>
-                
-                <View style={styles.infoItem}>
-                  <Text style={[styles.infoLabel, { color: theme.secondary }]}>{t('profile.name')}</Text>
-                  <Text style={[styles.infoValue, { color: theme.text }]}>
-                    {profile.name || t('property.sellerNameUnavailable')}
-                  </Text>
-                </View>
-                
-                <View style={styles.infoItem}>
-                  <Text style={[styles.infoLabel, { color: theme.secondary }]}>{t('profile.phone')}</Text>
-                  <Text style={[styles.infoValue, { color: theme.text }]}>
-                    {profile.phone || t('property.sellerNameUnavailable')}
-                  </Text>
-                </View>
-                
-                <View style={styles.infoItem}>
-                  <Text style={[styles.infoLabel, { color: theme.secondary }]}>{t('profile.email')}</Text>
-                  <Text style={[styles.infoValue, { color: theme.text }]}>{user.email}</Text>
-                </View>
-              </View>
-              
-              <View style={[styles.section, { backgroundColor: theme.card }]}>
-                <TouchableOpacity 
-                  style={styles.menuItem}
-                  onPress={() => navigation.navigate('MyProperties')}
-                >
-                  <Ionicons name="home-outline" size={24} color={theme.primary} />
-                  <Text style={[styles.menuItemText, { color: theme.text }]}>{t('profile.myProperties')}</Text>
-                  <Ionicons name="chevron-forward" size={20} color={theme.secondary} style={styles.menuArrow} />
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.menuItem}
-                  onPress={() => navigation.navigate('Favorites')}
-                >
-                  <Ionicons name="heart-outline" size={24} color={theme.primary} />
-                  <Text style={[styles.menuItemText, { color: theme.text }]}>{t('common.favorites')}</Text>
-                  <Ionicons name="chevron-forward" size={20} color={theme.secondary} style={styles.menuArrow} />
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.menuItem}
-                  onPress={() => navigation.navigate('Settings')}
-                >
-                  <Ionicons name="settings-outline" size={24} color={theme.primary} />
-                  <Text style={[styles.menuItemText, { color: theme.text }]}>{t('settings.title')}</Text>
-                  <Ionicons name="chevron-forward" size={20} color={theme.secondary} style={styles.menuArrow} />
-                </TouchableOpacity>
-              </View>
-              
-              <TouchableOpacity 
-                style={[styles.logoutButton, { backgroundColor: theme.card }]} 
-                onPress={handleLogout}
+          <View style={[styles.section, { backgroundColor: theme.card }]}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('profile.contactInfo')}</Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => navigation.navigate('ContactInfo')}
               >
-                <Ionicons name="log-out-outline" size={24} color="#EF4444" />
-                <Text style={styles.logoutText}>{t('common.logout')}</Text>
+                <Ionicons name="create-outline" size={20} color={theme.primary} />
+                <Text style={[styles.editButtonText, { color: theme.primary }]}>{t('common.edit')}</Text>
               </TouchableOpacity>
-            </>
-          )}
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={[styles.infoLabel, { color: theme.secondary }]}>{t('profile.name')}</Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {profile.name || t('property.sellerNameUnavailable')}
+              </Text>
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={[styles.infoLabel, { color: theme.secondary }]}>{t('profile.phone')}</Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>
+                {profile.phone || t('property.sellerNameUnavailable')}
+              </Text>
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={[styles.infoLabel, { color: theme.secondary }]}>{t('profile.email')}</Text>
+              <Text style={[styles.infoValue, { color: theme.text }]}>{profile.email || user.email}</Text>
+            </View>
+
+            <Text style={[styles.sectionHint, { color: theme.secondary }]}>
+              {t('profile.contactInfoDescription')}
+            </Text>
+          </View>
+
+          <View style={[styles.section, { backgroundColor: theme.card }]}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('ContactInfo')}
+            >
+              <Ionicons name="call-outline" size={24} color={theme.primary} />
+              <Text style={[styles.menuItemText, { color: theme.text }]}>{t('profile.contactInfo')}</Text>
+              <Ionicons name="chevron-forward" size={20} color={theme.secondary} style={styles.menuArrow} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('MyProperties')}
+            >
+              <Ionicons name="home-outline" size={24} color={theme.primary} />
+              <Text style={[styles.menuItemText, { color: theme.text }]}>{t('profile.myProperties')}</Text>
+              <Ionicons name="chevron-forward" size={20} color={theme.secondary} style={styles.menuArrow} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('Favorites')}
+            >
+              <Ionicons name="heart-outline" size={24} color={theme.primary} />
+              <Text style={[styles.menuItemText, { color: theme.text }]}>{t('common.favorites')}</Text>
+              <Ionicons name="chevron-forward" size={20} color={theme.secondary} style={styles.menuArrow} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigation.navigate('Settings')}
+            >
+              <Ionicons name="settings-outline" size={24} color={theme.primary} />
+              <Text style={[styles.menuItemText, { color: theme.text }]}>{t('settings.title')}</Text>
+              <Ionicons name="chevron-forward" size={20} color={theme.secondary} style={styles.menuArrow} />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: theme.card }]}
+            onPress={handleLogout}
+          >
+            <Ionicons name="log-out-outline" size={24} color="#EF4444" />
+            <Text style={styles.logoutText}>{t('common.logout')}</Text>
+          </TouchableOpacity>
         </View>
       )}
     </ScrollView>
@@ -344,7 +216,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -360,12 +231,10 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: '#E0E7FF',
   },
   loadingContainer: {
     flex: 1,
@@ -386,22 +255,27 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
-    marginBottom: 16,
+  },
+  sectionHint: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
   },
   editButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
   },
   editButtonText: {
     fontSize: 14,
-    color: '#1A4CA1',
     marginLeft: 4,
     fontWeight: '500',
   },
@@ -410,12 +284,10 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: '#6B7280',
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 16,
-    color: '#111827',
   },
   menuItem: {
     flexDirection: 'row',
@@ -426,7 +298,6 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    color: '#111827',
     marginLeft: 12,
     flex: 1,
   },
@@ -436,7 +307,6 @@ const styles = StyleSheet.create({
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
     borderRadius: 12,
     padding: 16,
     marginBottom: 32,
@@ -446,54 +316,6 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontWeight: '500',
     marginLeft: 12,
-  },
-  editForm: {
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    marginBottom: 16,
-    paddingVertical: 10,
-  },
-  buttonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  button: {
-    flex: 1,
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-  },
-  cancelButton: {
-    borderWidth: 1,
-  },
-  saveButton: {
-    marginLeft: 8,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '500',
   },
   centeredContainer: {
     flex: 1,

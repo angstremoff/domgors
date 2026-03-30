@@ -38,6 +38,14 @@ export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadi
 
 CardTitle.displayName = 'CardTitle';
 
+export const CardDescription = forwardRef<HTMLParagraphElement, HTMLAttributes<HTMLParagraphElement>>(
+  ({ className, ...props }, ref) => (
+    <p ref={ref} className={cn('text-sm text-textSecondary', className)} {...props} />
+  )
+);
+
+CardDescription.displayName = 'CardDescription';
+
 export const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
     <div ref={ref} className={cn('', className)} {...props} />

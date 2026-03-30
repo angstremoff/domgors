@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Upload, X, Check, MapPin } from 'lucide-react';
@@ -10,6 +11,13 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import type { Database, TablesInsert } from '@shared/lib/database.types';
+import {
+  fetchContactProfile,
+  getContactProfileValidationError,
+  saveContactProfile,
+  type ContactProfileClient,
+  type ContactProfile,
+} from '@shared/utils/contactProfile';
 import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '@shared/utils/propertyRules';
 
 type City = Database['public']['Tables']['cities']['Row'];
@@ -18,12 +26,19 @@ type District = Database['public']['Tables']['districts']['Row'];
 const MAX_IMAGES = 10;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+const EMPTY_CONTACT_PROFILE: ContactProfile = {
+  name: '',
+  phone: '',
+  email: '',
+  avatar_url: null,
+};
 
 export function AddPropertyForm() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const contactSupabase = supabase as unknown as ContactProfileClient;
 
   const [dealType, setDealType] = useState<'sale' | 'rent'>('sale');
   const [propertyType, setPropertyType] = useState('apartment');
@@ -44,6 +59,8 @@ export function AddPropertyForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [contactLoading, setContactLoading] = useState(true);
+  const [contactProfile, setContactProfile] = useState<ContactProfile>(EMPTY_CONTACT_PROFILE);
   const previewsRef = useRef<string[]>([]);
   const formStateRef = useRef('');
   const supportsRooms = propertyTypeSupportsRooms(propertyType);
@@ -77,6 +94,8 @@ export function AddPropertyForm() {
       cityId,
       districtId,
       location,
+      contactName: contactProfile.name,
+      contactPhone: contactProfile.phone,
       selectedFeaturesLength: selectedFeatures.length,
       filesLength: files.length,
     });
@@ -98,6 +117,8 @@ export function AddPropertyForm() {
     cityId,
     districtId,
     location,
+    contactProfile.name,
+    contactProfile.phone,
     selectedFeatures.length,
     files.length,
   ]);
@@ -116,6 +137,47 @@ export function AddPropertyForm() {
 
     loadCities();
   }, [supabase]);
+
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!user) {
+      setContactProfile(EMPTY_CONTACT_PROFILE);
+      setContactLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadContactProfile = async () => {
+      try {
+        setContactLoading(true);
+        const data = await fetchContactProfile(contactSupabase, user.id, user.email || '');
+        if (!cancelled) {
+          setContactProfile(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setContactProfile({
+            ...EMPTY_CONTACT_PROFILE,
+            email: user.email || '',
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setContactLoading(false);
+        }
+      }
+    };
+
+    void loadContactProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, contactSupabase, user]);
 
   useEffect(() => {
     if (!cityId) {
@@ -259,6 +321,11 @@ export function AddPropertyForm() {
       return;
     }
 
+    if (contactLoading) {
+      setError(t('common.loading'));
+      return;
+    }
+
     if (
       !title.trim() ||
       !description.trim() ||
@@ -270,6 +337,17 @@ export function AddPropertyForm() {
       (districtRequired && !districtId)
     ) {
       setError(t('property.addProperty.validation.fillAllFields'));
+      return;
+    }
+
+    const contactValidationError = getContactProfileValidationError(contactProfile);
+    if (contactValidationError === 'name') {
+      setError(t('profile.errors.nameRequired'));
+      return;
+    }
+
+    if (contactValidationError === 'phone') {
+      setError(t('profile.errors.phoneRequired'));
       return;
     }
 
@@ -290,6 +368,12 @@ export function AddPropertyForm() {
     setSubmitting(true);
 
     try {
+      await saveContactProfile(contactSupabase, {
+        userId: user.id,
+        email: user.email || contactProfile.email,
+        profile: contactProfile,
+      });
+
       const imageUrls = await uploadImages();
       const payload: TablesInsert<'properties'> = {
         title: title.trim(),
@@ -392,6 +476,47 @@ export function AddPropertyForm() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('addProperty.contactInfo')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-textSecondary">
+                {t('profile.contactInfoPublishingHint')}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input
+                  label={t('profile.name')}
+                  placeholder={t('addProperty.form.namePlaceholder')}
+                  value={contactProfile.name}
+                  onChange={(e) => setContactProfile((current) => ({ ...current, name: e.target.value }))}
+                  autoComplete="name"
+                  required
+                />
+                <Input
+                  label={t('profile.phone')}
+                  placeholder={t('addProperty.form.phonePlaceholder')}
+                  value={contactProfile.phone}
+                  onChange={(e) => setContactProfile((current) => ({ ...current, phone: e.target.value }))}
+                  autoComplete="tel"
+                  required
+                />
+                <Input
+                  label={t('profile.email')}
+                  value={contactProfile.email || user.email || ''}
+                  disabled
+                  readOnly
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-textSecondary">{t('profile.contactInfoDescription')}</span>
+                <Link href="/profil/kontakti" className="text-primary hover:underline">
+                  {t('profile.openContactInfo')}
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>{t('property.addProperty.basicInfo')}</CardTitle>

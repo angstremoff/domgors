@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { AuthError, Session, User } from '@supabase/supabase-js';
 import { Logger } from '../utils/logger';
 import { buildWebAuthCallbackUrl, buildWebResetPasswordUrl } from '../utils/authSessionUrl';
+import { ensureUserContactProfile, type ContactProfileClient } from '../utils/contactProfile';
 
 type LoginResult = {
   error: AuthError | null;
@@ -33,24 +34,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const contactSupabase = supabase as unknown as ContactProfileClient;
 
   const ensureUserProfile = React.useCallback(async (authUser: User | null) => {
     if (!authUser) {
       return;
     }
 
-    const { error } = await supabase.from('users').upsert(
-      {
-        id: authUser.id,
-        email: authUser.email || '',
-      },
-      { onConflict: 'id' }
-    );
-
-    if (error) {
+    try {
+      await ensureUserContactProfile(contactSupabase, authUser);
+    } catch (error) {
       Logger.debug('Профиль пользователя будет создан позже:', error);
     }
-  }, []);
+  }, [contactSupabase]);
 
   useEffect(() => {
     const setAuthData = async () => {

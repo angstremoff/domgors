@@ -12,6 +12,7 @@ export type RootStackParamList = {
   ResetPassword: undefined;
   AddProperty: undefined;
   Settings: undefined;
+  ContactInfo: undefined;
   Map: undefined;
   MyProperties: undefined;
   EditProperty: { propertyId: string };

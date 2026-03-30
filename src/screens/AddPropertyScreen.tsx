@@ -28,6 +28,7 @@ import Colors from '../constants/colors';
 import MapCoordinateSelector from '../components/MapCoordinateSelector';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
 import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '../utils/propertyRules';
+import { fetchContactProfile, saveContactProfile, type ContactProfileClient } from '../utils/contactProfile';
 
 // Используем интерфейс City из PropertyContext
 
@@ -44,6 +45,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
   const { user } = useAuth();
   const { darkMode } = useTheme();
   const theme = darkMode ? Colors.dark : Colors.light;
+  const contactSupabase = supabase as unknown as ContactProfileClient;
   const { invalidateCache, cities, loadCities, loadDistricts } = useProperties(); // Используем города из контекста
   
   // Добавляем состояния для имени и телефона пользователя
@@ -105,20 +107,11 @@ const AddPropertyScreen = ({ navigation }: any) => {
   const loadUserData = async () => {
     try {
       if (user) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('name, phone')
-          .eq('id', user.id)
-          .single();
-          
-        if (data) {
-          setUserData({
-            name: data.name || '',
-            phone: data.phone || ''
-          });
-        }
-        
-        if (error) throw error;
+        const data = await fetchContactProfile(contactSupabase, user.id, user.email || '');
+        setUserData({
+          name: data.name,
+          phone: data.phone,
+        });
       }
     } catch (error) {
       Logger.error('Ошибка при загрузке данных пользователя:', error);
@@ -318,19 +311,11 @@ const AddPropertyScreen = ({ navigation }: any) => {
       // Сохраняем данные пользователя
       try {
         if (user) {
-          const { error: profileError } = await supabase
-            .from('users')
-            .upsert({
-              id: user.id,
-              email: user.email || '',
-              name: userData.name,
-              phone: userData.phone
-            }, { onConflict: 'id' });
-
-          if (profileError) {
-            Logger.error('Ошибка при обновлении профиля:', profileError);
-            throw profileError;
-          }
+          await saveContactProfile(contactSupabase, {
+            userId: user.id,
+            email: user.email || '',
+            profile: userData,
+          });
         }
       } catch (error) {
         Logger.error('Ошибка при сохранении данных пользователя:', error);

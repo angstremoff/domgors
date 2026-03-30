@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, LogOut, Bell, Info, Phone, FileText, ExternalLink } from 'lucide-react';
+import { ChevronRight, LogOut, Bell, Info, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -76,6 +76,16 @@ export default function PodesavanjaPage() {
                                     <span className="text-textSecondary">Email</span>
                                     <span className="text-text">{user.email}</span>
                                 </div>
+                                <Link
+                                    href="/profil/kontakti"
+                                    className="flex items-center justify-between rounded-lg border border-border px-4 py-3 text-left transition-colors hover:bg-surface"
+                                >
+                                    <div>
+                                        <div className="font-medium text-text">{t('profile.contactInfo')}</div>
+                                        <div className="text-sm text-textSecondary">{t('profile.contactInfoDescription')}</div>
+                                    </div>
+                                    <ChevronRight className="h-5 w-5 text-textSecondary" />
+                                </Link>
                                 <Button
                                     variant="outline"
                                     className="w-full text-red-500 border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"

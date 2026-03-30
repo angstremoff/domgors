@@ -22,6 +22,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import FavoritesScreen from '../screens/FavoritesScreen';
 import AddPropertyScreen from '../screens/AddPropertyScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import ContactInfoScreen from '../screens/ContactInfoScreen';
 import MapScreen from '../screens/MapScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
@@ -218,6 +219,11 @@ const MainStack = () => {
         name="Settings"
         component={SettingsScreen}
         options={{ title: t('settings.title') }}
+      />
+      <Stack.Screen
+        name="ContactInfo"
+        component={ContactInfoScreen}
+        options={{ title: t('profile.contactInfo') }}
       />
       <Stack.Screen
         name="Map"

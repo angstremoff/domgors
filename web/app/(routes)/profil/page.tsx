@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Heart, Home, LogOut, Settings } from 'lucide-react';
+import { Heart, Home, LogOut, Phone, Settings } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
@@ -81,6 +81,18 @@ export default function ProfilPage() {
                 <div>
                   <h3 className="text-xl font-semibold text-text mb-1">{t('settings.title')}</h3>
                   <p className="text-sm text-textSecondary">{t('profile.settingsDescription')}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/profil/kontakti">
+            <Card className="hover:shadow-lg transition-all cursor-pointer">
+              <CardContent className="flex items-center p-6">
+                <Phone className="h-12 w-12 text-primary mr-4" />
+                <div>
+                  <h3 className="text-xl font-semibold text-text mb-1">{t('profile.contactInfo')}</h3>
+                  <p className="text-sm text-textSecondary">{t('profile.contactInfoDescription')}</p>
                 </div>
               </CardContent>
             </Card>

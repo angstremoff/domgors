@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { createClient } from '@/lib/supabase/client';
 import type { AuthError, Session, User } from '@supabase/supabase-js';
 import { buildWebAuthCallbackUrl, buildWebResetPasswordUrl } from '@shared/utils/authSessionUrl';
+import { ensureUserContactProfile, type ContactProfileClient } from '@shared/utils/contactProfile';
 
 interface AuthContextType {
   user: User | null;
@@ -24,26 +25,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = useMemo(() => createClient(), []);
+  const contactSupabase = supabase as unknown as ContactProfileClient;
 
   const ensureUserProfile = useCallback(async (authUser: User | null) => {
     if (!authUser) {
       return;
     }
 
-    const { error } = await supabase.from('users')
-      // @ts-expect-error - drift between generated DB types and Supabase upsert typing
-      .upsert(
-      {
-        id: authUser.id,
-        email: authUser.email || '',
-      },
-      { onConflict: 'id' }
-    );
-
-    if (error) {
+    try {
+      await ensureUserContactProfile(contactSupabase, authUser);
+    } catch {
       return;
     }
-  }, [supabase]);
+  }, [contactSupabase]);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {

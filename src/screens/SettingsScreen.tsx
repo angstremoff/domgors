@@ -19,7 +19,7 @@ import Colors from '../constants/colors';
 import CustomModal from '../components/CustomModal';
 import packageJson from '../../package.json';
 
-const SettingsScreen = () => {
+const SettingsScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { darkMode } = useTheme();
@@ -97,6 +97,14 @@ const SettingsScreen = () => {
         {user && (
           <View style={[styles.section, { backgroundColor: theme.card }]}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>{t('settings.account')}</Text>
+
+            <TouchableOpacity
+              style={styles.settingItem}
+              onPress={() => navigation.navigate('ContactInfo')}
+            >
+              <Text style={[styles.settingLabel, { color: theme.text }]}>{t('profile.contactInfo')}</Text>
+              <Ionicons name="chevron-forward" size={20} color={theme.secondary} />
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.logoutButton, {
