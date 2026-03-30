@@ -17,7 +17,6 @@
 - Mobile: `npm run check`
 - Shared/unit tests: `npm test`
 - Web: `cd web && npm run build`
-- Последние подтверждённые проверки `2026-03-27`: `npm run check`, `npm test`, `cd web && npm run build`.
 - Автотесты пока не покрывают e2e-критические сценарии `signup/login/reset password` и `create/edit property`; зелёный `check/build` = smoke-проверка кода, а не полное пользовательское e2e.
 
 ## 4. Ключевые инварианты данных
@@ -29,6 +28,10 @@
   - `rooms` не должен требоваться в create/edit;
   - числовые поля нельзя рендерить через truthy-проверки, если возможен `0`.
 - `properties.district_id` nullable; create/edit на web и mobile должны требовать район только если у выбранного города реально есть районы, иначе сохранять `district_id = null`.
+- Для `cities` координаты обязательны как продуктовый инвариант: create/edit forms и карты используют `cities.coordinates` как стартовую точку, если у объявления ещё нет собственных координат.
+- Если у города нет полноценного набора районов, безопасный fallback — район `Центар` с координатами центра города; не оставлять новые крупные города совсем без районов.
+- Имена городов/районов в БД = канонические ключи для переводов; новые `cities`/`districts` всегда синхронно добавлять в `src/translations/{ru,sr}.json` и `web/public/locales/{ru,sr}/translation.json`.
+- Mobile `propertyService` кэширует `cities` и `districts` в AsyncStorage на 3 часа; после сидирования новых городов/районов stale client-cache может скрывать изменения.
 - Фото объявлений должны жить единообразно:
   - bucket: `properties`
   - path: `property-images/<userId>/<filename>`
@@ -53,6 +56,8 @@
 - `Authentication -> Auth Hooks` в Supabase должны оставаться пустыми/выключенными, если hooks не настроены осознанно.
 - `auth.users` и `public.users` — разные сущности; удаление пользователя из `Authentication` при оставшейся строке в `public.users` может ломать повторную регистрацию (`Database error saving new user`).
 - Клиентский sync профиля в `public.users` должен upsert’ить только `id/email` и не должен перетирать `created_at`.
+- Контактные данные объявления архитектурно живут в `public.users`, а не в `properties`: имя и телефон продавца централизованы через `src/utils/contactProfile.ts`.
+- Web и mobile create-flow обязаны сначала валидировать/сохранять contact profile, затем публиковать объявление; публикация без телефона недопустима.
 - Deep links:
   - `domgomobile://property/<UUID>`
   - `domgomobile://agency/<UUID>`
@@ -83,6 +88,10 @@
 - Карусель последних объявлений на главной не должна ломать обычный клик по карточке.
 - Web i18n в рантайме использует shared `src/translations/{ru,sr}.json`; зеркала в `web/public/locales/*` держать синхронно.
 - Продуктовый UI на `domgo.rs` по умолчанию должен быть на сербской латинице; русские hardcoded/fallback-строки в публичных web-flow считаются багом.
+- Web create/edit property используют карту выбора точки: `PropertyCoordinateSelector` должен стартовать от координат города и сохранять `properties.coordinates`.
+- Web list map popup и карточка объявления должны вести на детальную страницу через `/oglas/?id=...`; popup карты кликабелен целиком.
+- На web detail page карта объекта встраивается прямо в карточку объявления; переход к ней — компактная icon-only кнопка рядом с адресом.
+- На web detail page контактный CTA должен быть `Показать номер` / `Prikaži broj`: после раскрытия номер виден текстом и остаётся кликабельным через `tel:`; сценарий должен быть удобен и для desktop, и для mobile browser.
 
 ## 9. Актуальный релизный контекст
 - Текущая версия: `1.0.12`
@@ -107,6 +116,8 @@
 - `src/services/propertyService.ts` — CRUD объявлений, storage, статусные операции, кэши.
 - `src/contexts/PropertyContext.tsx` — списки, пагинация, города/районы, загрузка по id.
 - `src/screens/AddPropertyScreen.tsx` и `src/screens/EditPropertyScreen.tsx` — mobile create/edit property, district/null logic, image upload order.
+- `src/utils/contactProfile.ts` — единый контракт contact profile (`users.name/phone/email`), валидация и upsert без перезаписи `created_at`.
+- `src/utils/mapCoordinates.ts` — parse/get/format/serialize координат городов и объявлений.
 - `src/utils/propertyRules.ts` — общие правила для `rooms/land`.
 - `src/utils/propertyListingFilters.ts` — shared helper для sanitize/reset/filter transitions и семантики rooms (`5+`, `land`) в web-листингах.
 - `src/utils/propertyStorage.ts` — единый контракт storage path.
@@ -119,5 +130,7 @@
 - `web/components/property/AddPropertyForm.tsx` и `web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx` — web create/edit property, district/null logic, sr-localized validation.
 - `web/components/property/PropertyListingsClient.tsx` — client refresh, infinite scroll и canonical filter state на web.
 - `web/components/property/PropertyFilters.tsx` — controlled sidebar filters; не должен расходиться с быстрыми фильтрами.
+- `web/components/property/PropertyCoordinateSelector.tsx`, `web/components/property/PropertyMap.tsx`, `web/components/property/PropertyLocationMap.tsx`, `web/components/property/PropertyDetails.tsx` — web-карты create/list/detail и product rules around coordinates, popup routing и phone reveal.
+- `web/components/profile/ContactProfileForm.tsx`, `src/screens/ContactInfoScreen.tsx` — отдельное редактирование контактных данных в кабинете на web и mobile.
 - `src/services/AppVersionManager.ts` — инвалидация кэшей по версии/сборке.
 - `MEMORY.md` — краткая оперативная память, `all.md` — полный onboarding.

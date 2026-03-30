@@ -11,6 +11,7 @@ DomGoMobile — платформа объявлений о недвижимос�
 ## 2. Правила работы по проекту
 - Всё общение и документацию вести на русском.
 - Любые новые UI-строки добавлять сразу в `ru` и `sr`.
+- Для web зеркала переводов в `web/public/locales/*` всегда синхронизировать с shared `src/translations/*`.
 - Изменения схемы Supabase делать только через миграции, затем обновлять generated types.
 - Не считать `any` нормой: в кодовой базе ещё остался техдолг, но новый код должен быть строго типизирован.
 - Mobile и web проверяются разными командами:
@@ -82,6 +83,13 @@ Web сейчас живёт в режиме static export.
 - `cities`
 - `districts`
 
+Дополнительные инварианты по данным:
+- контактные данные владельца объявления хранятся в `public.users`, а не в `properties`;
+- `cities.coordinates` — обязательный источник правды для стартовой точки карт и create/edit форм;
+- `districts` могут отсутствовать у города, но тогда формы обязаны работать с `district_id = null`;
+- для новых крупных городов безопасный fallback-район — `Центар` с координатами центра города.
+- mobile `propertyService` кэширует `cities` и `districts` в AsyncStorage на 3 часа, поэтому после сидирования новых данных клиент может показывать устаревший список до инвалидации кэша.
+
 ### 5.2 Важная проблема репозитория
 Сейчас репозиторий не является надёжным source of truth по live-схеме Supabase:
 - `supabase/export/*` фактически пустые;
@@ -143,11 +151,21 @@ Web сейчас живёт в режиме static export.
   - пока список районов грузится, submit/save должен быть заблокирован;
   - старая validation-ошибка не должна висеть после изменения полей.
 - Это особенно важно для городов без наполненной таблицы `districts`: форма не должна становиться непроходимой только из-за отсутствия районов в БД.
+- Координаты объекта в create/edit являются частью продукта:
+  - web и mobile используют `cities.coordinates` как дефолт карты;
+  - если пользователь не выбрал точку вручную, сохраняется центр выбранного города;
+  - helper для этой логики общий: [mapCoordinates.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/mapCoordinates.ts).
+- Контакты в create-flow централизованы:
+  - форма подачи не должна публиковать объявление без имени и телефона;
+  - если contact profile уже заполнен, поля не должны навязываться повторно;
+  - если profile пустой, имя и телефон показываются прямо в форме и обязательны.
 - Ключевые create/edit файлы:
   - [AddPropertyForm.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/AddPropertyForm.tsx)
   - [EditPropertyPageClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx)
   - [AddPropertyScreen.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/src/screens/AddPropertyScreen.tsx)
   - [EditPropertyScreen.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/src/screens/EditPropertyScreen.tsx)
+  - [contactProfile.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/contactProfile.ts)
+  - [mapCoordinates.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/mapCoordinates.ts)
 
 ## 7. Агентства
 
@@ -266,6 +284,7 @@ Mobile не отправляет пользователя в `domgomobile://...`
 - при появлении auth session приложение пытается гарантировать наличие строки в `public.users`
 - этот sync должен upsert’ить только `id/email`
 - `created_at` нельзя перетирать на каждом входе/обновлении сессии
+- имя и телефон продавца не должны дублироваться в `properties`; объявления используют contact profile из `public.users`
 
 ### 8.5 SMTP, Supabase Dashboard и письма
 Для production встроенный email service Supabase использовать нельзя.
@@ -322,6 +341,7 @@ Email templates живут не в репозитории, а в Supabase Dashbo
 
 Web fallback:
 - share/deep-link handler для объявлений ведёт на `property.html`/`oglas?id=...`
+- web map popup и любые переходы с карты на карточку объявления должны вести на `/oglas/?id=<UUID>`, а не на старые pseudo-routes `/prodaja/:id` или `/izdavanje/:id`
 
 В mobile есть отложенная навигация при холодном старте:
 - если экран ещё не готов, переход откладывается;
@@ -368,6 +388,20 @@ Web Supabase client/server теперь работают в fail-fast-режим
 - автопрокрутка;
 - drag-scroll;
 - клики по карточкам не должны гаситься drag-логикой.
+
+### 11.7 Карты и детали объявления
+- На web list map popup карточка объекта кликабельна целиком и открывает detail page.
+- На web detail page у объявления есть встроенная read-only карта объекта, если у объявления есть `properties.coordinates`.
+- Переход к карте на detail page — компактная icon-only кнопка рядом с адресом, а не отдельная большая CTA-кнопка.
+- Web create/edit/detail/list используют общую координатную модель и не должны расходиться по формату `lat/lng`.
+
+### 11.8 Контактный блок объявления на web
+- На web detail page нельзя оставлять только CTA `Позвонить/Pozovi` без раскрытого номера: на desktop это плохой UX.
+- Правильный сценарий:
+  - сначала `Показать номер` / `Prikaži broj`;
+  - после раскрытия номер виден как текст;
+  - номер остаётся кликабельным через `tel:` для мобильных браузеров.
+- Это считается продуктовым инвариантом web detail contact card.
 
 ## 12. Настройки, контакты и store-ссылки
 - Текущий Android-store: RuStore
@@ -418,14 +452,14 @@ APK в проекте нужен в основном для локального
 ## 16. Текущие проверки и техдолг
 
 ### 16.1 Что уже в зелёном состоянии
-- Последняя подтверждённая mobile-проверка: `npm run check` проходит (`2026-03-27`)
-- Последняя подтверждённая shared/unit-проверка: `npm test` проходит (`2026-03-27`)
-- Последняя подтверждённая web-проверка: `cd web && npm run build` проходит (`2026-03-27`)
 - Тесты сейчас покрывают:
   - auth callback param parsing
   - deep link parsing
   - agency profile normalization
   - property listing filter helpers
+  - contact profile helpers
+  - map coordinate helpers
+  - покрытие переводов для seeded cities/districts
 
 ### 16.2 Что остаётся проблемой
 - В mobile остаётся исторический lint-хвост, в основном старые `any` и техдолг в старых экранах/утилитах.
@@ -448,7 +482,11 @@ APK в проекте нужен в основном для локального
 - `Все города`/`Все районы` на web должны удалять фильтр из query, а не только менять UI.
 - `5+` комнат на web это `>= 5`.
 - `district_id` в объявлениях nullable; не делать район безусловно обязательным в create/edit.
+- Но для новых крупных городов не оставлять пустой UX: минимум `cities.coordinates`, а лучше базовый район `Центар`.
+- Контакты продавца не дублировать в `properties`; использовать профиль пользователя (`public.users`) и helper `contactProfile`.
 - `domgo.rs` должен отдавать сербскую латиницу по умолчанию; русские fallback-строки в public UI — это регресс.
+- Любая новая карта на web должна использовать общую координатную модель и вести в detail page через `/oglas/?id=...`.
+- Web detail contact card должна сначала раскрывать номер, а не пытаться “звонить вслепую”.
 - Web signup зависит и от кода, и от внешней SMTP-настройки Supabase.
 - Auth-ошибки signup/reset могут идти не только из фронта, но и из live Supabase schema/trigger drift.
 - Без актуального экспорта live-схемы нельзя безопасно делать серьёзные DB/RLS-рефакторы.
