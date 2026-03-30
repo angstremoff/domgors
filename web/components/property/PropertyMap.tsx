@@ -129,6 +129,9 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
             .marker.rent { border-left-color: #4CAF50; }
             .marker.sale { border-left-color: #1E88E5; }
             .popup-content { width: 220px; }
+            .popup-card {
+              cursor: pointer;
+            }
             .popup-image {
               width: 100%;
               height: 120px;
@@ -182,10 +185,18 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
               el.textContent = feature.properties.price;
 
               const propertyUrl = '/oglas/?id=' + encodeURIComponent(feature.properties.id);
+              const sendOpenProperty = (url) => {
+                window.parent.postMessage({
+                  source: 'domgo-property-map',
+                  channelId,
+                  action: 'openProperty',
+                  url,
+                }, '*');
+              };
 
               const popup = new maplibregl.Popup({ offset: 12 });
               popup.setHTML(
-                '<div class="popup-content">' +
+                '<div class="popup-content popup-card" data-property-url="' + propertyUrl + '" tabindex="0" role="link">' +
                   '<img class="popup-image" src="' + feature.properties.imageUrl + '" alt="' + feature.properties.title + '" />' +
                   '<div class="popup-title">' + feature.properties.title + '</div>' +
                   '<div class="popup-price">' + feature.properties.price + '</div>' +
@@ -195,27 +206,51 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
 
               popup.on('open', () => {
                 const popupElement = popup.getElement();
-                const link = popupElement ? popupElement.querySelector('[data-property-url]') : null;
+                const popupCard = popupElement ? popupElement.querySelector('.popup-card') : null;
+                const link = popupElement ? popupElement.querySelector('.popup-link') : null;
 
-                if (!link) {
+                if (!popupCard) {
                   return;
                 }
 
-                link.addEventListener('click', (event) => {
-                  event.preventDefault();
-                  const url = link.getAttribute('data-property-url');
+                if (!popupCard.dataset.boundClick) {
+                  popupCard.addEventListener('click', () => {
+                    const url = popupCard.getAttribute('data-property-url');
 
-                  if (!url) {
-                    return;
-                  }
+                    if (url) {
+                      sendOpenProperty(url);
+                    }
+                  });
 
-                  window.parent.postMessage({
-                    source: 'domgo-property-map',
-                    channelId,
-                    action: 'openProperty',
-                    url,
-                  }, '*');
-                }, { once: true });
+                  popupCard.addEventListener('keydown', (event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') {
+                      return;
+                    }
+
+                    event.preventDefault();
+                    const url = popupCard.getAttribute('data-property-url');
+
+                    if (url) {
+                      sendOpenProperty(url);
+                    }
+                  });
+
+                  popupCard.dataset.boundClick = 'true';
+                }
+
+                if (link && !link.dataset.boundClick) {
+                  link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const url = link.getAttribute('data-property-url');
+
+                    if (url) {
+                      sendOpenProperty(url);
+                    }
+                  });
+
+                  link.dataset.boundClick = 'true';
+                }
               });
 
               new maplibregl.Marker(el)

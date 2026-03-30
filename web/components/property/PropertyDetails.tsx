@@ -4,7 +4,9 @@ import { MapPin, Bed, Maximize, Phone, Share2, Heart, Building2 } from 'lucide-r
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { PropertyGallery } from './PropertyGallery';
+import { PropertyLocationMap } from './PropertyLocationMap';
 import type { Database } from '@shared/lib/database.types';
+import { parseMapCoordinates } from '@shared/utils/mapCoordinates';
 
 type Property = Database['public']['Tables']['properties']['Row'] & {
   city?: { name: string } | null;
@@ -18,6 +20,7 @@ interface PropertyDetailsProps {
 
 export function PropertyDetails({ property }: PropertyDetailsProps) {
   const { t } = useTranslation();
+  const propertyCoordinates = parseMapCoordinates(property.coordinates);
 
   const price = new Intl.NumberFormat('sr-RS', {
     style: 'currency',
@@ -93,6 +96,18 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
     }
   };
 
+  const handleScrollToMap = () => {
+    const mapSection = document.getElementById('property-location-map');
+    if (!mapSection) {
+      return;
+    }
+
+    mapSection.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
+
   return (
     <div className="space-y-8">
       {/* Галерея изображений */}
@@ -117,6 +132,12 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
                 {translatedCity}
               </span>
             </div>
+            {propertyCoordinates ? (
+              <Button variant="outline" size="sm" onClick={handleScrollToMap}>
+                <MapPin className="mr-2 h-4 w-4" />
+                {t('property.viewOnMap')}
+              </Button>
+            ) : null}
             <p className="text-4xl font-bold text-primary">{price}</p>
           </div>
 
@@ -175,6 +196,21 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
               </ul>
             </div>
           )}
+
+          {propertyCoordinates ? (
+            <div id="property-location-map" className="scroll-mt-24">
+              <div className="mb-4 flex flex-col gap-2">
+                <h2 className="text-2xl font-semibold text-text">{t('property.locationOnMap')}</h2>
+                <p className="text-sm text-textSecondary">
+                  {property.location}
+                  {translatedDistrict || translatedCity
+                    ? `, ${[translatedDistrict, translatedCity].filter(Boolean).join(', ')}`
+                    : ''}
+                </p>
+              </div>
+              <PropertyLocationMap property={property} />
+            </div>
+          ) : null}
         </div>
 
         {/* Правая колонка - контакты */}
