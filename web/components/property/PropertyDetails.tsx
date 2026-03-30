@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Map, MapPin, Bed, Maximize, Phone, Share2, Heart, Building2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
@@ -21,6 +22,7 @@ interface PropertyDetailsProps {
 export function PropertyDetails({ property }: PropertyDetailsProps) {
   const { t } = useTranslation();
   const propertyCoordinates = parseMapCoordinates(property.coordinates);
+  const [phoneRevealed, setPhoneRevealed] = useState(false);
 
   const price = new Intl.NumberFormat('sr-RS', {
     style: 'currency',
@@ -53,12 +55,6 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
 
   const getFeatureLabel = (feature: string) => {
     return t(`features.${feature}`, { defaultValue: feature });
-  };
-
-  const handleCall = () => {
-    if (property.user?.phone) {
-      window.location.href = `tel:${property.user.phone}`;
-    }
   };
 
   const handleShare = async () => {
@@ -231,10 +227,29 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
               </div>
             )}
 
-            <Button onClick={handleCall} className="w-full" size="lg">
-              <Phone className="h-5 w-5 mr-2" />
-              {t('agency.call')}
-            </Button>
+            {property.user?.phone ? (
+              <div className="space-y-3">
+                {!phoneRevealed ? (
+                  <Button onClick={() => setPhoneRevealed(true)} className="w-full" size="lg">
+                    <Phone className="h-5 w-5 mr-2" />
+                    {t('property.showPhone')}
+                  </Button>
+                ) : (
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                    <p className="mb-2 text-sm text-textSecondary">{t('property.phone')}</p>
+                    <a
+                      href={`tel:${property.user.phone}`}
+                      className="block text-xl font-semibold text-primary break-all hover:underline"
+                    >
+                      {property.user.phone}
+                    </a>
+                    <p className="mt-2 text-xs text-textSecondary">
+                      {t('property.phoneRevealHint')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : null}
 
             <Button onClick={handleShare} variant="outline" className="w-full" size="lg">
               <Share2 className="h-5 w-5 mr-2" />
