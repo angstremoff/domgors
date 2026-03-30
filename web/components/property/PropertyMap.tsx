@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import type { Database } from '@shared/lib/database.types';
 import { parseMapCoordinates } from '@shared/utils/mapCoordinates';
@@ -18,7 +19,9 @@ type Property = Database['public']['Tables']['properties']['Row'] & {
 
 export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) {
   const { t, i18n } = useTranslation();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const channelIdRef = useRef(`domgo-property-map-${Math.random().toString(36).slice(2)}`);
   const locale = i18n.language === 'ru' ? 'ru-RU' : 'sr-RS';
 
   useEffect(() => {
@@ -95,6 +98,7 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
     const calculatedZoom = propertiesWithCoords.length > 1 ? 10 : 12;
     const finalZoom = zoom || calculatedZoom;
     const viewDetails = `${t('property.details')} →`;
+    const safeChannelId = JSON.stringify(channelIdRef.current);
 
     return `
       <!DOCTYPE html>
@@ -149,6 +153,7 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
         <body>
           <div id="map"></div>
           <script>
+            const channelId = ${safeChannelId};
             const map = new maplibregl.Map({
               container: 'map',
               style: {
@@ -176,7 +181,7 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
               el.className = 'marker ' + feature.properties.propertyType;
               el.textContent = feature.properties.price;
 
-              const propertyUrl = '/' + (feature.properties.propertyType === 'sale' ? 'prodaja' : 'izdavanje') + '/' + feature.properties.id;
+              const propertyUrl = '/oglas/?id=' + encodeURIComponent(feature.properties.id);
 
               const popup = new maplibregl.Popup({ offset: 12 });
               popup.setHTML(
@@ -184,9 +189,34 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
                   '<img class="popup-image" src="' + feature.properties.imageUrl + '" alt="' + feature.properties.title + '" />' +
                   '<div class="popup-title">' + feature.properties.title + '</div>' +
                   '<div class="popup-price">' + feature.properties.price + '</div>' +
-                  '<a class="popup-link" href="' + propertyUrl + '" target="_parent">${viewDetails}</a>' +
+                  '<a class="popup-link" href="' + propertyUrl + '" data-property-url="' + propertyUrl + '">${viewDetails}</a>' +
                 '</div>'
               );
+
+              popup.on('open', () => {
+                const popupElement = popup.getElement();
+                const link = popupElement ? popupElement.querySelector('[data-property-url]') : null;
+
+                if (!link) {
+                  return;
+                }
+
+                link.addEventListener('click', (event) => {
+                  event.preventDefault();
+                  const url = link.getAttribute('data-property-url');
+
+                  if (!url) {
+                    return;
+                  }
+
+                  window.parent.postMessage({
+                    source: 'domgo-property-map',
+                    channelId,
+                    action: 'openProperty',
+                    url,
+                  }, '*');
+                }, { once: true });
+              });
 
               new maplibregl.Marker(el)
                 .setLngLat(feature.geometry.coordinates)
@@ -204,6 +234,28 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
       </html>
     `;
   }, [mapCenter.lat, mapCenter.lng, mapData, zoom, propertiesWithCoords.length, t]);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data as {
+        source?: string;
+        channelId?: string;
+        action?: 'openProperty';
+        url?: string;
+      };
+
+      if (data?.source !== 'domgo-property-map' || data.channelId !== channelIdRef.current) {
+        return;
+      }
+
+      if (data.action === 'openProperty' && data.url) {
+        router.push(data.url);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [router]);
 
   if (!mounted) {
     return (

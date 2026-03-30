@@ -35,7 +35,7 @@ export default function ProfilPage() {
     {
       href: '/profil/kontakti',
       title: t('profile.contactInfo'),
-      description: t('profile.contactInfoDescription'),
+      description: t('profile.contactInfoCardDescription'),
       icon: Phone,
     },
   ];

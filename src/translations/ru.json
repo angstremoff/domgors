@@ -169,6 +169,7 @@
     "personalInfo": "Личная информация",
     "editButton": "Редактировать",
     "contactInfo": "Контактные данные",
+    "contactInfoCardDescription": "Имя и телефон",
     "contactInfoDescription": "Эти данные используются в ваших объявлениях и показываются потенциальным покупателям и арендаторам.",
     "contactInfoSaved": "Контактные данные обновлены",
     "openContactInfo": "Открыть контакты",
