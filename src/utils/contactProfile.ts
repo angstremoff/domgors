@@ -1,4 +1,3 @@
-import type { User } from '@supabase/supabase-js';
 import type { Database } from '../lib/database.types';
 
 type UsersInsert = Database['public']['Tables']['users']['Insert'];
@@ -35,6 +34,11 @@ export interface ContactProfile {
   phone: string;
   email: string;
   avatar_url: string | null;
+}
+
+export interface ContactProfileAuthUser {
+  id: string;
+  email?: string | null;
 }
 
 export type ContactProfileValidationField = 'name' | 'phone';
@@ -90,7 +94,7 @@ export const buildContactProfileUpsert = ({
 
 export const ensureUserContactProfile = async (
   supabase: ContactProfileClient,
-  authUser: User | null
+  authUser: ContactProfileAuthUser | null
 ) => {
   if (!authUser) {
     return;
