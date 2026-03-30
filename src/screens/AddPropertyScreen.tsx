@@ -28,7 +28,7 @@ import Colors from '../constants/colors';
 import MapCoordinateSelector from '../components/MapCoordinateSelector';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
 import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '../utils/propertyRules';
-import { fetchContactProfile, saveContactProfile, type ContactProfileClient } from '../utils/contactProfile';
+import { fetchContactProfile, hasCompleteContactProfile, saveContactProfile, type ContactProfileClient } from '../utils/contactProfile';
 
 // Используем интерфейс City из PropertyContext
 
@@ -79,6 +79,8 @@ const AddPropertyScreen = ({ navigation }: any) => {
   
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [contactLoading, setContactLoading] = useState(true);
+  const [showSavedContactSummary, setShowSavedContactSummary] = useState(false);
 
   // Состояние для модальных окон
   const [cityModalVisible, setCityModalVisible] = useState(false);
@@ -97,6 +99,8 @@ const AddPropertyScreen = ({ navigation }: any) => {
   const [selectedPropertyCategoryName, setSelectedPropertyCategoryName] = useState(t('property.apartment'));
   const supportsRooms = propertyTypeSupportsRooms(propertyCategory);
   const districtRequired = districtOptions.length > 0;
+  const hasSavedContactInfo = hasCompleteContactProfile(userData);
+  const showContactFields = !showSavedContactSummary;
 
   useEffect(() => {
     // Загружаем города только по необходимости при открытии модального окна,
@@ -107,14 +111,19 @@ const AddPropertyScreen = ({ navigation }: any) => {
   const loadUserData = async () => {
     try {
       if (user) {
+        setContactLoading(true);
         const data = await fetchContactProfile(contactSupabase, user.id, user.email || '');
         setUserData({
           name: data.name,
           phone: data.phone,
         });
+        setShowSavedContactSummary(hasCompleteContactProfile(data));
       }
     } catch (error) {
       Logger.error('Ошибка при загрузке данных пользователя:', error);
+      setShowSavedContactSummary(false);
+    } finally {
+      setContactLoading(false);
     }
   };
 
@@ -257,6 +266,11 @@ const AddPropertyScreen = ({ navigation }: any) => {
 
     if (districtRequired && !districtId) {
       showErrorAlert(t('property.validation.districtRequired'));
+      return;
+    }
+
+    if (contactLoading) {
+      showErrorAlert(t('common.loading'));
       return;
     }
 
@@ -562,35 +576,73 @@ const AddPropertyScreen = ({ navigation }: any) => {
           )}
           
           <Text style={[styles.sectionTitle, { color: theme.headerText }]}>{t('addProperty.contactInfo')}</Text>
-          
-          <Text style={[styles.label, { color: theme.text }]}>{t('addProperty.form.name')}</Text>
-          <TextInput
-            style={[styles.input, { 
-              backgroundColor: theme.cardBackground,
-              color: theme.text,
-              borderColor: theme.border,
-              borderWidth: 1
-            }]}
-            value={userData.name}
-            onChangeText={(text) => setUserData({ ...userData, name: text })}
-            placeholder={t('addProperty.form.namePlaceholder')}
-            placeholderTextColor={theme.secondary}
-          />
-          
-          <Text style={[styles.label, { color: theme.text }]}>{t('addProperty.form.phone')}</Text>
-          <TextInput
-            style={[styles.input, { 
-              backgroundColor: theme.cardBackground,
-              color: theme.text,
-              borderColor: theme.border,
-              borderWidth: 1
-            }]}
-            value={userData.phone}
-            onChangeText={(text) => setUserData({ ...userData, phone: text })}
-            placeholder={t('addProperty.form.phonePlaceholder')}
-            placeholderTextColor={theme.secondary}
-            keyboardType="phone-pad"
-          />
+
+          {contactLoading ? (
+            <View style={styles.contactLoadingRow}>
+              <ActivityIndicator size="small" color={theme.primary} />
+              <Text style={[styles.contactLoadingText, { color: theme.secondary }]}>{t('common.loading')}</Text>
+            </View>
+          ) : showContactFields ? (
+            <>
+              <Text style={[styles.contactHint, { color: theme.secondary }]}>
+                {hasSavedContactInfo ? t('profile.contactInfoEditingHint') : t('profile.contactInfoRequiredHint')}
+              </Text>
+
+              <Text style={[styles.label, { color: theme.text }]}>{t('addProperty.form.name')}</Text>
+              <TextInput
+                style={[styles.input, {
+                  backgroundColor: theme.cardBackground,
+                  color: theme.text,
+                  borderColor: theme.border,
+                  borderWidth: 1
+                }]}
+                value={userData.name}
+                onChangeText={(text) => setUserData({ ...userData, name: text })}
+                placeholder={t('addProperty.form.namePlaceholder')}
+                placeholderTextColor={theme.secondary}
+              />
+
+              <Text style={[styles.label, { color: theme.text }]}>{t('addProperty.form.phone')}</Text>
+              <TextInput
+                style={[styles.input, {
+                  backgroundColor: theme.cardBackground,
+                  color: theme.text,
+                  borderColor: theme.border,
+                  borderWidth: 1
+                }]}
+                value={userData.phone}
+                onChangeText={(text) => setUserData({ ...userData, phone: text })}
+                placeholder={t('addProperty.form.phonePlaceholder')}
+                placeholderTextColor={theme.secondary}
+                keyboardType="phone-pad"
+              />
+            </>
+          ) : (
+            <>
+              <Text style={[styles.contactHint, { color: theme.secondary }]}>
+                {t('profile.contactInfoAutoFilledHint')}
+              </Text>
+              <View style={[styles.contactSummaryCard, {
+                backgroundColor: theme.cardBackground,
+                borderColor: theme.border,
+              }]}>
+                <View style={styles.contactSummaryRow}>
+                  <Text style={[styles.contactSummaryLabel, { color: theme.secondary }]}>{t('profile.name')}</Text>
+                  <Text style={[styles.contactSummaryValue, { color: theme.text }]}>{userData.name}</Text>
+                </View>
+                <View style={styles.contactSummaryRow}>
+                  <Text style={[styles.contactSummaryLabel, { color: theme.secondary }]}>{t('profile.phone')}</Text>
+                  <Text style={[styles.contactSummaryValue, { color: theme.text }]}>{userData.phone}</Text>
+                </View>
+              </View>
+              <View style={styles.contactActionsRow}>
+                <Text style={[styles.contactHint, { color: theme.secondary }]}>{t('profile.contactInfoPublishingHint')}</Text>
+                <TouchableOpacity onPress={() => setShowSavedContactSummary(false)}>
+                  <Text style={[styles.contactEditLink, { color: theme.primary }]}>{t('common.edit')}</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
           
           <Text style={[styles.sectionTitle, { color: theme.headerText }]}>{t('addProperty.basicInfo')}</Text>
           
@@ -1084,6 +1136,49 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginVertical: 12,
+  },
+  contactHint: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+  },
+  contactLoadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  contactLoadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+  },
+  contactSummaryCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  contactSummaryRow: {
+    marginBottom: 10,
+  },
+  contactSummaryLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  contactSummaryValue: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  contactActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 8,
+  },
+  contactEditLink: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   label: {
     fontSize: 16,

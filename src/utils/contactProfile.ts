@@ -67,6 +67,12 @@ export const getContactProfileValidationError = (
   return null;
 };
 
+export const hasCompleteContactProfile = (
+  profile: Pick<ContactProfile, 'name' | 'phone'>
+) => {
+  return normalizeText(profile.name).length > 0 && normalizeText(profile.phone).length > 0;
+};
+
 export const buildContactProfileUpsert = ({
   userId,
   email,

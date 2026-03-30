@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import type { Database, TablesInsert } from '@shared/lib/database.types';
 import {
   fetchContactProfile,
+  hasCompleteContactProfile,
   getContactProfileValidationError,
   saveContactProfile,
   type ContactProfileClient,
@@ -60,11 +61,14 @@ export function AddPropertyForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [contactLoading, setContactLoading] = useState(true);
+  const [showSavedContactSummary, setShowSavedContactSummary] = useState(false);
   const [contactProfile, setContactProfile] = useState<ContactProfile>(EMPTY_CONTACT_PROFILE);
   const previewsRef = useRef<string[]>([]);
   const formStateRef = useRef('');
   const supportsRooms = propertyTypeSupportsRooms(propertyType);
   const districtRequired = districts.length > 0;
+  const hasSavedContactInfo = hasCompleteContactProfile(contactProfile);
+  const showContactFields = !showSavedContactSummary;
 
   useEffect(() => {
     previewsRef.current = files.map((f) => f.preview);
@@ -94,6 +98,7 @@ export function AddPropertyForm() {
       cityId,
       districtId,
       location,
+      showSavedContactSummary,
       contactName: contactProfile.name,
       contactPhone: contactProfile.phone,
       selectedFeaturesLength: selectedFeatures.length,
@@ -117,6 +122,7 @@ export function AddPropertyForm() {
     cityId,
     districtId,
     location,
+    showSavedContactSummary,
     contactProfile.name,
     contactProfile.phone,
     selectedFeatures.length,
@@ -146,6 +152,7 @@ export function AddPropertyForm() {
     if (!user) {
       setContactProfile(EMPTY_CONTACT_PROFILE);
       setContactLoading(false);
+      setShowSavedContactSummary(false);
       return;
     }
 
@@ -157,6 +164,7 @@ export function AddPropertyForm() {
         const data = await fetchContactProfile(contactSupabase, user.id, user.email || '');
         if (!cancelled) {
           setContactProfile(data);
+          setShowSavedContactSummary(hasCompleteContactProfile(data));
         }
       } catch {
         if (!cancelled) {
@@ -164,6 +172,7 @@ export function AddPropertyForm() {
             ...EMPTY_CONTACT_PROFILE,
             email: user.email || '',
           });
+          setShowSavedContactSummary(false);
         }
       } finally {
         if (!cancelled) {
@@ -481,39 +490,85 @@ export function AddPropertyForm() {
               <CardTitle>{t('addProperty.contactInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-textSecondary">
-                {t('profile.contactInfoPublishingHint')}
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Input
-                  label={t('profile.name')}
-                  placeholder={t('addProperty.form.namePlaceholder')}
-                  value={contactProfile.name}
-                  onChange={(e) => setContactProfile((current) => ({ ...current, name: e.target.value }))}
-                  autoComplete="name"
-                  required
-                />
-                <Input
-                  label={t('profile.phone')}
-                  placeholder={t('addProperty.form.phonePlaceholder')}
-                  value={contactProfile.phone}
-                  onChange={(e) => setContactProfile((current) => ({ ...current, phone: e.target.value }))}
-                  autoComplete="tel"
-                  required
-                />
-                <Input
-                  label={t('profile.email')}
-                  value={contactProfile.email || user.email || ''}
-                  disabled
-                  readOnly
-                />
-              </div>
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-textSecondary">{t('profile.contactInfoDescription')}</span>
-                <Link href="/profil/kontakti" className="text-primary hover:underline">
-                  {t('profile.openContactInfo')}
-                </Link>
-              </div>
+              {contactLoading ? (
+                <div className="flex items-center gap-2 text-sm text-textSecondary">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  {t('common.loading')}
+                </div>
+              ) : showContactFields ? (
+                <>
+                  <p className="text-sm text-textSecondary">
+                    {hasSavedContactInfo ? t('profile.contactInfoEditingHint') : t('profile.contactInfoRequiredHint')}
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Input
+                      label={t('profile.name')}
+                      placeholder={t('addProperty.form.namePlaceholder')}
+                      value={contactProfile.name}
+                      onChange={(e) => setContactProfile((current) => ({ ...current, name: e.target.value }))}
+                      autoComplete="name"
+                      required
+                    />
+                    <Input
+                      label={t('profile.phone')}
+                      placeholder={t('addProperty.form.phonePlaceholder')}
+                      value={contactProfile.phone}
+                      onChange={(e) => setContactProfile((current) => ({ ...current, phone: e.target.value }))}
+                      autoComplete="tel"
+                      required
+                    />
+                    <Input
+                      label={t('profile.email')}
+                      value={contactProfile.email || user.email || ''}
+                      disabled
+                      readOnly
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-textSecondary">{t('profile.contactInfoDescription')}</span>
+                    <Link href="/profil/kontakti" className="text-primary hover:underline">
+                      {t('profile.openContactInfo')}
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-textSecondary">
+                    {t('profile.contactInfoAutoFilledHint')}
+                  </p>
+                  <div className="rounded-xl border border-border bg-surface px-4 py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <div className="mb-1 text-xs uppercase tracking-wide text-textSecondary">{t('profile.name')}</div>
+                        <div className="text-sm font-medium text-text">{contactProfile.name}</div>
+                      </div>
+                      <div>
+                        <div className="mb-1 text-xs uppercase tracking-wide text-textSecondary">{t('profile.phone')}</div>
+                        <div className="text-sm font-medium text-text">{contactProfile.phone}</div>
+                      </div>
+                      <div>
+                        <div className="mb-1 text-xs uppercase tracking-wide text-textSecondary">{t('profile.email')}</div>
+                        <div className="text-sm font-medium text-text">{contactProfile.email || user.email || ''}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-textSecondary">{t('profile.contactInfoPublishingHint')}</span>
+                    <div className="flex items-center gap-4">
+                      <button
+                        type="button"
+                        className="text-primary hover:underline"
+                        onClick={() => setShowSavedContactSummary(false)}
+                      >
+                        {t('common.edit')}
+                      </button>
+                      <Link href="/profil/kontakti" className="text-primary hover:underline">
+                        {t('profile.openContactInfo')}
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 

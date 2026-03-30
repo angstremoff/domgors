@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildContactProfileUpsert,
+  hasCompleteContactProfile,
   getContactProfileValidationError,
   normalizeContactProfile,
 } from '../contactProfile';
@@ -26,6 +27,11 @@ describe('contactProfile helpers', () => {
     expect(getContactProfileValidationError({ name: '', phone: '+381600000000' })).toBe('name');
     expect(getContactProfileValidationError({ name: 'Ivan', phone: '   ' })).toBe('phone');
     expect(getContactProfileValidationError({ name: 'Ivan', phone: '+381600000000' })).toBeNull();
+  });
+
+  it('detects whether contact profile is complete', () => {
+    expect(hasCompleteContactProfile({ name: 'Ivan', phone: '+381600000000' })).toBe(true);
+    expect(hasCompleteContactProfile({ name: 'Ivan', phone: '' })).toBe(false);
   });
 
   it('builds a trimmed upsert payload without touching created_at', () => {
