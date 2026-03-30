@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Bed, Maximize, Phone, Share2, Heart, Building2 } from 'lucide-react';
+import { Map, MapPin, Bed, Maximize, Phone, Share2, Heart, Building2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { PropertyGallery } from './PropertyGallery';
@@ -125,19 +125,25 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
                 <Heart className="h-5 w-5" />
               </Button>
             </div>
-            <div className="flex items-center text-textSecondary mb-4">
+            <div className="mb-4 flex items-center text-textSecondary">
               <MapPin className="h-5 w-5 mr-2" />
               <span>
                 {translatedDistrict && `${translatedDistrict}, `}
                 {translatedCity}
               </span>
+              {propertyCoordinates ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleScrollToMap}
+                  className="ml-1 h-8 w-8 shrink-0 p-0 text-primary hover:bg-primary/10"
+                  aria-label={t('property.viewOnMap')}
+                  title={t('property.viewOnMap')}
+                >
+                  <Map className="h-4 w-4" />
+                </Button>
+              ) : null}
             </div>
-            {propertyCoordinates ? (
-              <Button variant="outline" size="sm" onClick={handleScrollToMap}>
-                <MapPin className="mr-2 h-4 w-4" />
-                {t('property.viewOnMap')}
-              </Button>
-            ) : null}
             <p className="text-4xl font-bold text-primary">{price}</p>
           </div>
 
