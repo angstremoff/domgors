@@ -6,11 +6,13 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, Upload, X, Check, MapPin, ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
+import { PropertyCoordinateSelector } from '@/components/property/PropertyCoordinateSelector';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Link from 'next/link';
 import type { Database } from '@shared/lib/database.types';
+import { getCityMapCoordinates, parseMapCoordinates, serializeMapCoordinates, type MapCoordinates } from '@shared/utils/mapCoordinates';
 import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '@shared/utils/propertyRules';
 
 type City = Database['public']['Tables']['cities']['Row'];
@@ -39,6 +41,7 @@ function EditPropertyContent() {
     const [rooms, setRooms] = useState('');
     const [cityId, setCityId] = useState('');
     const [districtId, setDistrictId] = useState('');
+    const [coordinates, setCoordinates] = useState<MapCoordinates | null>(null);
     const [location, setLocation] = useState('');
     const [isNewBuilding, setIsNewBuilding] = useState(false);
     const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
@@ -51,8 +54,10 @@ function EditPropertyContent() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const formStateRef = useRef('');
+    const coordinatesInitializedRef = useRef(false);
     const supportsRooms = propertyTypeSupportsRooms(propertyType);
     const districtRequired = districts.length > 0;
+    const selectedCity = cities.find((city) => String(city.id) === cityId) ?? null;
 
     // Загрузка городов
     useEffect(() => {
@@ -107,6 +112,7 @@ function EditPropertyContent() {
             rooms,
             cityId,
             districtId,
+            coordinates,
             location,
             selectedFeaturesLength: selectedFeatures.length,
             existingImagesLength: existingImages.length,
@@ -129,17 +135,28 @@ function EditPropertyContent() {
         rooms,
         cityId,
         districtId,
+        coordinates,
         location,
         selectedFeatures.length,
         existingImages.length,
         newFiles.length,
     ]);
 
+    useEffect(() => {
+        if (!selectedCity || coordinatesInitializedRef.current) {
+            return;
+        }
+
+        setCoordinates(getCityMapCoordinates(selectedCity.coordinates));
+        coordinatesInitializedRef.current = true;
+    }, [selectedCity]);
+
     // Загрузка данных объявления
     useEffect(() => {
         if (!propertyId || authLoading) return;
 
         const loadProperty = async () => {
+            coordinatesInitializedRef.current = false;
             const { data, error: fetchError } = await supabase
                 .from('properties')
                 .select('*')
@@ -170,6 +187,9 @@ function EditPropertyContent() {
             setRooms(String(property.rooms || ''));
             setCityId(String(property.city_id || ''));
             setDistrictId(property.district_id || '');
+            const propertyCoordinates = parseMapCoordinates(property.coordinates);
+            setCoordinates(propertyCoordinates);
+            coordinatesInitializedRef.current = propertyCoordinates !== null;
             setLocation(property.location || '');
             setIsNewBuilding(property.is_new_building || false);
             setSelectedFeatures((property.features as string[]) || []);
@@ -185,7 +205,6 @@ function EditPropertyContent() {
         { value: 'house', label: t('property.house') },
         { value: 'commercial', label: t('property.commercial') },
         { value: 'land', label: t('property.land') },
-        { value: 'garage', label: t('property.garage') },
     ];
 
     const featureOptions = [
@@ -223,6 +242,20 @@ function EditPropertyContent() {
         setSelectedFeatures((prev) =>
             prev.includes(value) ? prev.filter((f) => f !== value) : [...prev, value]
         );
+    };
+
+    const handleCityChange = (nextCityId: string) => {
+        setCityId(nextCityId);
+
+        if (!nextCityId) {
+            setCoordinates(null);
+            coordinatesInitializedRef.current = true;
+            return;
+        }
+
+        const nextCity = cities.find((city) => String(city.id) === nextCityId) ?? null;
+        setCoordinates(getCityMapCoordinates(nextCity?.coordinates));
+        coordinatesInitializedRef.current = true;
     };
 
     const uploadNewImages = async () => {
@@ -300,6 +333,7 @@ function EditPropertyContent() {
                 rooms: numericRooms ?? 0,
                 city_id: Number(cityId),
                 district_id: districtId || null,
+                coordinates: serializeMapCoordinates(coordinates ?? getCityMapCoordinates(selectedCity?.coordinates)),
                 location: location.trim(),
                 type: dealType,
                 property_type: propertyType,
@@ -382,7 +416,7 @@ function EditPropertyContent() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <Card>
-                        <CardHeader><CardTitle>{t('property.addProperty.basicInfo')}</CardTitle></CardHeader>
+                        <CardHeader><CardTitle>{t('addProperty.basicInfo')}</CardTitle></CardHeader>
                         <CardContent className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -431,7 +465,7 @@ function EditPropertyContent() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-text mb-2">{t('property.city')}</label>
-                                    <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary" value={cityId} onChange={(e) => setCityId(e.target.value)}>
+                                    <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary" value={cityId} onChange={(e) => handleCityChange(e.target.value)}>
                                         <option value="">{t('common.selectCity')}</option>
                                         {cities.map((city) => (
                                             <option key={city.id} value={city.id}>{t(`cities.${city.name}`, { defaultValue: city.name })}</option>
@@ -454,6 +488,11 @@ function EditPropertyContent() {
                                 </div>
                             </div>
                             <Input label={t('property.address')} value={location} onChange={(e) => setLocation(e.target.value)} />
+                            <PropertyCoordinateSelector
+                                selectedCity={selectedCity}
+                                value={coordinates}
+                                onChange={setCoordinates}
+                            />
                         </CardContent>
                     </Card>
 

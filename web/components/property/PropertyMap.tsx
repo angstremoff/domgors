@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Database } from '@shared/lib/database.types';
+import { parseMapCoordinates } from '@shared/utils/mapCoordinates';
 
 interface PropertyMapProps {
   properties: Property[];
@@ -24,32 +25,8 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
     setMounted(true);
   }, []);
 
-  // Функция извлечения координат
   const extractCoordinates = (property: Property): { lat: number; lng: number } | null => {
-    // Проверяем поле coordinates
-    if (property.coordinates) {
-      try {
-        let coordsObj: { lat?: number | string; lng?: number | string } | null = null;
-
-        if (typeof property.coordinates === 'string') {
-          coordsObj = JSON.parse(property.coordinates);
-        } else if (typeof property.coordinates === 'object' && property.coordinates !== null) {
-          coordsObj = property.coordinates as { lat?: number | string; lng?: number | string };
-        }
-
-        if (coordsObj?.lat !== undefined && coordsObj?.lng !== undefined) {
-          const lat = parseFloat(String(coordsObj.lat));
-          const lng = parseFloat(String(coordsObj.lng));
-          if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            return { lat, lng };
-          }
-        }
-      } catch (error) {
-        console.error('Ошибка парсинга координат:', error);
-      }
-    }
-
-    return null;
+    return parseMapCoordinates(property.coordinates);
   };
 
   // Фильтруем объявления с координатами

@@ -10,6 +10,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { PropertyCoordinateSelector } from './PropertyCoordinateSelector';
 import type { Database, TablesInsert } from '@shared/lib/database.types';
 import {
   fetchContactProfile,
@@ -19,6 +20,7 @@ import {
   type ContactProfileClient,
   type ContactProfile,
 } from '@shared/utils/contactProfile';
+import { getCityMapCoordinates, serializeMapCoordinates, type MapCoordinates } from '@shared/utils/mapCoordinates';
 import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '@shared/utils/propertyRules';
 
 type City = Database['public']['Tables']['cities']['Row'];
@@ -50,6 +52,7 @@ export function AddPropertyForm() {
   const [rooms, setRooms] = useState('');
   const [cityId, setCityId] = useState('');
   const [districtId, setDistrictId] = useState('');
+  const [coordinates, setCoordinates] = useState<MapCoordinates | null>(null);
   const [location, setLocation] = useState('');
   const [isNewBuilding, setIsNewBuilding] = useState(false);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
@@ -69,6 +72,7 @@ export function AddPropertyForm() {
   const districtRequired = districts.length > 0;
   const hasSavedContactInfo = hasCompleteContactProfile(contactProfile);
   const showContactFields = !showSavedContactSummary;
+  const selectedCity = cities.find((city) => String(city.id) === cityId) ?? null;
 
   useEffect(() => {
     previewsRef.current = files.map((f) => f.preview);
@@ -97,6 +101,7 @@ export function AddPropertyForm() {
       rooms,
       cityId,
       districtId,
+      coordinates,
       location,
       showSavedContactSummary,
       contactName: contactProfile.name,
@@ -121,6 +126,7 @@ export function AddPropertyForm() {
     rooms,
     cityId,
     districtId,
+    coordinates,
     location,
     showSavedContactSummary,
     contactProfile.name,
@@ -229,7 +235,6 @@ export function AddPropertyForm() {
     { value: 'house', label: t('property.house') },
     { value: 'commercial', label: t('property.commercial') },
     { value: 'land', label: t('property.land') },
-    { value: 'garage', label: t('property.garage') },
   ];
 
   const featureOptions = [
@@ -273,6 +278,18 @@ export function AddPropertyForm() {
 
     if (prepared.length === 0) return;
     setFiles((prev) => [...prev, ...prepared]);
+  };
+
+  const handleCityChange = (nextCityId: string) => {
+    setCityId(nextCityId);
+
+    if (!nextCityId) {
+      setCoordinates(null);
+      return;
+    }
+
+    const nextCity = cities.find((city) => String(city.id) === nextCityId) ?? null;
+    setCoordinates(getCityMapCoordinates(nextCity?.coordinates));
   };
 
   const removeFile = (preview: string) => {
@@ -384,6 +401,7 @@ export function AddPropertyForm() {
       });
 
       const imageUrls = await uploadImages();
+      const propertyCoordinates = coordinates ?? getCityMapCoordinates(selectedCity?.coordinates);
       const payload: TablesInsert<'properties'> = {
         title: title.trim(),
         description: description.trim(),
@@ -398,6 +416,7 @@ export function AddPropertyForm() {
         is_new_building: isNewBuilding,
         features: selectedFeatures.length ? selectedFeatures : null,
         images: imageUrls,
+        coordinates: serializeMapCoordinates(propertyCoordinates),
         status: 'active',
         user_id: user.id,
       };
@@ -574,7 +593,7 @@ export function AddPropertyForm() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('property.addProperty.basicInfo')}</CardTitle>
+              <CardTitle>{t('addProperty.basicInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -683,7 +702,7 @@ export function AddPropertyForm() {
                   <select
                     className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
                     value={cityId}
-                    onChange={(e) => setCityId(e.target.value)}
+                    onChange={(e) => handleCityChange(e.target.value)}
                   >
                     <option value="">{t('common.selectCity')}</option>
                     {cities.map((city) => (
@@ -725,6 +744,12 @@ export function AddPropertyForm() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 required
+              />
+
+              <PropertyCoordinateSelector
+                selectedCity={selectedCity}
+                value={coordinates}
+                onChange={setCoordinates}
               />
             </CardContent>
           </Card>

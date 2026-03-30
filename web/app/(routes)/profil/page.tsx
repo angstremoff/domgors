@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Heart, Home, LogOut, Phone, Settings } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
-import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -13,6 +12,33 @@ export default function ProfilPage() {
   const { user, signOut, loading } = useAuth();
   const router = useRouter();
   const { t } = useTranslation();
+
+  const menuItems = [
+    {
+      href: '/profil/omiljeno',
+      title: t('profile.favorites'),
+      description: t('profile.favoritesDescription'),
+      icon: Heart,
+    },
+    {
+      href: '/profil/moji-oglasi',
+      title: t('profile.myProperties'),
+      description: t('profile.myPropertiesDescription'),
+      icon: Home,
+    },
+    {
+      href: '/profil/podesavanja',
+      title: t('settings.title'),
+      description: t('profile.settingsDescription'),
+      icon: Settings,
+    },
+    {
+      href: '/profil/kontakti',
+      title: t('profile.contactInfo'),
+      description: t('profile.contactInfoDescription'),
+      icon: Phone,
+    },
+  ];
 
   const handleLogout = async () => {
     await signOut();
@@ -47,70 +73,37 @@ export default function ProfilPage() {
 
         {/* Меню */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Избранное */}
-          <Link href="/profil/omiljeno">
-            <Card className="hover:shadow-lg transition-all cursor-pointer">
-              <CardContent className="flex items-center p-6">
-                <Heart className="h-12 w-12 text-primary mr-4" />
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <Link key={item.href} href={item.href} className="block h-full">
+                <Card className="h-full cursor-pointer transition-all hover:shadow-lg">
+                  <CardContent className="flex h-full min-h-[132px] items-start gap-4 p-6">
+                    <Icon className="mt-1 h-10 w-10 shrink-0 text-primary" />
+                    <div className="min-w-0">
+                      <h3 className="mb-1 text-xl font-semibold text-text">{item.title}</h3>
+                      <p className="text-sm leading-6 text-textSecondary">{item.description}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-6">
+          <button type="button" className="block w-full text-left" onClick={handleLogout}>
+            <Card className="cursor-pointer border-error/25 transition-all hover:border-error/40 hover:shadow-lg">
+              <CardContent className="flex min-h-[112px] items-start gap-4 p-6">
+                <LogOut className="mt-1 h-10 w-10 shrink-0 text-error" />
                 <div>
-                  <h3 className="text-xl font-semibold text-text mb-1">{t('profile.favorites')}</h3>
-                  <p className="text-sm text-textSecondary">{t('profile.favoritesDescription')}</p>
+                  <h3 className="mb-1 text-xl font-semibold text-text">{t('common.logout')}</h3>
+                  <p className="text-sm leading-6 text-textSecondary">{t('profile.logoutDescription')}</p>
                 </div>
               </CardContent>
             </Card>
-          </Link>
-
-          {/* Мои объявления */}
-          <Link href="/profil/moji-oglasi">
-            <Card className="hover:shadow-lg transition-all cursor-pointer">
-              <CardContent className="flex items-center p-6">
-                <Home className="h-12 w-12 text-primary mr-4" />
-                <div>
-                  <h3 className="text-xl font-semibold text-text mb-1">{t('profile.myProperties')}</h3>
-                  <p className="text-sm text-textSecondary">{t('profile.myPropertiesDescription')}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          {/* Настройки */}
-          <Link href="/profil/podesavanja">
-            <Card className="hover:shadow-lg transition-all cursor-pointer">
-              <CardContent className="flex items-center p-6">
-                <Settings className="h-12 w-12 text-primary mr-4" />
-                <div>
-                  <h3 className="text-xl font-semibold text-text mb-1">{t('settings.title')}</h3>
-                  <p className="text-sm text-textSecondary">{t('profile.settingsDescription')}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/profil/kontakti">
-            <Card className="hover:shadow-lg transition-all cursor-pointer">
-              <CardContent className="flex items-center p-6">
-                <Phone className="h-12 w-12 text-primary mr-4" />
-                <div>
-                  <h3 className="text-xl font-semibold text-text mb-1">{t('profile.contactInfo')}</h3>
-                  <p className="text-sm text-textSecondary">{t('profile.contactInfoDescription')}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          {/* Выход */}
-          <Card
-            className="hover:shadow-lg transition-all cursor-pointer"
-            onClick={handleLogout}
-          >
-            <CardContent className="flex items-center p-6">
-              <LogOut className="h-12 w-12 text-error mr-4" />
-              <div>
-                <h3 className="text-xl font-semibold text-text mb-1">{t('common.logout')}</h3>
-                <p className="text-sm text-textSecondary">{t('profile.logoutDescription')}</p>
-              </div>
-            </CardContent>
-          </Card>
+          </button>
         </div>
       </div>
     </div>

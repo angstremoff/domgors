@@ -149,6 +149,8 @@
     "selectLocationOnMap": "Izaberite lokaciju na mapi",
     "tapMapToSelectLocation": "Dodirnite mapu da izaberete lokaciju",
     "selectedLocation": "Izabrana lokacija",
+    "defaultMapLocationHint": "Ako ne izaberete tačku ručno, koristiće se centar izabranog grada.",
+    "chooseCityForMap": "Prvo izaberite grad.",
     "locationNotSet": "Lokacija nije postavljena",
     "rooms": "Sobe",
     "price": "Cena",

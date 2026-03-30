@@ -200,6 +200,8 @@
     "selectLocationOnMap": "Выберите расположение на карте",
     "tapMapToSelectLocation": "Нажмите на карту, чтобы выбрать расположение",
     "selectedLocation": "Выбранное расположение",
+    "defaultMapLocationHint": "Если точку не выбирать вручную, будет использован центр выбранного города.",
+    "chooseCityForMap": "Сначала выберите город.",
     "locationNotSet": "Расположение не выбрано",
     "location": "Расположение",
     "seller": "Продавец",
