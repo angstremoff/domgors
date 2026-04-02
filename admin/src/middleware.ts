@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PUBLIC_PATHS = ['/login', '/api/login'];
+const PUBLIC_PATHS = ['/admin/login', '/admin/api/login'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === '/robots.txt') {
+  if (pathname === '/admin/robots.txt') {
     const robots = `User-agent: *
 Disallow: /
 
@@ -30,7 +30,7 @@ Disallow: /`;
   const session = request.cookies.get('admin_session');
 
   if (!session) {
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = new URL('/admin/login', request.url);
     return NextResponse.redirect(loginUrl);
   }
 
