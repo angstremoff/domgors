@@ -134,3 +134,15 @@
 - `web/components/profile/ContactProfileForm.tsx`, `src/screens/ContactInfoScreen.tsx` — отдельное редактирование контактных данных в кабинете на web и mobile.
 - `src/services/AppVersionManager.ts` — инвалидация кэшей по версии/сборке.
 - `MEMORY.md` — краткая оперативная память, `all.md` — полный onboarding.
+
+## 12. Админ-панель (/admin)
+- Next.js 15 App Router, отдельное приложение в `/admin`, порт 3001.
+- Использует shared database types из `../src/lib/database.types.ts`.
+- Авторизация: Supabase auth + проверка email (`ADMIN_EMAIL`) + rate limiting (5 попыток → блок 15 мин).
+- Сессия: httpOnly cookie `admin_session`, `sameSite: strict`, TTL 8 часов.
+- CRUD для таблиц: `users`, `agency_profiles`, `properties`.
+- API роуты: `/api/users`, `/api/agencies`, `/api/properties` (+ `/[id]` для PUT/DELETE).
+- Деплой на render.com через `render.yaml`.
+- Переменные окружения: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAIL`, `NEXT_PUBLIC_SITE_URL`.
+- Команды: `npm run dev` (dev), `npm run build` (prod), `npm start` (prod server).
+- Пароль админа: `665708qQ!` (в Supabase Auth → admin@domgo.rs).
