@@ -136,13 +136,18 @@
 - `MEMORY.md` — краткая оперативная память, `all.md` — полный onboarding.
 
 ## 12. Админ-панель (/admin)
-- Next.js 15 App Router, отдельное приложение в `/admin`, порт 3001.
-- Использует shared database types из `../src/lib/database.types.ts`.
-- Авторизация: Supabase auth + проверка email (`ADMIN_EMAIL`) + rate limiting (5 попыток → блок 15 мин).
-- Сессия: httpOnly cookie `admin_session`, `sameSite: strict`, TTL 8 часов.
-- CRUD для таблиц: `users`, `agency_profiles`, `properties`.
-- API роуты: `/api/users`, `/api/agencies`, `/api/properties` (+ `/[id]` для PUT/DELETE).
-- Деплой на render.com через `render.yaml`.
-- Переменные окружения: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAIL`, `NEXT_PUBLIC_SITE_URL`.
+- Next.js 15 App Router, отдельное приложение в `/admin` (не влияет на mobile/web).
+- `basePath: '/admin'` — на продакшене доступно по `https://<render-url>/admin`.
+- Shared database types из `../src/lib/database.types.ts`.
+- Авторизация: Supabase auth (anon client) + проверка email (`ADMIN_EMAIL`).
+- Rate limiting: 5 неудачных попыток → блок 15 мин по IP (in-memory Map).
+- Сессия: httpOnly cookie `admin_session`, `sameSite: strict`, `secure` в prod, TTL 8ч, path `/`.
+- CRUD для таблиц: `users`, `agency_profiles`, `properties` (GET/PUT/DELETE).
+- API: `/api/users`, `/api/agencies`, `/api/properties` (+ `/[id]` для PUT/DELETE).
+- Middleware: принудительный редирект на `/admin/login` без сессии, security headers на все ответы.
+- Security headers: `X-Robots-Tag: noindex`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`.
+- `robots.txt` — полный запрет индексации (User-agent: * Disallow: /).
+- Деплой: render.com, отдельный сервис, `render.yaml` в корне репо, `rootDir: admin`.
+- Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAIL`, `NEXT_PUBLIC_SITE_URL`.
 - Команды: `npm run dev` (dev), `npm run build` (prod), `npm start` (prod server).
-- Пароль админа: `665708qQ!` (в Supabase Auth → admin@domgo.rs).
+- Админ-юзер: `admin@domgo.rs`, пароль: `665708qQ!` (создан в Supabase Auth, email confirmed).

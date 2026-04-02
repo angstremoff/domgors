@@ -491,6 +491,107 @@ APK в проекте нужен в основном для локального
 - Auth-ошибки signup/reset могут идти не только из фронта, но и из live Supabase schema/trigger drift.
 - Без актуального экспорта live-схемы нельзя безопасно делать серьёзные DB/RLS-рефакторы.
 
-## 18. Навигация по документации
+## 18. Админ-панель (/admin)
+
+### 18.1 Что это
+Отдельное Next.js 15 App Router приложение в `/admin` репозитория.
+Не влияет на mobile или web — свои `package.json`, `node_modules`, конфиги.
+
+### 18.2 Структура
+```
+admin/
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx          — корневой layout, meta noindex
+│   │   ├── page.tsx            — пустой (редирект на login)
+│   │   ├── globals.css         — Tailwind
+│   │   ├── login/page.tsx      — страница входа
+│   │   ├── dashboard/page.tsx  — дашборд (server component, проверка сессии)
+│   │   └── api/
+│   │       ├── login/route.ts        — POST: вход + rate limiting
+│   │       ├── logout/route.ts       — POST: выход
+│   │       ├── users/route.ts        — GET: список пользователей
+│   │       ├── users/[id]/route.ts   — PUT/DELETE: редактирование/удаление
+│   │       ├── agencies/route.ts     — GET: список агентств
+│   │       ├── agencies/[id]/route.ts — PUT/DELETE
+│   │       ├── properties/route.ts   — GET: список объявлений
+│   │       └── properties/[id]/route.ts — PUT/DELETE
+│   ├── components/
+│   │   ├── LoginForm.tsx           — форма входа
+│   │   └── DashboardContent.tsx    — табы, таблицы, модалки редактирования
+│   ├── lib/
+│   │   ├── supabase.ts       — anon client (для чтения)
+│   │   ├── supabaseAnon.ts   — anon client (для auth)
+│   │   └── supabaseAdmin.ts  — service_role client (для CRUD)
+│   └── middleware.ts         — защита роутов, security headers, robots.txt
+├── .env.example
+├── .env.local                — не коммитить
+├── next.config.ts            — basePath: '/admin', security headers
+├── tailwind.config.js
+├── tsconfig.json
+└── package.json
+```
+
+### 18.3 basePath и деплой
+- `basePath: '/admin'` в `next.config.ts` — все роуты автоматически префиксуются.
+- На локалке: `http://localhost:3001/admin/login`
+- На render.com: `https://<render-url>/admin/login`
+- `render.yaml` в корне репо: отдельный сервис, `rootDir: admin`.
+
+### 18.4 Авторизация
+- Единственный способ входа: email + password через Supabase Auth (anon client).
+- После успешного входа проверяется `data.user.email === ADMIN_EMAIL`.
+- Сессия хранится в httpOnly cookie `admin_session`.
+- Cookie параметры: `sameSite: strict`, `secure` в production, `maxAge: 8h`, `path: /`.
+- Админ-юзер: `admin@domgo.rs`, пароль: `665708qQ!` (создан в Supabase Auth, email confirmed).
+
+### 18.5 Rate limiting
+- In-memory Map по IP (`x-forwarded-for` / `x-real-ip`).
+- 5 неудачных попыток → блок на 15 минут.
+- После успешного входа счётчик сбрасывается.
+- Очистка старых записей при каждом запросе.
+
+### 18.6 Middleware
+- `/admin/login` и `/admin/api/login` — публичные.
+- `/admin/robots.txt` — отдаёт `Disallow: /` для всех ботов.
+- Все остальные пути: без cookie → редирект на `/admin/login`.
+- Security headers на все ответы:
+  - `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet`
+  - `X-Frame-Options: DENY`
+  - `X-Content-Type-Options: nosniff`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+
+### 18.7 API роуты
+Все API роуты (кроме `/api/login`) требуют валидную сессию:
+- `verifyAdmin()` — проверяет cookie через `supabaseAnon.auth.getUser(token)` + сверяет email с `ADMIN_EMAIL`.
+- CRUD операции выполняются через `supabaseAdmin` (service_role key).
+- Без сессии → `401 Unauthorized`.
+
+### 18.8 Переменные окружения
+| Переменная | Описание |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL Supabase проекта |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon ключ Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role ключ (секретный, для CRUD) |
+| `ADMIN_EMAIL` | Email администратора (должен совпадать с auth user) |
+| `NEXT_PUBLIC_SITE_URL` | Базовый URL (для редиректов) |
+
+### 18.9 Команды
+```bash
+cd admin
+npm install        # установка зависимостей
+npm run dev        # dev server на порту 3001
+npm run build      # production build
+npm start          # production server
+```
+
+### 18.10 Важные ограничения
+- Нет добавления записей (только редактирование и удаление существующих).
+- Нет пагинации на больших таблицах (загружает все записи).
+- Rate limiting in-memory (не persists между рестартами).
+- На production service_role key должен быть защищён в env переменных render.com.
+
+## 19. Навигация по документации
 - [MEMORY.md](/Users/angstremoff/Documents/GitHub/domgomobile/MEMORY.md) — краткая оперативная память
 - [all.md](/Users/angstremoff/Documents/GitHub/domgomobile/all.md) — полный onboarding-файл
