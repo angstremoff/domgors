@@ -147,7 +147,8 @@
 - Middleware: принудительный редирект на `/admin/login` без сессии, security headers на все ответы.
 - Security headers: `X-Robots-Tag: noindex`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`.
 - `robots.txt` — полный запрет индексации (User-agent: * Disallow: /).
-- Деплой: render.com, отдельный сервис, `render.yaml` в корне репо, `rootDir: admin`.
+- Ветка `admin-only` — минимальная (~30 файлов): только `admin/`, `src/lib/database.types.ts`, `render.yaml`, `package.json`, `tsconfig.json`, документация.
+- Деплой: render.com, ветка `admin-only`, отдельный Web Service, `rootDir: admin`.
 - Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAIL`, `NEXT_PUBLIC_SITE_URL`.
 - Команды: `npm run dev` (dev), `npm run build` (prod), `npm start` (prod server).
 - Админ-юзер: `admin@domgo.rs`, пароль: `665708qQ!` (создан в Supabase Auth, email confirmed).
