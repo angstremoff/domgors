@@ -199,6 +199,11 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
   };
 
   const pickImage = async () => {
+    if (images.length >= 20) {
+      showErrorAlert(t('addProperty.validation.maxPhotosReached'));
+      return;
+    }
+    
     try {
       Logger.debug('Запрос на выбор изображения...');
       

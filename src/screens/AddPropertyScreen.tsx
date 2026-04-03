@@ -188,7 +188,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
   };
 
   const pickImage = async () => {
-    if (images.length >= 10) {
+    if (images.length >= 20) {
       showErrorAlert(t('addProperty.validation.maxPhotosReached'));
       return;
     }
@@ -1044,7 +1044,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
           </TouchableOpacity>
           
           <Text style={[styles.photoNote, { color: theme.secondary }]}>
-            {t('addProperty.form.maxPhotos', { count: 10 })} ({images.length}/10)
+            {t('addProperty.form.maxPhotos', { count: 20 })} ({images.length}/20)
           </Text>
           
           {images.length > 0 && (

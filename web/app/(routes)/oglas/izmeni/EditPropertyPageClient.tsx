@@ -19,7 +19,7 @@ type City = Database['public']['Tables']['cities']['Row'];
 type District = Database['public']['Tables']['districts']['Row'];
 type Property = Database['public']['Tables']['properties']['Row'];
 
-const MAX_IMAGES = 10;
+const MAX_IMAGES = 20;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 

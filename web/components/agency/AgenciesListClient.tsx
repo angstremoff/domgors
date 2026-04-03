@@ -58,10 +58,6 @@ export function AgenciesListClient({
   }, [initialCities.length, supabase]);
 
   useEffect(() => {
-    if (initialAgencies.length > 0) {
-      setLoading(false);
-      return;
-    }
     const loadAgencies = async () => {
       const { data, error: fetchError } = await supabase
         .from('agency_profiles')
@@ -78,7 +74,7 @@ export function AgenciesListClient({
     };
 
     loadAgencies();
-  }, [initialAgencies.length, supabase]);
+  }, [supabase]);
 
   // Фильтрация агентств по городу
   const filteredAgencies = useMemo(() => {
