@@ -36,6 +36,14 @@
   - bucket: `properties`
   - path: `property-images/<userId>/<filename>`
   - удаление только через извлечение storage path из URL, а не по одному filename.
+- Фото: максимум 20 на объявление (константа `MAX_IMAGES = 20` в web; hardcoded `>= 20` в mobile).
+- Порядок фото: `images: string[]` — первый элемент = обложка. Web edit-форма использует unified `ImageItem[]` (discriminated union `existing | new`) для reorder всех фото в одном массиве.
+- Web create/edit: reorder кнопки (↑↓★) без drag-and-drop, без внешних зависимостей.
+- Добавлять новые фото можно до 20; превышение — сообщение `addProperty.validation.maxPhotosReached`.
+- `crypto.randomUUID()` не использовать — заменён на `Date.now()-random` для совместимости с HTTP.
+- В state updater (`setImages`/`setFiles`) нельзя вызывать `URL.revokeObjectURL` — это side effect; выносить наружу.
+- Object URLs (`URL.createObjectURL`) нужно чистить через `useEffect` cleanup при unmount через ref.
+- Если `uploadNewImages()` не вернул URL для нового фото — бросать ошибку, а не писать `""` в БД.
 
 ## 5. Auth, email и deep links
 - Auth-канал продуктово только один: `email + password`; phone/SMS auth в текущей архитектуре не используется.
@@ -78,6 +86,7 @@
 
 ## 8. Web-специфика
 - Web-листинги после static export обязаны тихо обновлять объявления из Supabase после монтирования; нельзя полагаться только на `initialProperties`.
+- Список агентств тоже должен делать live fetch при монтировании, а не только использовать static initial data — early return при `initialAgencies.length > 0` убран.
 - Для `/prodaja`, `/izdavanje`, `/novogradnja` initial fetch и client pagination должны использовать общий helper `web/lib/property-listings.ts`, а не копии query по страницам.
 - В `web/components/property/PropertyListingsClient.tsx` initial refresh и infinite scroll должны быть разделены: `IntersectionObserver` нельзя включать до завершения первого refresh, иначе короткие desktop-списки могут задвоить первую страницу.
 - Любое слияние web-листингов делать только с дедупликацией по `property.id`.

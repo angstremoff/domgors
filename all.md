@@ -199,6 +199,7 @@ Web сейчас живёт в режиме static export.
 - Mobile и web теперь опираются на один и тот же нормализованный контракт.
 - Карточки и детали агентств не должны запрашивать несуществующие typed-поля из `agency_profiles`.
 - Загрузка агентства может фолбечиться с `id` на `user_id`, потому что в старых линках/маршрутах иногда передавался именно `users.id`.
+- Web-список агентств (`AgenciesListClient.tsx`) всегда делает live fetch из Supabase при монтировании, даже при наличии static initial data — чтобы новые агентства появлялись без пересборки. Запрос обёрнут в `try/catch/finally` для защиты от вечного спиннера при сетевой ошибке.
 
 ## 8. Auth и email-потоки
 
@@ -323,6 +324,8 @@ Email templates живут не в репозитории, а в Supabase Dashbo
 - [authErrorMessage.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/authErrorMessage.ts)
 
 ## 9. Storage и изображения
+
+### 9.1 Путь и bucket
 - Bucket для фото объявлений: `properties`
 - Рабочая папка: `property-images/<userId>/<filename>`
 - Формат path централизован в:
@@ -331,6 +334,33 @@ Email templates живут не в репозитории, а в Supabase Dashbo
 Важно:
 - web и mobile должны грузить изображения по одному и тому же path-контракту;
 - удаление файлов должно идти через извлечение реального storage path из URL, а не по одному имени файла.
+
+### 9.2 Лимит фото
+- Максимум 20 фотографий на объявление.
+- Web: константа `MAX_IMAGES = 20` в `AddPropertyForm.tsx` и `EditPropertyPageClient.tsx`.
+- Mobile: hardcoded `>= 20` проверка в `AddPropertyScreen.tsx` и `EditPropertyScreen.tsx`.
+- Ключ перевода: `addProperty.validation.maxPhotosReached` — есть в ru/sr, mobile/web.
+
+### 9.3 Порядок фотографий (reorder)
+- В БД порядок фото = порядок элементов в `images: string[]`; первый элемент = обложка.
+- Web edit-форма (`EditPropertyPageClient.tsx`) использует unified state:
+  ```ts
+  type ImageItem =
+    | { id: string; type: 'existing'; url: string }
+    | { id: string; type: 'new'; file: File; preview: string };
+  ```
+  Это позволяет переставлять существующие и новые фото как единый список.
+- Reorder UI: кнопки ↑↓ (пошаговое перемещение) и ★ (сделать обложкой). Без внешних DnD-библиотек.
+- Web add-форма (`AddPropertyForm.tsx`) — reorder поверх существующего `files[]`.
+- Mobile edit (`EditPropertyScreen.tsx`) — reorder уже был реализован ранее.
+
+### 9.4 Технические правила работы с фото
+- `crypto.randomUUID()` НЕ использовать — нет на HTTP. Использовать `Date.now()-random`.
+- Object URLs (`URL.createObjectURL`) нужно чистить при unmount через `useEffect` cleanup + ref.
+- `URL.revokeObjectURL` нельзя вызывать внутри state updater (`setState`) — это side effect.
+- Если upload нового фото не вернул URL — бросать ошибку, а не тихо писать `""` в БД.
+- ID для `existing` фото = URL (надёжно, т.к. URLs уникальны).
+- `uploadNewImages()` возвращает `Map<id, url>` для сохранения порядка при сборке финального `string[]`.
 
 ## 10. Deep links, sharing и навигация
 
@@ -476,6 +506,16 @@ APK в проекте нужен в основном для локального
 - `land` — отдельный кейс во всём: create/edit, фильтры, карточки, детали.
 - `agency_profiles` typed-схема ограничена `email/site/location`; не придумывать новые колонки в запросах.
 - Storage path фото должен быть единым для web и mobile.
+- Максимум 20 фото на объявление (`MAX_IMAGES = 20`); в mobile —hardcoded `>= 20`.
+- Порядок фото = порядок в `images: string[]`; первый = обложка.
+- Web edit-форма: unified `ImageItem[]` (existing | new) для reorder всех фото.
+- Web create/edit: reorder кнопки ↑↓★, без drag-and-drop, Без внешних зависимостей.
+- `crypto.randomUUID()` не использовать — `Date.now()-random`.
+- В state updater нельзя вызывать `URL.revokeObjectURL` — это side effect.
+- Object URLs чистить через `useEffect` cleanup при unmount через ref.
+- `uploadNewImages()` при отсутствии URL бросает ошибку, не писать `""` в БД.
+- `addProperty.validation.maxPhotosReached` — обязательный ключ в переводах ru/sr.
+
 - Web-листинги нельзя склеивать сырыми массивами; только merge с дедупликацией по `property.id`.
 - В web-листингах сначала завершать initial refresh, потом включать infinite scroll.
 - Быстрые web-фильтры и sidebar должны писать в один canonical filter state.
