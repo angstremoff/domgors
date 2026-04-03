@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { Loader2, Save, UserRound, Phone, Mail } from 'lucide-react';
+import { Loader2, Save, UserRound, Phone, Mail, Building2, Upload, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
@@ -16,6 +16,13 @@ import {
   type ContactProfileClient,
   type ContactProfile,
 } from '@shared/utils/contactProfile';
+import {
+  fetchAgencyProfileByUserId,
+  upsertAgencyProfile,
+  uploadAgencyLogo,
+  type AgencyProfileFormData,
+  type AgencySupabaseClient,
+} from '@shared/utils/agencyProfile';
 
 const EMPTY_CONTACT_PROFILE: ContactProfile = {
   name: '',
@@ -24,26 +31,33 @@ const EMPTY_CONTACT_PROFILE: ContactProfile = {
   avatar_url: null,
 };
 
+const EMPTY_AGENCY_PROFILE: AgencyProfileFormData = {
+  name: '',
+  email: '',
+  site: '',
+  location: '',
+  logo_url: '',
+};
+
 export function ContactProfileForm() {
   const { t } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const supabase = useMemo(() => createClient(), []);
   const contactSupabase = supabase as unknown as ContactProfileClient;
+  const agencySupabase = supabase as unknown as AgencySupabaseClient;
   const [profile, setProfile] = useState<ContactProfile>(EMPTY_CONTACT_PROFILE);
+  const [agencyProfile, setAgencyProfile] = useState<AgencyProfileFormData | null>(null);
+  const [isAgency, setIsAgency] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading) {
-      return;
-    }
-
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    if (authLoading) return;
+    if (!user) { setLoading(false); return; }
 
     let cancelled = false;
 
@@ -51,33 +65,52 @@ export function ContactProfileForm() {
       try {
         setLoading(true);
         const data = await fetchContactProfile(contactSupabase, user.id, user.email || '');
-        if (!cancelled) {
-          setProfile(data);
+        if (!cancelled) setProfile(data);
+
+        const { data: userData } = await supabase
+          .from('users')
+          .select('is_agency')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const userIsAgency = (userData as { is_agency: boolean } | null)?.is_agency === true;
+        if (!cancelled) setIsAgency(userIsAgency);
+
+        if (userIsAgency) {
+          const agencyData = await fetchAgencyProfileByUserId(agencySupabase, user.id);
+          if (!cancelled) {
+            setAgencyProfile(agencyData || { ...EMPTY_AGENCY_PROFILE });
+            if (agencyData?.logo_url) setLogoPreview(agencyData.logo_url);
+          }
         }
       } catch {
-        if (!cancelled) {
-          setError(t('profile.errors.saveFailed'));
-        }
+        if (!cancelled) setError(t('profile.errors.saveFailed'));
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
     void loadProfile();
+    return () => { cancelled = true; };
+  }, [authLoading, contactSupabase, agencySupabase, supabase, t, user]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [authLoading, contactSupabase, t, user]);
+  const handleLogoUpload = useCallback(async (file: File) => {
+    if (!user) return;
+    try {
+      setUploadingLogo(true);
+      const url = await uploadAgencyLogo(agencySupabase, user.id, file);
+      setAgencyProfile((current) => current ? { ...current, logo_url: url } : null);
+      setLogoPreview(url);
+    } catch {
+      setError(t('profile.errors.saveFailed'));
+    } finally {
+      setUploadingLogo(false);
+    }
+  }, [agencySupabase, t, user]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (!user) {
-      return;
-    }
+    if (!user) return;
 
     setError(null);
     setSuccess(null);
@@ -87,7 +120,6 @@ export function ContactProfileForm() {
       setError(t('profile.errors.nameRequired'));
       return;
     }
-
     if (validationError === 'phone') {
       setError(t('profile.errors.phoneRequired'));
       return;
@@ -101,6 +133,11 @@ export function ContactProfileForm() {
         profile,
       });
       setProfile(savedProfile);
+
+      if (isAgency && agencyProfile) {
+        await upsertAgencyProfile(agencySupabase, user.id, agencyProfile);
+      }
+
       setSuccess(t('profile.contactInfoSaved'));
     } catch {
       setError(t('profile.errors.saveFailed'));
@@ -145,7 +182,6 @@ export function ContactProfileForm() {
             {error}
           </div>
         )}
-
         {success && (
           <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3 text-green-600 dark:text-green-400">
             {success}
@@ -203,13 +239,98 @@ export function ContactProfileForm() {
             </div>
           </div>
 
+          {isAgency && agencyProfile && (
+            <div className="border-t border-border pt-6 mt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Building2 className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-semibold text-text">{t('agency.title')}</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-text mb-2">{t('agency.logo', 'Логотип')}</label>
+                  <div className="flex items-center gap-4">
+                    {logoPreview ? (
+                      <div className="relative">
+                        <img src={logoPreview} alt="Logo" className="h-16 w-16 rounded-lg object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLogoPreview(null);
+                            setAgencyProfile((current) => current ? { ...current, logo_url: '' } : null);
+                          }}
+                          className="absolute -top-1 -right-1 rounded-full bg-black/60 p-0.5 text-white"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-primary/10">
+                        <Building2 className="h-8 w-8 text-primary" />
+                      </div>
+                    )}
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-4 py-2 text-sm text-text hover:border-primary">
+                      {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      <span>{t('addProperty.addProperty.addPhoto', 'Загрузить')}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) void handleLogoUpload(file);
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <Input
+                  label={t('agency.title', 'Агентство')}
+                  value={agencyProfile.name}
+                  onChange={(event) => setAgencyProfile((current) => current ? { ...current, name: event.target.value } : null)}
+                  placeholder={t('agency.title', 'Название агентства')}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label={t('profile.email')}
+                    value={agencyProfile.email}
+                    onChange={(event) => setAgencyProfile((current) => current ? { ...current, email: event.target.value } : null)}
+                    placeholder="agency@example.com"
+                  />
+                  <Input
+                    label={t('profile.phone')}
+                    value={profile.phone}
+                    disabled
+                    readOnly
+                  />
+                </div>
+
+                <Input
+                  label="Telegram / Сайт"
+                  value={agencyProfile.site}
+                  onChange={(event) => setAgencyProfile((current) => current ? { ...current, site: event.target.value } : null)}
+                  placeholder="@username, t.me/... или https://..."
+                />
+
+                <Input
+                  label={t('property.addProperty.location', 'Адрес')}
+                  value={agencyProfile.location}
+                  onChange={(event) => setAgencyProfile((current) => current ? { ...current, location: event.target.value } : null)}
+                  placeholder={t('property.addProperty.propertyAddressPlaceholder', 'Адрес агентства')}
+                />
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-3">
             <Link href="/profil">
               <Button type="button" variant="outline">
                 {t('common.back')}
               </Button>
             </Link>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving || uploadingLogo}>
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
               {t('common.save')}
             </Button>

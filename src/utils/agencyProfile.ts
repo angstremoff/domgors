@@ -82,6 +82,110 @@ export const formatAgencyTelegramUrl = (telegram?: string | null): string | null
   return `https://t.me/${normalizedTelegram.replace(/^\/+/, '')}`;
 };
 
+export interface AgencyProfileFormData {
+  name: string;
+  email: string;
+  site: string;
+  location: string;
+  logo_url: string;
+}
+
+export type AgencySupabaseClient = {
+  from: (table: 'agency_profiles') => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        maybeSingle: () => Promise<{ data: AgencyProfileRow | null; error: unknown | null }>;
+      };
+    };
+    upsert: (values: Record<string, unknown>, options: { onConflict: string }) => {
+      select: (columns: string) => {
+        single: () => Promise<{ data: AgencyProfileRow | null; error: unknown | null }>;
+      };
+    };
+  };
+  storage: {
+    from: (bucket: string) => {
+      upload: (path: string, body: Blob | File, options?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown | null }>;
+      getPublicUrl: (path: string) => { data: { publicUrl: string } };
+    };
+  };
+};
+
+export const fetchAgencyProfileByUserId = async (
+  supabase: AgencySupabaseClient,
+  userId: string,
+): Promise<AgencyProfileFormData | null> => {
+  const { data, error } = await supabase
+    .from('agency_profiles')
+    .select('id, name, email, site, location, logo_url')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    name: (data as Record<string, unknown>).name as string || '',
+    email: (data as Record<string, unknown>).email as string || '',
+    site: (data as Record<string, unknown>).site as string || '',
+    location: (data as Record<string, unknown>).location as string || '',
+    logo_url: (data as Record<string, unknown>).logo_url as string || '',
+  };
+};
+
+export const upsertAgencyProfile = async (
+  supabase: AgencySupabaseClient,
+  userId: string,
+  data: AgencyProfileFormData,
+): Promise<AgencyProfileFormData> => {
+  const payload = {
+    user_id: userId,
+    name: data.name || null,
+    email: data.email || null,
+    site: data.site || null,
+    location: data.location || null,
+    logo_url: data.logo_url || null,
+  };
+
+  const { data: result, error } = await supabase
+    .from('agency_profiles')
+    .upsert(payload, { onConflict: 'user_id' })
+    .select('name, email, site, location, logo_url')
+    .single();
+
+  if (error) throw error;
+  if (!result) throw new Error('Agency profile upsert returned no data');
+
+  return {
+    name: (result as Record<string, unknown>).name as string || '',
+    email: (result as Record<string, unknown>).email as string || '',
+    site: (result as Record<string, unknown>).site as string || '',
+    location: (result as Record<string, unknown>).location as string || '',
+    logo_url: (result as Record<string, unknown>).logo_url as string || '',
+  };
+};
+
+export const uploadAgencyLogo = async (
+  supabase: AgencySupabaseClient,
+  userId: string,
+  file: Blob | File,
+): Promise<string> => {
+  const ext = file instanceof File ? (file.name.split('.').pop()?.toLowerCase() || 'jpg') : 'jpg';
+  const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(ext) ? ext : 'jpg';
+  const fileName = `agency-logos/${userId}/${Date.now()}.${safeExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('agency-logos')
+    .upload(fileName, file, {
+      contentType: file instanceof File ? file.type || `image/${safeExt}` : `image/${safeExt}`,
+      upsert: true,
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from('agency-logos').getPublicUrl(fileName);
+  return data.publicUrl;
+};
+
 export const normalizeAgencyProfile = (
   source?: AgencyProfileSource | null
 ): NormalizedAgencyProfile | null => {
