@@ -36,6 +36,20 @@ const EMPTY_CONTACT_PROFILE: ContactProfile = {
   avatar_url: null,
 };
 
+type FieldErrors = {
+  city?: boolean;
+  district?: boolean;
+  title?: boolean;
+  price?: boolean;
+  area?: boolean;
+  rooms?: boolean;
+  location?: boolean;
+  description?: boolean;
+  contactName?: boolean;
+  contactPhone?: boolean;
+  photos?: boolean;
+};
+
 export function AddPropertyForm() {
   const { t } = useTranslation();
   const router = useRouter();
@@ -63,12 +77,23 @@ export function AddPropertyForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [cityError, setCityError] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [contactLoading, setContactLoading] = useState(true);
   const [showSavedContactSummary, setShowSavedContactSummary] = useState(false);
   const [contactProfile, setContactProfile] = useState<ContactProfile>(EMPTY_CONTACT_PROFILE);
   const previewsRef = useRef<string[]>([]);
   const formStateRef = useRef('');
+  const contactNameRef = useRef<HTMLDivElement>(null);
+  const contactPhoneRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const priceRef = useRef<HTMLDivElement>(null);
+  const areaRef = useRef<HTMLDivElement>(null);
+  const roomsRef = useRef<HTMLDivElement>(null);
+  const cityRef = useRef<HTMLDivElement>(null);
+  const districtRef = useRef<HTMLDivElement>(null);
+  const locationRef = useRef<HTMLDivElement>(null);
+  const descriptionRef = useRef<HTMLDivElement>(null);
+  const photosRef = useRef<HTMLDivElement>(null);
   const supportsRooms = propertyTypeSupportsRooms(propertyType);
   const districtRequired = districts.length > 0;
   const hasSavedContactInfo = hasCompleteContactProfile(contactProfile);
@@ -113,6 +138,10 @@ export function AddPropertyForm() {
 
     if (formStateRef.current && formStateRef.current !== nextFormState && error) {
       setError(null);
+    }
+
+    if (formStateRef.current && formStateRef.current !== nextFormState) {
+      setFieldErrors({});
     }
 
     formStateRef.current = nextFormState;
@@ -283,7 +312,7 @@ export function AddPropertyForm() {
 
   const handleCityChange = (nextCityId: string) => {
     setCityId(nextCityId);
-    setCityError(false);
+    setFieldErrors((prev) => ({ ...prev, city: false, district: false }));
 
     if (!nextCityId) {
       setCoordinates(null);
@@ -361,6 +390,17 @@ export function AddPropertyForm() {
     return uploaded;
   };
 
+  const clearFieldError = (field: keyof FieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      return { ...prev, [field]: false };
+    });
+  };
+
+  const scrollToRef = (ref: React.RefObject<HTMLDivElement | null>) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError(null);
@@ -383,37 +423,69 @@ export function AddPropertyForm() {
       return;
     }
 
-    if (!cityId) {
-      setCityError(true);
-    }
-
-    if (
-      !cityId ||
-      !title.trim() ||
-      !description.trim() ||
-      !location.trim() ||
-      !price ||
-      !area ||
-      (supportsRooms && !rooms) ||
-      (districtRequired && !districtId)
-    ) {
-      setError(t('property.addProperty.validation.fillAllFields'));
-      return;
-    }
-
+    const errors: FieldErrors = {};
     const contactValidationError = getContactProfileValidationError(contactProfile);
+
     if (contactValidationError === 'name') {
-      setError(t('profile.errors.nameRequired'));
-      return;
+      errors.contactName = true;
     }
-
     if (contactValidationError === 'phone') {
-      setError(t('profile.errors.phoneRequired'));
-      return;
+      errors.contactPhone = true;
+    }
+    if (!title.trim()) {
+      errors.title = true;
+    }
+    if (!price) {
+      errors.price = true;
+    }
+    if (!area) {
+      errors.area = true;
+    }
+    if (supportsRooms && !rooms) {
+      errors.rooms = true;
+    }
+    if (!cityId) {
+      errors.city = true;
+    }
+    if (districtRequired && !districtId) {
+      errors.district = true;
+    }
+    if (!location.trim()) {
+      errors.location = true;
+    }
+    if (!description.trim()) {
+      errors.description = true;
+    }
+    if (files.length === 0) {
+      errors.photos = true;
     }
 
-    if (files.length === 0) {
-      setError(t('property.addProperty.validation.addAtLeastOnePhoto'));
+    setFieldErrors(errors);
+
+    if (Object.values(errors).some(Boolean)) {
+      const scrollOrder: (keyof FieldErrors)[] = [
+        'contactName', 'contactPhone',
+        'title', 'price', 'area', 'rooms',
+        'city', 'district', 'location',
+        'description', 'photos',
+      ];
+      const firstErrorField = scrollOrder.find((f) => errors[f]);
+      const refMap: Record<string, React.RefObject<HTMLDivElement | null>> = {
+        contactName: contactNameRef,
+        contactPhone: contactPhoneRef,
+        title: titleRef,
+        price: priceRef,
+        area: areaRef,
+        rooms: roomsRef,
+        city: cityRef,
+        district: districtRef,
+        location: locationRef,
+        description: descriptionRef,
+        photos: photosRef,
+      };
+      if (firstErrorField) {
+        scrollToRef(refMap[firstErrorField]);
+      }
       return;
     }
 
@@ -458,7 +530,6 @@ export function AddPropertyForm() {
 
       const { data, error: insertError } = await supabase
         .from('properties')
-        // Render ломает типы, поэтому приводим к any, чтобы не падал билд
         .insert(payload as any)
         .select('id')
         .single();
@@ -555,22 +626,28 @@ export function AddPropertyForm() {
                     {hasSavedContactInfo ? t('profile.contactInfoEditingHint') : t('profile.contactInfoRequiredHint')}
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Input
-                      label={t('profile.name')}
-                      placeholder={t('addProperty.form.namePlaceholder')}
-                      value={contactProfile.name}
-                      onChange={(e) => setContactProfile((current) => ({ ...current, name: e.target.value }))}
-                      autoComplete="name"
-                      required
-                    />
-                    <Input
-                      label={t('profile.phone')}
-                      placeholder={t('addProperty.form.phonePlaceholder')}
-                      value={contactProfile.phone}
-                      onChange={(e) => setContactProfile((current) => ({ ...current, phone: e.target.value }))}
-                      autoComplete="tel"
-                      required
-                    />
+                    <div ref={contactNameRef}>
+                      <Input
+                        label={t('profile.name')}
+                        placeholder={t('addProperty.form.namePlaceholder')}
+                        value={contactProfile.name}
+                        onChange={(e) => { setContactProfile((current) => ({ ...current, name: e.target.value })); clearFieldError('contactName'); }}
+                        autoComplete="name"
+                        error={fieldErrors.contactName ? t('profile.errors.nameRequired') : undefined}
+                        required
+                      />
+                    </div>
+                    <div ref={contactPhoneRef}>
+                      <Input
+                        label={t('profile.phone')}
+                        placeholder={t('addProperty.form.phonePlaceholder')}
+                        value={contactProfile.phone}
+                        onChange={(e) => { setContactProfile((current) => ({ ...current, phone: e.target.value })); clearFieldError('contactPhone'); }}
+                        autoComplete="tel"
+                        error={fieldErrors.contactPhone ? t('profile.errors.phoneRequired') : undefined}
+                        required
+                      />
+                    </div>
                     <Input
                       label={t('profile.email')}
                       value={contactProfile.email || user.email || ''}
@@ -667,44 +744,56 @@ export function AddPropertyForm() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label={t('property.addProperty.propertyTitle')}
-                  placeholder={t('property.addProperty.propertyTitlePlaceholder')}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
-                <Input
-                  type="number"
-                  label={t('property.price')}
-                  placeholder={t('property.pricePlaceholder')}
-                  value={price}
-                  min={0}
-                  onChange={(e) => setPrice(e.target.value)}
-                  required
-                />
+                <div ref={titleRef}>
+                  <Input
+                    label={t('property.addProperty.propertyTitle')}
+                    placeholder={t('property.addProperty.propertyTitlePlaceholder')}
+                    value={title}
+                    onChange={(e) => { setTitle(e.target.value); clearFieldError('title'); }}
+                    error={fieldErrors.title ? t('property.addProperty.validation.titleRequired') : undefined}
+                    required
+                  />
+                </div>
+                <div ref={priceRef}>
+                  <Input
+                    type="number"
+                    label={t('property.price')}
+                    placeholder={t('property.pricePlaceholder')}
+                    value={price}
+                    min={0}
+                    onChange={(e) => { setPrice(e.target.value); clearFieldError('price'); }}
+                    error={fieldErrors.price ? t('property.addProperty.validation.priceRequired') : undefined}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Input
-                  type="number"
-                  label={t('property.area')}
-                  placeholder={t('property.areaPlaceholder')}
-                  value={area}
-                  min={0}
-                  onChange={(e) => setArea(e.target.value)}
-                  required
-                />
-                {supportsRooms ? (
+                <div ref={areaRef}>
                   <Input
                     type="number"
-                    label={t('property.rooms')}
-                    placeholder={t('property.roomsPlaceholder')}
-                    value={rooms}
+                    label={t('property.area')}
+                    placeholder={t('property.areaPlaceholder')}
+                    value={area}
                     min={0}
-                    onChange={(e) => setRooms(e.target.value)}
+                    onChange={(e) => { setArea(e.target.value); clearFieldError('area'); }}
+                    error={fieldErrors.area ? t('property.addProperty.validation.areaRequired') : undefined}
                     required
                   />
+                </div>
+                {supportsRooms ? (
+                  <div ref={roomsRef}>
+                    <Input
+                      type="number"
+                      label={t('property.rooms')}
+                      placeholder={t('property.roomsPlaceholder')}
+                      value={rooms}
+                      min={0}
+                      onChange={(e) => { setRooms(e.target.value); clearFieldError('rooms'); }}
+                      error={fieldErrors.rooms ? t('property.addProperty.validation.roomsRequired') : undefined}
+                      required
+                    />
+                  </div>
                 ) : (
                   <div />
                 )}
@@ -730,12 +819,12 @@ export function AddPropertyForm() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div ref={cityRef}>
                   <label className="block text-sm font-medium text-text mb-2">
                     {t('property.city')}
                   </label>
                   <select
-                    className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary ${cityError ? 'border-error' : 'border-border'}`}
+                    className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary ${fieldErrors.city ? 'border-error' : 'border-border'}`}
                     value={cityId}
                     onChange={(e) => handleCityChange(e.target.value)}
                   >
@@ -746,19 +835,19 @@ export function AddPropertyForm() {
                       </option>
                     ))}
                   </select>
-                  {cityError && (
+                  {fieldErrors.city && (
                     <p className="mt-1 text-sm text-error">{t('property.addProperty.validation.cityRequired')}</p>
                   )}
                 </div>
 
-                <div>
+                <div ref={districtRef}>
                   <label className="block text-sm font-medium text-text mb-2">
                     {t('property.district')}
                   </label>
                   <select
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                    className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary ${fieldErrors.district ? 'border-error' : 'border-border'}`}
                     value={districtId}
-                    onChange={(e) => setDistrictId(e.target.value)}
+                    onChange={(e) => { setDistrictId(e.target.value); clearFieldError('district'); }}
                     disabled={!cityId || districtsLoading || districts.length === 0}
                   >
                     <option value="">{districtsLoading ? t('common.loading') : t('common.selectDistrict')}</option>
@@ -768,6 +857,9 @@ export function AddPropertyForm() {
                       </option>
                     ))}
                   </select>
+                  {fieldErrors.district && (
+                    <p className="mt-1 text-sm text-error">{t('property.addProperty.validation.districtRequired')}</p>
+                  )}
                   {cityId && !districtsLoading && districts.length === 0 ? (
                     <p className="mt-2 text-sm text-textSecondary">
                       {t('addProperty.form.noDistricts')}
@@ -776,13 +868,16 @@ export function AddPropertyForm() {
                 </div>
               </div>
 
-              <Input
-                label={t('property.address')}
-                placeholder={t('property.addressPlaceholder')}
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                required
-              />
+              <div ref={locationRef}>
+                <Input
+                  label={t('property.address')}
+                  placeholder={t('property.addressPlaceholder')}
+                  value={location}
+                  onChange={(e) => { setLocation(e.target.value); clearFieldError('location'); }}
+                  error={fieldErrors.location ? t('property.addProperty.validation.addressRequired') : undefined}
+                  required
+                />
+              </div>
 
               <PropertyCoordinateSelector
                 selectedCity={selectedCity}
@@ -797,17 +892,20 @@ export function AddPropertyForm() {
               <CardTitle>{t('property.details')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
+              <div ref={descriptionRef}>
                 <label className="block text-sm font-medium text-text mb-2">
                   {t('property.description')}
                 </label>
                 <textarea
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary min-h-[140px]"
+                  className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary min-h-[140px] ${fieldErrors.description ? 'border-error' : 'border-border'}`}
                   placeholder={t('property.descriptionPlaceholder')}
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => { setDescription(e.target.value); clearFieldError('description'); }}
                   required
                 />
+                {fieldErrors.description && (
+                  <p className="mt-1 text-sm text-error">{t('property.addProperty.validation.descriptionRequired')}</p>
+                )}
               </div>
 
               <div>
@@ -839,11 +937,16 @@ export function AddPropertyForm() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card ref={photosRef}>
             <CardHeader>
               <CardTitle>{t('property.addProperty.photoUpload')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {fieldErrors.photos && (
+                <div className="rounded-lg border border-error/20 bg-error/10 px-4 py-2 text-sm text-error">
+                  {t('property.addProperty.validation.addAtLeastOnePhoto')}
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div className="text-sm text-textSecondary">
                   {t('property.addProperty.youCanAddUpTo')} {MAX_IMAGES} {t('property.addProperty.photosCount')}.{' '}

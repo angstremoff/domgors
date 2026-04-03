@@ -354,7 +354,13 @@
         "cityRequired": "Выберите город",
         "waitForPhotos": "Пожалуйста, дождитесь загрузки всех фотографий",
         "addAtLeastOnePhoto": "Добавьте хотя бы одну фотографию",
-        "maxPhotosReached": "Максимум 20 фотографий"
+        "maxPhotosReached": "Максимум 20 фотографий",
+        "titleRequired": "Введите заголовок объявления",
+        "priceRequired": "Введите цену",
+        "areaRequired": "Введите площадь",
+        "roomsRequired": "Введите количество комнат",
+        "addressRequired": "Введите адрес",
+        "descriptionRequired": "Введите описание"
       },
       "form": {
         "uploadPhoto": "Загрузить фото",

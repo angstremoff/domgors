@@ -27,6 +27,18 @@ type ImageItem =
     | { id: string; type: 'existing'; url: string }
     | { id: string; type: 'new'; file: File; preview: string };
 
+type FieldErrors = {
+    title?: boolean;
+    price?: boolean;
+    area?: boolean;
+    rooms?: boolean;
+    city?: boolean;
+    district?: boolean;
+    location?: boolean;
+    description?: boolean;
+    photos?: boolean;
+};
+
 function EditPropertyContent() {
     const { t } = useTranslation();
     const router = useRouter();
@@ -56,14 +68,34 @@ function EditPropertyContent() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
-    const [cityError, setCityError] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
     const formStateRef = useRef('');
     const coordinatesInitializedRef = useRef(false);
     const imagesRef = useRef<ImageItem[]>([]);
+    const titleRef = useRef<HTMLDivElement>(null);
+    const priceRef = useRef<HTMLDivElement>(null);
+    const areaRef = useRef<HTMLDivElement>(null);
+    const roomsRef = useRef<HTMLDivElement>(null);
+    const cityRef = useRef<HTMLDivElement>(null);
+    const districtRef = useRef<HTMLDivElement>(null);
+    const locationRef = useRef<HTMLDivElement>(null);
+    const descriptionRef = useRef<HTMLDivElement>(null);
+    const photosRef = useRef<HTMLDivElement>(null);
     imagesRef.current = images;
     const supportsRooms = propertyTypeSupportsRooms(propertyType);
     const districtRequired = districts.length > 0;
     const selectedCity = cities.find((city) => String(city.id) === cityId) ?? null;
+
+    const clearFieldError = (field: keyof FieldErrors) => {
+        setFieldErrors((prev) => {
+            if (!prev[field]) return prev;
+            return { ...prev, [field]: false };
+        });
+    };
+
+    const scrollToRef = (ref: React.RefObject<HTMLDivElement | null>) => {
+        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
 
     // Загрузка городов
     useEffect(() => {
@@ -134,6 +166,10 @@ function EditPropertyContent() {
 
         if (formStateRef.current && formStateRef.current !== nextFormState && error) {
             setError(null);
+        }
+
+        if (formStateRef.current && formStateRef.current !== nextFormState) {
+            setFieldErrors({});
         }
 
         formStateRef.current = nextFormState;
@@ -291,7 +327,7 @@ function EditPropertyContent() {
 
     const handleCityChange = (nextCityId: string) => {
         setCityId(nextCityId);
-        setCityError(false);
+        setFieldErrors((prev) => ({ ...prev, city: false, district: false }));
 
         if (!nextCityId) {
             setCoordinates(null);
@@ -337,27 +373,40 @@ function EditPropertyContent() {
             return;
         }
 
-        if (!cityId) {
-            setCityError(true);
-        }
+        const errors: FieldErrors = {};
+        if (!title.trim()) errors.title = true;
+        if (!price) errors.price = true;
+        if (!area) errors.area = true;
+        if (supportsRooms && !rooms) errors.rooms = true;
+        if (!cityId) errors.city = true;
+        if (districtRequired && !districtId) errors.district = true;
+        if (!location.trim()) errors.location = true;
+        if (!description.trim()) errors.description = true;
+        if (images.length === 0) errors.photos = true;
 
-        if (
-            !cityId ||
-            !title.trim() ||
-            !description.trim() ||
-            !location.trim() ||
-            !price ||
-            !area ||
-            (supportsRooms && !rooms) ||
-            (districtRequired && !districtId)
-        ) {
-            setError(t('property.addProperty.validation.fillAllFields'));
-            return;
-        }
+        setFieldErrors(errors);
 
-        const totalImages = images.length;
-        if (totalImages === 0) {
-            setError(t('property.addProperty.validation.addAtLeastOnePhoto'));
+        if (Object.values(errors).some(Boolean)) {
+            const scrollOrder: (keyof FieldErrors)[] = [
+                'title', 'price', 'area', 'rooms',
+                'city', 'district', 'location',
+                'description', 'photos',
+            ];
+            const refMap: Record<string, React.RefObject<HTMLDivElement | null>> = {
+                title: titleRef,
+                price: priceRef,
+                area: areaRef,
+                rooms: roomsRef,
+                city: cityRef,
+                district: districtRef,
+                location: locationRef,
+                description: descriptionRef,
+                photos: photosRef,
+            };
+            const firstErrorField = scrollOrder.find((f) => errors[f]);
+            if (firstErrorField) {
+                scrollToRef(refMap[firstErrorField]);
+            }
             return;
         }
 
@@ -496,14 +545,22 @@ function EditPropertyContent() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Input label={t('property.addProperty.propertyTitle')} value={title} onChange={(e) => setTitle(e.target.value)} required />
-                                <Input type="number" label={t('property.price')} value={price} min={0} onChange={(e) => setPrice(e.target.value)} required />
+                                <div ref={titleRef}>
+                                    <Input label={t('property.addProperty.propertyTitle')} value={title} onChange={(e) => { setTitle(e.target.value); clearFieldError('title'); }} error={fieldErrors.title ? t('property.addProperty.validation.titleRequired') : undefined} required />
+                                </div>
+                                <div ref={priceRef}>
+                                    <Input type="number" label={t('property.price')} value={price} min={0} onChange={(e) => { setPrice(e.target.value); clearFieldError('price'); }} error={fieldErrors.price ? t('property.addProperty.validation.priceRequired') : undefined} required />
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <Input type="number" label={t('property.area')} value={area} min={0} onChange={(e) => setArea(e.target.value)} required />
+                                <div ref={areaRef}>
+                                    <Input type="number" label={t('property.area')} value={area} min={0} onChange={(e) => { setArea(e.target.value); clearFieldError('area'); }} error={fieldErrors.area ? t('property.addProperty.validation.areaRequired') : undefined} required />
+                                </div>
                                 {supportsRooms ? (
-                                    <Input type="number" label={t('property.rooms')} value={rooms} min={0} onChange={(e) => setRooms(e.target.value)} required />
+                                    <div ref={roomsRef}>
+                                        <Input type="number" label={t('property.rooms')} value={rooms} min={0} onChange={(e) => { setRooms(e.target.value); clearFieldError('rooms'); }} error={fieldErrors.rooms ? t('property.addProperty.validation.roomsRequired') : undefined} required />
+                                    </div>
                                 ) : (
                                     <div />
                                 )}
@@ -519,26 +576,29 @@ function EditPropertyContent() {
                         <CardHeader><CardTitle>{t('property.location')}</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
+                                <div ref={cityRef}>
                                     <label className="block text-sm font-medium text-text mb-2">{t('property.city')}</label>
-                                    <select className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary ${cityError ? 'border-error' : 'border-border'}`} value={cityId} onChange={(e) => handleCityChange(e.target.value)}>
+                                    <select className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary ${fieldErrors.city ? 'border-error' : 'border-border'}`} value={cityId} onChange={(e) => handleCityChange(e.target.value)}>
                                         <option value="">{t('common.selectCity')}</option>
                                         {cities.map((city) => (
                                             <option key={city.id} value={city.id}>{t(`cities.${city.name}`, { defaultValue: city.name })}</option>
                                         ))}
                                     </select>
-                                    {cityError && (
+                                    {fieldErrors.city && (
                                         <p className="mt-1 text-sm text-error">{t('property.addProperty.validation.cityRequired')}</p>
                                     )}
                                 </div>
-                                <div>
+                                <div ref={districtRef}>
                                     <label className="block text-sm font-medium text-text mb-2">{t('property.district')}</label>
-                                    <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary" value={districtId} onChange={(e) => setDistrictId(e.target.value)} disabled={!cityId || districtsLoading || districts.length === 0}>
+                                    <select className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary ${fieldErrors.district ? 'border-error' : 'border-border'}`} value={districtId} onChange={(e) => { setDistrictId(e.target.value); clearFieldError('district'); }} disabled={!cityId || districtsLoading || districts.length === 0}>
                                         <option value="">{districtsLoading ? t('common.loading') : t('common.selectDistrict')}</option>
                                         {districts.map((district) => (
                                             <option key={district.id} value={district.id}>{t(`districts.${district.name}`, { defaultValue: district.name })}</option>
                                         ))}
                                     </select>
+                                    {fieldErrors.district && (
+                                        <p className="mt-1 text-sm text-error">{t('property.addProperty.validation.districtRequired')}</p>
+                                    )}
                                     {cityId && !districtsLoading && districts.length === 0 ? (
                                         <p className="mt-2 text-sm text-textSecondary">
                                             {t('addProperty.form.noDistricts')}
@@ -546,7 +606,9 @@ function EditPropertyContent() {
                                     ) : null}
                                 </div>
                             </div>
-                            <Input label={t('property.address')} value={location} onChange={(e) => setLocation(e.target.value)} />
+                            <div ref={locationRef}>
+                                <Input label={t('property.address')} value={location} onChange={(e) => { setLocation(e.target.value); clearFieldError('location'); }} error={fieldErrors.location ? t('property.addProperty.validation.addressRequired') : undefined} />
+                            </div>
                             <PropertyCoordinateSelector
                                 selectedCity={selectedCity}
                                 value={coordinates}
@@ -558,9 +620,12 @@ function EditPropertyContent() {
                     <Card>
                         <CardHeader><CardTitle>{t('property.details')}</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
-                            <div>
+                            <div ref={descriptionRef}>
                                 <label className="block text-sm font-medium text-text mb-2">{t('property.description')}</label>
-                                <textarea className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary min-h-[140px]" value={description} onChange={(e) => setDescription(e.target.value)} />
+                                <textarea className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary min-h-[140px] ${fieldErrors.description ? 'border-error' : 'border-border'}`} value={description} onChange={(e) => { setDescription(e.target.value); clearFieldError('description'); }} />
+                                {fieldErrors.description && (
+                                    <p className="mt-1 text-sm text-error">{t('property.addProperty.validation.descriptionRequired')}</p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-text mb-2">{t('property.features')}</label>
@@ -576,9 +641,14 @@ function EditPropertyContent() {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card ref={photosRef}>
                         <CardHeader><CardTitle>{t('property.addProperty.photoUpload')}</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
+                            {fieldErrors.photos && (
+                                <div className="rounded-lg border border-error/20 bg-error/10 px-4 py-2 text-sm text-error">
+                                    {t('property.addProperty.validation.addAtLeastOnePhoto')}
+                                </div>
+                            )}
                             <div className="flex items-center justify-between">
                                 <div className="text-sm text-textSecondary">
                                     {images.length} / {MAX_IMAGES}

@@ -372,7 +372,13 @@
       "waitForPhotos": "Sačekajte da se fotografije učitaju",
       "addAtLeastOnePhoto": "Dodajte bar jednu fotografiju",
       "fillAllFields": "Popunite sva obavezna polja",
-      "maxPhotosReached": "Maksimalan broj fotografija je 20"
+      "maxPhotosReached": "Maksimalan broj fotografija je 20",
+      "titleRequired": "Unesite naslov oglasa",
+      "priceRequired": "Unesite cenu",
+      "areaRequired": "Unesite površinu",
+      "roomsRequired": "Unesite broj soba",
+      "addressRequired": "Unesite adresu",
+      "descriptionRequired": "Unesite opis"
     },
     "success": "Oglas je uspešno dodat!",
     "failure": "Greška prilikom dodavanja oglasa"
