@@ -173,12 +173,14 @@ export const uploadAgencyLogo = async (
   const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(ext) ? ext : 'jpg';
   const fileName = `${userId}/${Date.now()}.${safeExt}`;
 
-  const { error: uploadError } = await supabase.storage
+  const { data: uploadData, error: uploadError } = await supabase.storage
     .from('agency-logos')
     .upload(fileName, file, {
       contentType: file instanceof File ? file.type || `image/${safeExt}` : `image/${safeExt}`,
       upsert: true,
     });
+
+  console.log('[uploadAgencyLogo] path:', fileName, 'data:', uploadData, 'error:', uploadError);
 
   if (uploadError) throw uploadError;
 
