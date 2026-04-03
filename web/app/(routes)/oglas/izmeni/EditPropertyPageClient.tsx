@@ -468,7 +468,7 @@ function EditPropertyContent() {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                     <Card>
                         <CardHeader><CardTitle>{t('addProperty.basicInfo')}</CardTitle></CardHeader>
                         <CardContent className="space-y-6">

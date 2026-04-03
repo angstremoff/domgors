@@ -536,7 +536,7 @@ export function AddPropertyForm() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <Card>
             <CardHeader>
               <CardTitle>{t('addProperty.contactInfo')}</CardTitle>
