@@ -101,7 +101,8 @@ export function ContactProfileForm() {
       const url = await uploadAgencyLogo(agencySupabase, user.id, file);
       setAgencyProfile((current) => current ? { ...current, logo_url: url } : null);
       setLogoPreview(url);
-    } catch {
+    } catch (err) {
+      console.error('[ContactProfileForm] logo upload failed:', err);
       setError(t('profile.errors.saveFailed'));
     } finally {
       setUploadingLogo(false);
