@@ -254,6 +254,10 @@
     "uploadingPhotos": "Učitavanje fotografija...",
     "errorUpdatingProperty": "Greška prilikom ažuriranja oglasa",
     "errorLoadingCities": "Greška prilikom učitavanja gradova",
+    "mainPhoto": "Glavna fotografija",
+    "makeMainPhoto": "Postavi kao glavnu",
+    "moveUp": "Gore",
+    "moveDown": "Dole",
     "messages": {
       "propertyDeleted": "Oglas je uspešno obrisan"
     },

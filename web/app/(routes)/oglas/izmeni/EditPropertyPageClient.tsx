@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Upload, X, Check, MapPin, ArrowLeft } from 'lucide-react';
+import { Loader2, Upload, X, Check, MapPin, ArrowLeft, ChevronUp, ChevronDown, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { PropertyCoordinateSelector } from '@/components/property/PropertyCoordinateSelector';
@@ -22,6 +22,10 @@ type Property = Database['public']['Tables']['properties']['Row'];
 const MAX_IMAGES = 10;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+
+type ImageItem =
+    | { id: string; type: 'existing'; url: string }
+    | { id: string; type: 'new'; file: File; preview: string };
 
 function EditPropertyContent() {
     const { t } = useTranslation();
@@ -45,8 +49,7 @@ function EditPropertyContent() {
     const [location, setLocation] = useState('');
     const [isNewBuilding, setIsNewBuilding] = useState(false);
     const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
-    const [existingImages, setExistingImages] = useState<string[]>([]);
-    const [newFiles, setNewFiles] = useState<{ file: File; preview: string }[]>([]);
+    const [images, setImages] = useState<ImageItem[]>([]);
     const [cities, setCities] = useState<City[]>([]);
     const [districts, setDistricts] = useState<District[]>([]);
     const [districtsLoading, setDistrictsLoading] = useState(false);
@@ -115,8 +118,7 @@ function EditPropertyContent() {
             coordinates,
             location,
             selectedFeaturesLength: selectedFeatures.length,
-            existingImagesLength: existingImages.length,
-            newFilesLength: newFiles.length,
+            imagesLength: images.length,
         });
 
         if (formStateRef.current && formStateRef.current !== nextFormState && error) {
@@ -138,8 +140,7 @@ function EditPropertyContent() {
         coordinates,
         location,
         selectedFeatures.length,
-        existingImages.length,
-        newFiles.length,
+        images.length,
     ]);
 
     useEffect(() => {
@@ -193,7 +194,13 @@ function EditPropertyContent() {
             setLocation(property.location || '');
             setIsNewBuilding(property.is_new_building || false);
             setSelectedFeatures((property.features as string[]) || []);
-            setExistingImages((property.images as string[]) || []);
+            setImages(
+                ((property.images as string[]) || []).map((url) => ({
+                    id: url,
+                    type: 'existing' as const,
+                    url,
+                }))
+            );
             setLoading(false);
         };
 
@@ -214,28 +221,57 @@ function EditPropertyContent() {
     const handleFiles = (list: FileList | null) => {
         if (!list) return;
         setError(null);
-        const currentCount = existingImages.length + newFiles.length;
-        const availableSlots = MAX_IMAGES - currentCount;
+        const availableSlots = MAX_IMAGES - images.length;
         if (availableSlots <= 0) return;
 
         const incoming = Array.from(list).slice(0, availableSlots);
-        const prepared: { file: File; preview: string }[] = [];
+        const prepared: ImageItem[] = [];
 
         for (const file of incoming) {
             const ext = file.name.split('.').pop()?.toLowerCase() || '';
             if (!ALLOWED_EXTENSIONS.includes(ext) || file.size > MAX_IMAGE_SIZE) continue;
-            prepared.push({ file, preview: URL.createObjectURL(file) });
+            prepared.push({ id: crypto.randomUUID(), type: 'new', file, preview: URL.createObjectURL(file) });
         }
-        if (prepared.length) setNewFiles((prev) => [...prev, ...prepared]);
+        if (prepared.length) setImages((prev) => [...prev, ...prepared]);
     };
 
-    const removeExistingImage = (url: string) => {
-        setExistingImages((prev) => prev.filter((img) => img !== url));
+    const removeImage = (id: string) => {
+        setImages((prev) => {
+            const item = prev.find((img) => img.id === id);
+            if (item && item.type === 'new') {
+                URL.revokeObjectURL(item.preview);
+            }
+            return prev.filter((img) => img.id !== id);
+        });
     };
 
-    const removeNewFile = (preview: string) => {
-        URL.revokeObjectURL(preview);
-        setNewFiles((prev) => prev.filter((item) => item.preview !== preview));
+    const moveImageUp = (id: string) => {
+        setImages((prev) => {
+            const idx = prev.findIndex((img) => img.id === id);
+            if (idx <= 0) return prev;
+            const next = [...prev];
+            [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+            return next;
+        });
+    };
+
+    const moveImageDown = (id: string) => {
+        setImages((prev) => {
+            const idx = prev.findIndex((img) => img.id === id);
+            if (idx === -1 || idx >= prev.length - 1) return prev;
+            const next = [...prev];
+            [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+            return next;
+        });
+    };
+
+    const moveImageToFirst = (id: string) => {
+        setImages((prev) => {
+            const idx = prev.findIndex((img) => img.id === id);
+            if (idx <= 0) return prev;
+            const item = prev[idx];
+            return [item, ...prev.filter((img) => img.id !== id)];
+        });
     };
 
     const toggleFeature = (value: string) => {
@@ -258,9 +294,10 @@ function EditPropertyContent() {
         coordinatesInitializedRef.current = true;
     };
 
-    const uploadNewImages = async () => {
-        const uploaded: string[] = [];
-        for (const item of newFiles) {
+    const uploadNewImages = async (): Promise<Map<string, string>> => {
+        const urlMap = new Map<string, string>();
+        for (const item of images) {
+            if (item.type !== 'new') continue;
             const ext = (item.file.name.split('.').pop() || 'jpg').toLowerCase();
             const safeExt = ALLOWED_EXTENSIONS.includes(ext) ? ext : 'jpg';
             const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
@@ -273,9 +310,9 @@ function EditPropertyContent() {
             if (uploadError) throw new Error(uploadError.message);
 
             const { data } = supabase.storage.from('properties').getPublicUrl(filePath);
-            uploaded.push(data.publicUrl);
+            urlMap.set(item.id, data.publicUrl);
         }
-        return uploaded;
+        return urlMap;
     };
 
     const handleSubmit = async (event: React.FormEvent) => {
@@ -304,7 +341,7 @@ function EditPropertyContent() {
             return;
         }
 
-        const totalImages = existingImages.length + newFiles.length;
+        const totalImages = images.length;
         if (totalImages === 0) {
             setError(t('property.addProperty.validation.addAtLeastOnePhoto'));
             return;
@@ -322,8 +359,11 @@ function EditPropertyContent() {
                 return;
             }
 
-            const newImageUrls = await uploadNewImages();
-            const allImages = [...existingImages, ...newImageUrls];
+            const urlMap = await uploadNewImages();
+            const allImages = images.map((item) => {
+                if (item.type === 'existing') return item.url;
+                return urlMap.get(item.id) || '';
+            });
 
             const updatePayload = {
                 title: title.trim(),
@@ -522,7 +562,7 @@ function EditPropertyContent() {
                         <CardContent className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="text-sm text-textSecondary">
-                                    {existingImages.length + newFiles.length} / {MAX_IMAGES}
+                                    {images.length} / {MAX_IMAGES}
                                 </div>
                                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-4 py-2 text-sm text-text hover:border-primary">
                                     <Upload className="h-4 w-4" />
@@ -531,24 +571,37 @@ function EditPropertyContent() {
                                 </label>
                             </div>
 
-                            {(existingImages.length > 0 || newFiles.length > 0) && (
+                            {images.length > 0 && (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                    {existingImages.map((url) => (
-                                        <div key={url} className="relative group">
+                                    {images.map((item, index) => (
+                                        <div key={item.id} className="relative group">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={url} alt="property" className="h-32 w-full rounded-lg object-cover" />
-                                            <button type="button" onClick={() => removeExistingImage(url)} className="absolute top-2 right-2 rounded-full bg-black/60 p-1 text-white opacity-0 group-hover:opacity-100 transition">
+                                            <img
+                                                src={item.type === 'existing' ? item.url : item.preview}
+                                                alt="property"
+                                                className="h-32 w-full rounded-lg object-cover"
+                                            />
+                                            {index === 0 && (
+                                                <span className="absolute top-2 left-2 rounded bg-primary px-2 py-0.5 text-xs font-medium text-white">
+                                                    {t('property.mainPhoto')}
+                                                </span>
+                                            )}
+                                            <button type="button" onClick={() => removeImage(item.id)} className="absolute top-2 right-2 rounded-full bg-black/60 p-1 text-white">
                                                 <X className="h-4 w-4" />
                                             </button>
-                                        </div>
-                                    ))}
-                                    {newFiles.map((item) => (
-                                        <div key={item.preview} className="relative group">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={item.preview} alt="preview" className="h-32 w-full rounded-lg object-cover" />
-                                            <button type="button" onClick={() => removeNewFile(item.preview)} className="absolute top-2 right-2 rounded-full bg-black/60 p-1 text-white opacity-0 group-hover:opacity-100 transition">
-                                                <X className="h-4 w-4" />
-                                            </button>
+                                            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1 rounded-b-lg bg-black/50 px-2 py-1">
+                                                <button type="button" onClick={() => moveImageUp(item.id)} disabled={index === 0} className="rounded p-1 text-white disabled:opacity-30" title={t('property.moveUp')}>
+                                                    <ChevronUp className="h-3.5 w-3.5" />
+                                                </button>
+                                                <button type="button" onClick={() => moveImageDown(item.id)} disabled={index === images.length - 1} className="rounded p-1 text-white disabled:opacity-30" title={t('property.moveDown')}>
+                                                    <ChevronDown className="h-3.5 w-3.5" />
+                                                </button>
+                                                {index !== 0 && (
+                                                    <button type="button" onClick={() => moveImageToFirst(item.id)} className="rounded p-1 text-white" title={t('property.makeMainPhoto')}>
+                                                        <Star className="h-3.5 w-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

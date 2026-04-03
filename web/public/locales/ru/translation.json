@@ -292,6 +292,10 @@
     "saleCommercial": "Продажа коммерческой",
     "noPropertiesFound": "Объявления не найдены",
     "editProperty": "Редактирование объявления",
+    "mainPhoto": "Главное фото",
+    "makeMainPhoto": "Сделать главной",
+    "moveUp": "Вверх",
+    "moveDown": "Вниз",
     "errors": {
       "maxPropertiesReached": "Вы достигли максимального количества объявлений",
       "imageUploadFailed": "Не удалось загрузить изображения",

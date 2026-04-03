@@ -419,7 +419,11 @@
     "showAllPhotos": "Показать все фото",
     "hideAllPhotos": "Скрыть все фото",
     "photoAlt": "Фото {{index}}",
-    "thumbnailAlt": "Миниатюра {{index}}"
+    "thumbnailAlt": "Миниатюра {{index}}",
+    "mainPhoto": "Главное фото",
+    "makeMainPhoto": "Сделать главной",
+    "moveUp": "Вверх",
+    "moveDown": "Вниз"
   },
   "auth": {
     "login": "Войти",

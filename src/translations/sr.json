@@ -263,6 +263,10 @@
     "hideAllPhotos": "Sakrij sve fotografije",
     "photoAlt": "Fotografija {{index}}",
     "thumbnailAlt": "Sličica {{index}}",
+    "mainPhoto": "Glavna fotografija",
+    "makeMainPhoto": "Postavi kao glavnu",
+    "moveUp": "Gore",
+    "moveDown": "Dole",
     "messages": {
       "propertyDeleted": "Oglas je uspešno obrisan"
     },

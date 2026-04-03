@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Upload, X, Check, MapPin } from 'lucide-react';
+import { Loader2, Upload, X, Check, MapPin, ChevronUp, ChevronDown, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
@@ -295,6 +295,35 @@ export function AddPropertyForm() {
   const removeFile = (preview: string) => {
     URL.revokeObjectURL(preview);
     setFiles((prev) => prev.filter((item) => item.preview !== preview));
+  };
+
+  const moveFileUp = (preview: string) => {
+    setFiles((prev) => {
+      const idx = prev.findIndex((item) => item.preview === preview);
+      if (idx <= 0) return prev;
+      const next = [...prev];
+      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+      return next;
+    });
+  };
+
+  const moveFileDown = (preview: string) => {
+    setFiles((prev) => {
+      const idx = prev.findIndex((item) => item.preview === preview);
+      if (idx === -1 || idx >= prev.length - 1) return prev;
+      const next = [...prev];
+      [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+      return next;
+    });
+  };
+
+  const moveFileToFirst = (preview: string) => {
+    setFiles((prev) => {
+      const idx = prev.findIndex((item) => item.preview === preview);
+      if (idx <= 0) return prev;
+      const item = prev[idx];
+      return [item, ...prev.filter((f) => f.preview !== preview)];
+    });
   };
 
   const toggleFeature = (value: string) => {
@@ -826,7 +855,7 @@ export function AddPropertyForm() {
 
               {files.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {files.map((item) => (
+                  {files.map((item, index) => (
                     <div key={item.preview} className="relative group">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -834,14 +863,49 @@ export function AddPropertyForm() {
                         alt="preview"
                         className="h-32 w-full rounded-lg object-cover"
                       />
+                      {index === 0 && (
+                        <span className="absolute top-2 left-2 rounded bg-primary px-2 py-0.5 text-xs font-medium text-white">
+                          {t('property.mainPhoto')}
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={() => removeFile(item.preview)}
-                        className="absolute top-2 right-2 rounded-full bg-black/60 p-1 text-white opacity-0 group-hover:opacity-100 transition"
+                        className="absolute top-2 right-2 rounded-full bg-black/60 p-1 text-white"
                         aria-label="remove photo"
                       >
                         <X className="h-4 w-4" />
                       </button>
+                      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1 rounded-b-lg bg-black/50 px-2 py-1">
+                        <button
+                          type="button"
+                          onClick={() => moveFileUp(item.preview)}
+                          disabled={index === 0}
+                          className="rounded p-1 text-white disabled:opacity-30"
+                          title={t('property.moveUp')}
+                        >
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveFileDown(item.preview)}
+                          disabled={index === files.length - 1}
+                          className="rounded p-1 text-white disabled:opacity-30"
+                          title={t('property.moveDown')}
+                        >
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </button>
+                        {index !== 0 && (
+                          <button
+                            type="button"
+                            onClick={() => moveFileToFirst(item.preview)}
+                            className="rounded p-1 text-white"
+                            title={t('property.makeMainPhoto')}
+                          >
+                            <Star className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
