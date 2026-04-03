@@ -58,6 +58,8 @@ function EditPropertyContent() {
     const [success, setSuccess] = useState<string | null>(null);
     const formStateRef = useRef('');
     const coordinatesInitializedRef = useRef(false);
+    const imagesRef = useRef<ImageItem[]>([]);
+    imagesRef.current = images;
     const supportsRooms = propertyTypeSupportsRooms(propertyType);
     const districtRequired = districts.length > 0;
     const selectedCity = cities.find((city) => String(city.id) === cityId) ?? null;
@@ -70,6 +72,14 @@ function EditPropertyContent() {
         };
         loadCities();
     }, [supabase]);
+
+    useEffect(() => {
+        return () => {
+            imagesRef.current.forEach((item) => {
+                if (item.type === 'new') URL.revokeObjectURL(item.preview);
+            });
+        };
+    }, []);
 
     // Загрузка районов при смене города
     useEffect(() => {
@@ -230,19 +240,17 @@ function EditPropertyContent() {
         for (const file of incoming) {
             const ext = file.name.split('.').pop()?.toLowerCase() || '';
             if (!ALLOWED_EXTENSIONS.includes(ext) || file.size > MAX_IMAGE_SIZE) continue;
-            prepared.push({ id: crypto.randomUUID(), type: 'new', file, preview: URL.createObjectURL(file) });
+            prepared.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, type: 'new', file, preview: URL.createObjectURL(file) });
         }
         if (prepared.length) setImages((prev) => [...prev, ...prepared]);
     };
 
     const removeImage = (id: string) => {
-        setImages((prev) => {
-            const item = prev.find((img) => img.id === id);
-            if (item && item.type === 'new') {
-                URL.revokeObjectURL(item.preview);
-            }
-            return prev.filter((img) => img.id !== id);
-        });
+        const item = images.find((img) => img.id === id);
+        if (item && item.type === 'new') {
+            URL.revokeObjectURL(item.preview);
+        }
+        setImages((prev) => prev.filter((img) => img.id !== id));
     };
 
     const moveImageUp = (id: string) => {
@@ -362,7 +370,9 @@ function EditPropertyContent() {
             const urlMap = await uploadNewImages();
             const allImages = images.map((item) => {
                 if (item.type === 'existing') return item.url;
-                return urlMap.get(item.id) || '';
+                const url = urlMap.get(item.id);
+                if (!url) throw new Error('Image upload failed: URL not returned');
+                return url;
             });
 
             const updatePayload = {

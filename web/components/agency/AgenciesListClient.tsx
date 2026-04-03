@@ -59,18 +59,22 @@ export function AgenciesListClient({
 
   useEffect(() => {
     const loadAgencies = async () => {
-      const { data, error: fetchError } = await supabase
-        .from('agency_profiles')
-        .select('id, name, phone, email, site, location, logo_url, description, city_id')
-        .order('name', { ascending: true })
-        .limit(50);
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('agency_profiles')
+          .select('id, name, phone, email, site, location, logo_url, description, city_id')
+          .order('name', { ascending: true });
 
-      if (fetchError) {
+        if (fetchError) {
+          setError(true);
+        } else {
+          setAgencies((data as Agency[]) || []);
+        }
+      } catch {
         setError(true);
-      } else {
-        setAgencies((data as Agency[]) || []);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     loadAgencies();
