@@ -293,26 +293,18 @@ export function ContactProfileForm() {
                   placeholder={t('agency.title', 'Agencija')}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label={t('profile.email')}
-                    value={agencyProfile.email}
-                    onChange={(event) => setAgencyProfile((current) => current ? { ...current, email: event.target.value } : null)}
-                    placeholder="agency@example.com"
-                  />
-                  <Input
-                    label={t('profile.phone')}
-                    value={profile.phone}
-                    disabled
-                    readOnly
-                  />
-                </div>
+                <Input
+                  label={t('profile.email')}
+                  value={agencyProfile.email}
+                  onChange={(event) => setAgencyProfile((current) => current ? { ...current, email: event.target.value } : null)}
+                  placeholder="agency@example.com"
+                />
 
                 <Input
-                  label={t('agency.siteOrTelegram', 'Telegram / Sajt')}
+                  label={t('agency.telegram', 'Telegram')}
                   value={agencyProfile.site}
                   onChange={(event) => setAgencyProfile((current) => current ? { ...current, site: event.target.value } : null)}
-                  placeholder="@username, t.me/... ili https://..."
+                  placeholder="@username ili t.me/..."
                 />
 
                 <Input

@@ -669,7 +669,8 @@
     "listingsTitle": "Объявления агентства",
     "listingsCount": "Всего {{count}} объявлений",
     "logo": "Логотип",
-    "siteOrTelegram": "Telegram / Сайт"
+    "siteOrTelegram": "Telegram / Сайт",
+    "telegram": "Telegram"
   },
   "web": {
     "heroSubtitle": "Поиск квартир, домов и коммерческой недвижимости в Сербии. Продажа, аренда, новостройки.",
