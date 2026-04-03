@@ -12,7 +12,7 @@ import type { Database } from '@shared/lib/database.types';
 type Property = Database['public']['Tables']['properties']['Row'] & {
   city?: { name: string } | null;
   district?: { name: string } | null;
-  user?: { name: string; phone: string } | null;
+  user?: { name: string; phone: string; is_agency?: boolean } | null;
 };
 
 export function PropertyPageClient() {
@@ -36,9 +36,10 @@ export function PropertyPageClient() {
         .from('properties')
         .select(`
           *,
-          user:users(name, phone),
+          user:users(name, phone, is_agency),
           city:cities(name),
-          district:districts(name)
+          district:districts(name),
+          agency_profile:agency_profiles(id, name, logo_url)
         `)
         .eq('id', id)
         .single();
@@ -138,7 +139,7 @@ export function PropertyPageClient() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <PropertyDetails property={property} />
+      <PropertyDetails property={property} agencyId={property.agency_id} />
     </div>
   );
 }

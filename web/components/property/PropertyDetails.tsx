@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Map, MapPin, Bed, Maximize, Phone, Share2, Heart, Building2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { PropertyGallery } from './PropertyGallery';
 import { PropertyLocationMap } from './PropertyLocationMap';
@@ -17,12 +19,29 @@ type Property = Database['public']['Tables']['properties']['Row'] & {
 
 interface PropertyDetailsProps {
   property: Property;
+  agencyId?: string | null;
 }
 
-export function PropertyDetails({ property }: PropertyDetailsProps) {
+export function PropertyDetails({ property, agencyId }: PropertyDetailsProps) {
   const { t } = useTranslation();
   const propertyCoordinates = parseMapCoordinates(property.coordinates);
   const [phoneRevealed, setPhoneRevealed] = useState(false);
+  const [agencyData, setAgencyData] = useState<{ id: string; name: string; logo_url: string | null } | null>(null);
+
+  const isAgency = (property.user as { is_agency?: boolean } | null)?.is_agency === true;
+
+  useEffect(() => {
+    if (!agencyId) return;
+    const supabase = createClient();
+    supabase
+      .from('agency_profiles')
+      .select('id, name, logo_url')
+      .eq('id', agencyId)
+      .single()
+      .then(({ data }) => {
+        if (data) setAgencyData(data);
+      });
+  }, [agencyId]);
 
   const price = new Intl.NumberFormat('sr-RS', {
     style: 'currency',
@@ -222,8 +241,19 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
 
             {property.user?.name && (
               <div>
-                <p className="text-sm text-textSecondary mb-1">{t('property.owner')}</p>
-                <p className="text-lg font-medium text-text">{property.user.name}</p>
+                <p className="text-sm text-textSecondary mb-1">
+                  {isAgency ? t('property.agency', 'Agencija') : t('property.owner')}
+                </p>
+                {isAgency && agencyData ? (
+                  <Link
+                    href={`/agencija?id=${agencyData.id}`}
+                    className="text-lg font-medium text-primary hover:underline"
+                  >
+                    {agencyData.name}
+                  </Link>
+                ) : (
+                  <p className="text-lg font-medium text-text">{property.user.name}</p>
+                )}
               </div>
             )}
 
