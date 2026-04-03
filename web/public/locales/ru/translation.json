@@ -67,6 +67,7 @@
     "yes": "Да",
     "no": "Нет",
     "share": "Поделиться",
+    "linkCopied": "Ссылка скопирована в буфер обмена",
     "save_changes": "Сохранить изменения",
     "select": "Выбрать",
     "info": "Информация",
@@ -77,8 +78,9 @@
     "errorLoadingData": "Ошибка при загрузке данных",
     "noAvailableListings": "Нет доступных объявлений",
     "notFound": "Не найдено",
-    "accessDenied": "Доступ запрещён",
-    "notEditable": "нельзя изменить"
+    "pageNotFoundTitle": "Страница не найдена",
+    "pageNotFoundDescription": "Запрашиваемая страница не существует или была удалена",
+    "goHome": "Вернуться на главную"
   },
   "cities": {
     "Бор": "Бор",
@@ -191,6 +193,12 @@
     "logout": "Выйти",
     "editProfile": "Редактировать профиль",
     "changePassword": "Изменить пароль",
+    "dashboardTitle": "Личный кабинет",
+    "favoritesDescription": "Сохраненные объявления",
+    "myPropertiesDescription": "Управление объявлениями",
+    "settingsDescription": "Настройки профиля",
+    "logoutDescription": "Выход из аккаунта",
+    "myPropertiesCount": "Всего {{count}} объявлений",
     "noProperties": "У вас пока нет объявлений",
     "errorLoadingProperties": "Ошибка при загрузке объявлений",
     "propertyRentedMarked": "Объявление отмечено как сданное",
@@ -273,7 +281,7 @@
     "city": "Город",
     "district": "Район",
     "districtRequired": "Район обязателен",
-    "districtOptional": "Район",
+    "districtOptional": "Район (необязательно)",
     "images": "Изображения",
     "addImages": "Добавить изображения",
     "loading": "Загрузка объявления...",
@@ -292,10 +300,6 @@
     "saleCommercial": "Продажа коммерческой",
     "noPropertiesFound": "Объявления не найдены",
     "editProperty": "Редактирование объявления",
-    "mainPhoto": "Главное фото",
-    "makeMainPhoto": "Сделать главной",
-    "moveUp": "Вверх",
-    "moveDown": "Вниз",
     "errors": {
       "maxPropertiesReached": "Вы достигли максимального количества объявлений",
       "imageUploadFailed": "Не удалось загрузить изображения",
@@ -387,6 +391,8 @@
     "mapView": "Карта объектов",
     "selectCityForMap": "Выберите город для просмотра объектов на карте",
     "noPropertiesOnMap": "Нет объектов с координатами в выбранном городе",
+    "mapLoading": "Загрузка карты...",
+    "priceOnRequest": "Цена по запросу",
     "status": {
       "sold": "Продано",
       "rented": "Сдано",
@@ -410,8 +416,15 @@
     "uploadingPhotos": "Загрузка фотографий...",
     "errorUpdatingProperty": "Ошибка при обновлении объявления",
     "errorLoadingCities": "Ошибка при загрузке городов",
-    "updateSuccess": "Объявление успешно обновлено",
-    "updateError": "Ошибка при обновлении объявления"
+    "noImages": "Нет изображений",
+    "showAllPhotos": "Показать все фото",
+    "hideAllPhotos": "Скрыть все фото",
+    "photoAlt": "Фото {{index}}",
+    "thumbnailAlt": "Миниатюра {{index}}",
+    "mainPhoto": "Главное фото",
+    "makeMainPhoto": "Сделать главной",
+    "moveUp": "Вверх",
+    "moveDown": "Вниз"
   },
   "auth": {
     "login": "Войти",
@@ -585,18 +598,10 @@
     "parking": "Парковка",
     "balcony": "Балкон",
     "elevator": "Лифт",
-    "furniture": "Мебель",
-    "airConditioner": "Кондиционер",
-    "garden": "Сад",
-    "pool": "Бассейн",
-    "security": "Охрана",
-    "internet": "Интернет",
-    "gym": "Спортзал",
-    "petFriendly": "Можно с питомцами",
-    "fireplace": "Камин",
-    "furnished": "Меблированная"
+    "furniture": "Мебель"
   },
   "favoriteScreen": {
+    "count": "Найдено {{count}} объявлений",
     "emptyText": "У вас пока нет избранных объявлений. Добавьте объявления в избранное, чтобы они отображались здесь."
   },
   "addProperty": {
@@ -656,10 +661,20 @@
     "facebook": "Facebook",
     "email": "Email",
     "emptyList": "Агентства пока не добавлены",
-    "unnamed": "Агентство"
+    "unnamed": "Агентство",
+    "listTitle": "Агентства недвижимости",
+    "listDescription": "Проверенные агентства недвижимости в Сербии",
+    "backToList": "Все агентства",
+    "contact": "Контакты",
+    "listingsTitle": "Объявления агентства",
+    "listingsCount": "Всего {{count}} объявлений",
+    "logo": "Логотип",
+    "siteOrTelegram": "Telegram / Сайт"
   },
-  "footer": {
-    "aboutLine": "Платформа для поиска недвижимости в Сербии.",
-    "seoLine": "DomGo.rs — недвижимость в Сербии: покупка и аренда квартир и домов."
+  "web": {
+    "heroSubtitle": "Поиск квартир, домов и коммерческой недвижимости в Сербии. Продажа, аренда, новостройки.",
+    "homeRentShort": "Аренда",
+    "latestPropertiesTitle": "Последние объявления",
+    "latestPropertiesEmpty": "Пока нет объявлений"
   }
 }

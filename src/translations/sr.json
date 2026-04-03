@@ -620,7 +620,9 @@
     "backToList": "Sve agencije",
     "contact": "Kontakt",
     "listingsTitle": "Oglasi agencije",
-    "listingsCount": "Ukupno {{count}} oglasa"
+    "listingsCount": "Ukupno {{count}} oglasa",
+    "logo": "Logo",
+    "siteOrTelegram": "Telegram / Sajt"
   },
   "web": {
     "heroSubtitle": "Pretraga stanova, kuća i poslovnih prostora u Srbiji. Prodaja, zakup, novogradnja.",

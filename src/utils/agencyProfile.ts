@@ -171,7 +171,7 @@ export const uploadAgencyLogo = async (
 ): Promise<string> => {
   const ext = file instanceof File ? (file.name.split('.').pop()?.toLowerCase() || 'jpg') : 'jpg';
   const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(ext) ? ext : 'jpg';
-  const fileName = `agency-logos/${userId}/${Date.now()}.${safeExt}`;
+  const fileName = `${userId}/${Date.now()}.${safeExt}`;
 
   const { error: uploadError } = await supabase.storage
     .from('agency-logos')

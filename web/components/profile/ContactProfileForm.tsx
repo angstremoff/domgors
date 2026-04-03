@@ -248,7 +248,7 @@ export function ContactProfileForm() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-text mb-2">{t('agency.logo', 'Логотип')}</label>
+                  <label className="block text-sm font-medium text-text mb-2">{t('agency.logo', 'Logo')}</label>
                   <div className="flex items-center gap-4">
                     {logoPreview ? (
                       <div className="relative">
@@ -271,7 +271,7 @@ export function ContactProfileForm() {
                     )}
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-4 py-2 text-sm text-text hover:border-primary">
                       {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                      <span>{t('addProperty.addProperty.addPhoto', 'Загрузить')}</span>
+                      <span>{t('property.addProperty.addPhoto', 'Dodaj')}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -286,10 +286,10 @@ export function ContactProfileForm() {
                 </div>
 
                 <Input
-                  label={t('agency.title', 'Агентство')}
+                  label={t('agency.title', 'Agencija')}
                   value={agencyProfile.name}
                   onChange={(event) => setAgencyProfile((current) => current ? { ...current, name: event.target.value } : null)}
-                  placeholder={t('agency.title', 'Название агентства')}
+                  placeholder={t('agency.title', 'Agencija')}
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -308,17 +308,17 @@ export function ContactProfileForm() {
                 </div>
 
                 <Input
-                  label="Telegram / Сайт"
+                  label={t('agency.siteOrTelegram', 'Telegram / Sajt')}
                   value={agencyProfile.site}
                   onChange={(event) => setAgencyProfile((current) => current ? { ...current, site: event.target.value } : null)}
-                  placeholder="@username, t.me/... или https://..."
+                  placeholder="@username, t.me/... ili https://..."
                 />
 
                 <Input
-                  label={t('property.addProperty.location', 'Адрес')}
+                  label={t('property.addProperty.propertyAddress', 'Adresa')}
                   value={agencyProfile.location}
                   onChange={(event) => setAgencyProfile((current) => current ? { ...current, location: event.target.value } : null)}
-                  placeholder={t('property.addProperty.propertyAddressPlaceholder', 'Адрес агентства')}
+                  placeholder={t('property.addProperty.propertyAddressPlaceholder', 'Npr. Ul. Kneza Miloša 10')}
                 />
               </div>
             </div>

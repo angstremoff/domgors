@@ -22,6 +22,7 @@
     "yes": "Da",
     "no": "Ne",
     "share": "Podeli",
+    "linkCopied": "Link je kopiran u klipbord",
     "save_changes": "Sačuvaj promene",
     "select": "Izaberi",
     "from": "Od",
@@ -60,6 +61,9 @@
     "errorLoadingData": "Greška pri učitavanju podataka",
     "noAvailableListings": "Nema dostupnih oglasa",
     "notFound": "Oglas nije pronađen",
+    "pageNotFoundTitle": "Stranica nije pronađena",
+    "pageNotFoundDescription": "Tražena stranica ne postoji ili je uklonjena",
+    "goHome": "Povratak na početnu",
     "loginRequired": "Potrebna prijava",
     "status": {
       "sold": "Prodato",
@@ -67,9 +71,7 @@
       "active": "Aktivno",
       "notSold": "Nije prodato",
       "notRented": "Nije izdato"
-    },
-    "accessDenied": "Pristup odbijen",
-    "notEditable": "ne može se menjati"
+    }
   },
   "cities": {
     "Бор": "Bor",
@@ -224,6 +226,8 @@
     "mapView": "Mapa objekata",
     "selectCityForMap": "Izaberite grad za pregled objekata na mapi",
     "noPropertiesOnMap": "Nema objekata sa koordinatama u izabranom gradu",
+    "mapLoading": "Učitavanje mape...",
+    "priceOnRequest": "Cena na upit",
     "house": "Kuća",
     "commercial": "Poslovni prostor",
     "land": "Zemljište",
@@ -254,6 +258,11 @@
     "uploadingPhotos": "Učitavanje fotografija...",
     "errorUpdatingProperty": "Greška prilikom ažuriranja oglasa",
     "errorLoadingCities": "Greška prilikom učitavanja gradova",
+    "noImages": "Nema slika",
+    "showAllPhotos": "Prikaži sve fotografije",
+    "hideAllPhotos": "Sakrij sve fotografije",
+    "photoAlt": "Fotografija {{index}}",
+    "thumbnailAlt": "Sličica {{index}}",
     "mainPhoto": "Glavna fotografija",
     "makeMainPhoto": "Postavi kao glavnu",
     "moveUp": "Gore",
@@ -301,8 +310,6 @@
         "maxPhotosReached": "Maksimalan broj fotografija je 20"
       }
     },
-    "updateSuccess": "Oglas je uspešno ažuriran",
-    "updateError": "Greška prilikom ažuriranja oglasa",
     "status": {
       "active": "Aktivno",
       "sold": "Prodato",
@@ -414,7 +421,8 @@
   },
   "favoriteScreen": {
     "title": "Favoriti",
-    "emptyText": "Još uvek nemate sačuvane favorite"
+    "emptyText": "Još uvek nemate sačuvane favorite",
+    "count": "Pronađeno {{count}} oglasa"
   },
   "profile": {
     "title": "Profil",
@@ -439,6 +447,12 @@
     "favorites": "Omiljeni oglasi",
     "settings": "Podešavanja",
     "logout": "Odjavi se",
+    "dashboardTitle": "Nalog",
+    "favoritesDescription": "Sačuvani oglasi",
+    "myPropertiesDescription": "Upravljanje oglasima",
+    "settingsDescription": "Podešavanja profila",
+    "logoutDescription": "Odjava iz naloga",
+    "myPropertiesCount": "Ukupno {{count}} oglasa",
     "noProperties": "Još uvek nemate oglase",
     "errorLoadingProperties": "Greška pri učitavanju oglasa",
     "propertySoldMarked": "Oglas je označen kao prodat",
@@ -486,10 +500,13 @@
     "error": "Greška",
     "fillRequiredFields": "Popunite sva obavezna polja",
     "passwordsDoNotMatch": "Lozinke se ne podudaraju",
+    "passwordTooShort": "Lozinka mora imati najmanje 6 karaktera",
     "success": "Uspešno",
     "registerSuccess": "Registracija je uspešno završena",
+    "registerError": "Greška prilikom registracije",
     "registerFailed": "Registracija nije uspela",
     "loginFailed": "Prijava nije uspela",
+    "loginError": "Greška prilikom prijave",
     "info": "Informacija",
     "resetPasswordInstructions": "Da biste resetovali lozinku, idite na veb sajt i koristite funkciju za oporavak lozinke.",
     "resetPasswordHelp": "Unesite email koji ste koristili prilikom registracije. Poslaćemo vam poruku sa linkom za oporavak lozinke.",
@@ -597,10 +614,20 @@
     "facebook": "Facebook",
     "email": "Email",
     "emptyList": "Još nema agencija",
-    "unnamed": "Agencija bez naziva"
+    "unnamed": "Agencija bez naziva",
+    "listTitle": "Agencije za nekretnine",
+    "listDescription": "Proverene agencije za nekretnine u Srbiji",
+    "backToList": "Sve agencije",
+    "contact": "Kontakt",
+    "listingsTitle": "Oglasi agencije",
+    "listingsCount": "Ukupno {{count}} oglasa",
+    "logo": "Logo",
+    "siteOrTelegram": "Telegram / Sajt"
   },
-  "footer": {
-    "aboutLine": "Platforma za pretragu nekretnina u Srbiji.",
-    "seoLine": "DomGo.rs — nekretnine u Srbiji: kupovina i iznajmljivanje stanova i kuća."
+  "web": {
+    "heroSubtitle": "Pretraga stanova, kuća i poslovnih prostora u Srbiji. Prodaja, zakup, novogradnja.",
+    "homeRentShort": "Izdavanje",
+    "latestPropertiesTitle": "Najnoviji oglasi",
+    "latestPropertiesEmpty": "Još nema oglasa"
   }
 }
