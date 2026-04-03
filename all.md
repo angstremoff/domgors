@@ -151,10 +151,18 @@ Web сейчас живёт в режиме static export.
   - пока список районов грузится, submit/save должен быть заблокирован;
   - старая validation-ошибка не должна висеть после изменения полей.
 - Это особенно важно для городов без наполненной таблицы `districts`: форма не должна становиться непроходимой только из-за отсутствия районов в БД.
-- Inline-валидация города:
-  - `!cityId` проверяется внутри общего `fillAllFields` условия (не отдельным блоком);
-  - при отсутствии города на `<select>` отображается красная рамка (`border-error`) и текст «Izaberite grad» / «Выберите город»;
-  - `cityError` state сбрасывается в `handleCityChange` при выборе города.
+- Inline-валидация всех обязательных полей (web create/edit):
+  - Архитектура: единый `FieldErrors` state (`{ city?: boolean; title?: boolean; ... }`) вместо отдельных `cityError`/`districtError` boolean;
+  - при submit собираются все ошибки в объект `errors`, затем `setFieldErrors(errors)`;
+  - если есть хотя бы одна ошибка — `scrollIntoView({ behavior: 'smooth', block: 'center' })` к первому незаполненному полю по порядку: контакты → заголовок → цена → площадь → комнаты → город → район → адрес → описание → фото;
+  - каждое поле обёрнуто в `<div ref={...Ref}>` для scroll-таргета;
+  - `Input` компонент поддерживает `error` prop — красная рамка + текст под полем;
+  - `<select>` и `<textarea>` получают `border-error` класс + `<p className="text-error">` вручную;
+  - `clearFieldError('field')` вызывается в `onChange` каждого поля;
+  - `handleCityChange` очищает `city` и `district` ошибки одновременно;
+  - ошибки автоматически сбрасываются при любом изменении формы (formState useEffect);
+  - `<form noValidate>` — браузерная HTML5-валидация отключена;
+  - ключи переводов в `property.addProperty.validation`: `titleRequired`, `priceRequired`, `areaRequired`, `roomsRequired`, `addressRequired`, `descriptionRequired`, `cityRequired`, `districtRequired` — добавлены в `sr` и `ru`, зеркала в `web/public/locales`.
 - Координаты объекта в create/edit являются частью продукта:
   - web и mobile используют `cities.coordinates` как дефолт карты;
   - если пользователь не выбрал точку вручную, сохраняется центр выбранного города;
@@ -531,6 +539,7 @@ APK в проекте нужен в основном для локального
 - `domgo.rs` должен отдавать сербскую латиницу по умолчанию; русские fallback-строки в public UI — это регресс.
 - Любая новая карта на web должна использовать общую координатную модель и вести в detail page через `/oglas/?id=...`.
 - Web detail contact card должна сначала раскрывать номер, а не пытаться “звонить вслепую”.
+- Web create/edit inline-валидация: `FieldErrors` объект + scroll к первому ошибочному полю; ошибки на сербском; `noValidate` на `<form>`. Не использовать отдельные `*Error` boolean-стейты — только единый объект.
 - Web signup зависит и от кода, и от внешней SMTP-настройки Supabase.
 - Auth-ошибки signup/reset могут идти не только из фронта, но и из live Supabase schema/trigger drift.
 - Без актуального экспорта live-схемы нельзя безопасно делать серьёзные DB/RLS-рефакторы.

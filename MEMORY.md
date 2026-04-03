@@ -96,7 +96,7 @@
 - Продуктовый UI на `domgo.rs` по умолчанию на сербской латинице; русские hardcoded/fallback-строки в публичных web-flow — баг. Все fallback-значения в `t()` вызовах должны быть на сербском.
 - I18n hydration: `I18nProvider` обёрнут в `<div style={{ display: 'contents' }} suppressHydrationWarning>` для устранения React #418 при SSR/static export + клиентском i18n.
 - Web Supabase client кэшируется (singleton в `web/lib/supabase/client.ts`); безопасно вызывать `createClient()` в любом компоненте.
-- Web create/edit property: валидация города через `fillAllFields` (общая проверка) + inline-подсказка «Izaberite grad» рядом с селектором города. Формы имеют `noValidate` — браузерные подсказки отключены.
+- Web create/edit property: inline-валидация каждого обязательного поля (красная рамка `border-error` + текст ошибки на сербском). При submit — `scrollIntoView` к первому незаполненному полю. Ошибки сбрасываются при вводе. Формы имеют `noValidate`. Поля: контакты (имя, телефон), заголовок, цена, площадь, комнаты (если не `land`), город, район, адрес, описание, фото. Ключи переводов: `property.addProperty.validation.{titleRequired,priceRequired,areaRequired,roomsRequired,addressRequired,descriptionRequired,cityRequired,districtRequired}` в `sr` и `ru`.
 - На web detail page контактный CTA: `Prikaži broj` → раскрытие номера текстом + `tel:` ссылка.
 
 ## 9. Актуальный релизный контекст
@@ -129,7 +129,8 @@
 - `web/lib/authSession.ts` и `src/utils/authSessionUrl.ts` — разбор callback'ов.
 - `src/utils/authErrorMessage.ts` — безопасное отображение auth-ошибок.
 - `web/lib/property-listings.ts` — единый web-helper для initial fetch, пагинации, дедупликации.
-- `web/components/property/AddPropertyForm.tsx` и `web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx` — web create/edit, `noValidate`, district/null logic, inline city validation.
+- `web/components/property/AddPropertyForm.tsx` — web create: `noValidate`, `FieldErrors` state, inline-валидация всех полей, `scrollIntoView`, `clearFieldError`, `handleCityChange` очищает `city`/`district` ошибки.
+- `web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx` — web edit: та же схема inline-валидации.
 - `web/components/property/PropertyDetails.tsx` — detail page с agency logic (is_agency → Agencija label + ссылка).
 - `web/components/property/PropertyPageClient.tsx` — загрузка property с `user:users(name, phone, is_agency)`, передача `agencyId` prop.
 - `web/components/property/PropertyListingsClient.tsx` — client refresh, infinite scroll, canonical filter state.
