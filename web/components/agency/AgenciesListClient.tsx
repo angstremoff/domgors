@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Phone, Globe, Mail, MapPin } from 'lucide-react';
+import { Phone, Globe, Mail, MapPin, Send, Building2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@shared/lib/database.types';
-import { formatAgencySiteUrl } from '@shared/utils/agencyProfile';
+import { formatAgencySiteUrl, formatAgencyTelegramUrl, isTelegramValue } from '@shared/utils/agencyProfile';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Link from 'next/link';
 
@@ -144,20 +144,37 @@ export function AgenciesListClient({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAgencies.map((agency) => {
-              const site = formatAgencySiteUrl(agency.site);
+              const siteIsTelegram = isTelegramValue(agency.site);
+              const site = siteIsTelegram ? null : formatAgencySiteUrl(agency.site);
+              const telegram = siteIsTelegram ? formatAgencyTelegramUrl(agency.site) : null;
 
               return (
                 <Link key={agency.id} href={`/agencija/?id=${agency.id}`} className="block h-full">
                   <Card className="h-full hover:shadow-lg transition-shadow">
                     <CardHeader>
-                      <CardTitle className="text-xl">
-                        {agency.name || t('agency.unnamed')}
-                      </CardTitle>
-                      {agency.description && (
-                        <p className="text-sm text-textSecondary line-clamp-2">
-                          {agency.description}
-                        </p>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {agency.logo_url ? (
+                          <img
+                            src={agency.logo_url}
+                            alt={agency.name || t('agency.unnamed')}
+                            className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
+                            <Building2 className="h-5 w-5 text-primary" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <CardTitle className="text-xl">
+                            {agency.name || t('agency.unnamed')}
+                          </CardTitle>
+                          {agency.description && (
+                            <p className="text-sm text-textSecondary line-clamp-2 mt-1">
+                              {agency.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3 text-sm text-textSecondary">
@@ -177,6 +194,12 @@ export function AgenciesListClient({
                           <div className="flex items-center gap-2">
                             <Globe className="h-4 w-4" />
                             <span className="hover:text-primary truncate">{agency.site}</span>
+                          </div>
+                        )}
+                        {telegram && (
+                          <div className="flex items-center gap-2">
+                            <Send className="h-4 w-4" />
+                            <span className="hover:text-primary">Telegram</span>
                           </div>
                         )}
                         {agency.location && (

@@ -40,7 +40,7 @@ const getFirstString = (source: Record<string, unknown>, keys: string[]): string
   return null;
 };
 
-const isTelegramValue = (value: string | null): boolean => {
+export const isTelegramValue = (value: string | null): boolean => {
   if (!value) {
     return false;
   }

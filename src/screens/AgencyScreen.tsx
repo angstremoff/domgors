@@ -151,7 +151,11 @@ const AgencyScreen = ({ route, navigation }: AgencyScreenProps) => {
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }, styles.cardWeb]}>
           {agency.logo_url ? (
             <Image source={{ uri: agency.logo_url }} style={styles.logo} resizeMode="contain" />
-          ) : null}
+          ) : (
+            <View style={[styles.logoPlaceholder, { backgroundColor: theme.primary + '1A' }]}>
+              <Ionicons name="business-outline" size={28} color={theme.primary} />
+            </View>
+          )}
 
           <View style={styles.titleRow}>
             {agency.name ? (
@@ -295,6 +299,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     marginBottom: 2,
+  },
+  logoPlaceholder: {
+    width: '100%',
+    height: 50,
+    marginBottom: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
   },
   titleRow: {
     flexDirection: 'row',

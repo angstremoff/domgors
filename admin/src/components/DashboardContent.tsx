@@ -345,6 +345,8 @@ function EditAgencyModal({ agency, onSave }: { agency: any; onSave: () => void }
   const [site, setSite] = useState(agency.site || '');
   const [location, setLocation] = useState(agency.location || '');
   const [description, setDescription] = useState(agency.description || '');
+  const [logoUrl, setLogoUrl] = useState(agency.logo_url || '');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -352,10 +354,26 @@ function EditAgencyModal({ agency, onSave }: { agency: any; onSave: () => void }
     setSaving(true);
     setError('');
     try {
-      const res = await fetch(`/api/agencies/${agency.id}`, { credentials: 'include', credentials: 'include',
+      let finalLogoUrl = logoUrl;
+
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append('file', logoFile);
+        const uploadRes = await fetch(`/api/agencies/${agency.id}`, {
+          credentials: 'include',
+          method: 'POST',
+          body: formData,
+        });
+        if (!uploadRes.ok) throw new Error('Ошибка загрузки логотипа');
+        const uploadData = await uploadRes.json();
+        finalLogoUrl = uploadData.url;
+      }
+
+      const res = await fetch(`/api/agencies/${agency.id}`, {
+        credentials: 'include',
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, email, site, location, description }),
+        body: JSON.stringify({ name, phone, email, site, location, description, logo_url: finalLogoUrl }),
       });
       if (!res.ok) throw new Error('Ошибка сохранения');
       onSave();
@@ -376,6 +394,27 @@ function EditAgencyModal({ agency, onSave }: { agency: any; onSave: () => void }
         <Modal onClose={() => setOpen(false)}>
           <h2 className="text-lg font-semibold mb-4">Редактировать агентство</h2>
           <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Логотип</label>
+              <div className="flex items-center gap-3">
+                {logoUrl ? (
+                  <img src={logoUrl} alt="logo" className="h-10 w-10 rounded-lg object-cover" />
+                ) : (
+                  <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                    Нет
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) setLogoFile(f);
+                  }}
+                  className="text-sm"
+                />
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Название</label>
               <input
@@ -404,12 +443,13 @@ function EditAgencyModal({ agency, onSave }: { agency: any; onSave: () => void }
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Сайт</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Telegram / Сайт</label>
               <input
                 type="text"
                 value={site}
                 onChange={(e) => setSite(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md"
+                placeholder="@username, t.me/... или https://..."
               />
             </div>
             <div>
