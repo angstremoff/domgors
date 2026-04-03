@@ -381,11 +381,15 @@ export function AddPropertyForm() {
       return;
     }
 
+    if (!cityId) {
+      setError(t('property.addProperty.validation.cityRequired'));
+      return;
+    }
+
     if (
       !title.trim() ||
       !description.trim() ||
       !location.trim() ||
-      !cityId ||
       !price ||
       !area ||
       (supportsRooms && !rooms) ||
