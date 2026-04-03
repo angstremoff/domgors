@@ -63,6 +63,7 @@ export function AddPropertyForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [cityError, setCityError] = useState(false);
   const [contactLoading, setContactLoading] = useState(true);
   const [showSavedContactSummary, setShowSavedContactSummary] = useState(false);
   const [contactProfile, setContactProfile] = useState<ContactProfile>(EMPTY_CONTACT_PROFILE);
@@ -282,6 +283,7 @@ export function AddPropertyForm() {
 
   const handleCityChange = (nextCityId: string) => {
     setCityId(nextCityId);
+    setCityError(false);
 
     if (!nextCityId) {
       setCoordinates(null);
@@ -382,11 +384,11 @@ export function AddPropertyForm() {
     }
 
     if (!cityId) {
-      setError(t('property.addProperty.validation.cityRequired'));
-      return;
+      setCityError(true);
     }
 
     if (
+      !cityId ||
       !title.trim() ||
       !description.trim() ||
       !location.trim() ||
@@ -733,7 +735,7 @@ export function AddPropertyForm() {
                     {t('property.city')}
                   </label>
                   <select
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+                    className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary ${cityError ? 'border-error' : 'border-border'}`}
                     value={cityId}
                     onChange={(e) => handleCityChange(e.target.value)}
                   >
@@ -744,6 +746,9 @@ export function AddPropertyForm() {
                       </option>
                     ))}
                   </select>
+                  {cityError && (
+                    <p className="mt-1 text-sm text-error">{t('property.addProperty.validation.cityRequired')}</p>
+                  )}
                 </div>
 
                 <div>

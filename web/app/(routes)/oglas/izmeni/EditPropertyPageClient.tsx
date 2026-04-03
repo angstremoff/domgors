@@ -56,6 +56,7 @@ function EditPropertyContent() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [cityError, setCityError] = useState(false);
     const formStateRef = useRef('');
     const coordinatesInitializedRef = useRef(false);
     const imagesRef = useRef<ImageItem[]>([]);
@@ -290,6 +291,7 @@ function EditPropertyContent() {
 
     const handleCityChange = (nextCityId: string) => {
         setCityId(nextCityId);
+        setCityError(false);
 
         if (!nextCityId) {
             setCoordinates(null);
@@ -336,11 +338,11 @@ function EditPropertyContent() {
         }
 
         if (!cityId) {
-            setError(t('property.addProperty.validation.cityRequired'));
-            return;
+            setCityError(true);
         }
 
         if (
+            !cityId ||
             !title.trim() ||
             !description.trim() ||
             !location.trim() ||
@@ -519,12 +521,15 @@ function EditPropertyContent() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-text mb-2">{t('property.city')}</label>
-                                    <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary" value={cityId} onChange={(e) => handleCityChange(e.target.value)}>
+                                    <select className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary ${cityError ? 'border-error' : 'border-border'}`} value={cityId} onChange={(e) => handleCityChange(e.target.value)}>
                                         <option value="">{t('common.selectCity')}</option>
                                         {cities.map((city) => (
                                             <option key={city.id} value={city.id}>{t(`cities.${city.name}`, { defaultValue: city.name })}</option>
                                         ))}
                                     </select>
+                                    {cityError && (
+                                        <p className="mt-1 text-sm text-error">{t('property.addProperty.validation.cityRequired')}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-text mb-2">{t('property.district')}</label>

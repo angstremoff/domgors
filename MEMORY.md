@@ -6,6 +6,7 @@
 - Схему Supabase меняем только через миграции, затем обновляем типы.
 - Root `npm run typecheck` проверяет mobile и не проверяет `web`; web всегда проверять отдельно.
 - TypeScript strict обязателен; `any` в проекте ещё есть, но это техдолг, а не норма.
+- Web-деплой: render.com, ветка `main`. После push нужно убедиться, что render пересобрал (Manual Deploy → Clear build cache при необходимости).
 
 ## 2. Что находится в репозитории
 - Это один репозиторий с двумя разными фронтендами и общей Supabase:
@@ -16,7 +17,7 @@
 ## 3. Что проверять после изменений
 - Mobile: `npm run check`
 - Shared/unit tests: `npm test`
-- Web: `cd web && npm run build`
+- Web: `cd web && npm run build` (требует env `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY`; без них падает на prerender — это нормально для локальной проверки)
 - Автотесты пока не покрывают e2e-критические сценарии `signup/login/reset password` и `create/edit property`; зелёный `check/build` = smoke-проверка кода, а не полное пользовательское e2e.
 
 ## 4. Ключевые инварианты данных
@@ -59,23 +60,21 @@
 - Web callback/recovery должен уметь обрабатывать `access_token + refresh_token`, `code`, `token_hash` и уже созданную session; логика централизована в `web/lib/authSession.ts` и `src/utils/authSessionUrl.ts`.
 - User-facing auth-ошибки должны быть безопасными и продуктово-понятными; не показывать сырые тексты Supabase вроде `Database error saving new user`, SMTP/internal errors и т.п.
 - Для production нельзя полагаться на built-in email service Supabase; нужен custom SMTP вне репозитория.
-- Built-in SMTP Supabase допустим только как временная диагностика auth-flow.
-- Если custom SMTP на Adriahost/cPanel не работает, в Supabase нужно использовать реальный `Outgoing Server` из панели; `mail.domgo.rs` нельзя считать рабочим host без настроенного DNS.
 - `Authentication -> Auth Hooks` в Supabase должны оставаться пустыми/выключенными, если hooks не настроены осознанно.
 - `auth.users` и `public.users` — разные сущности; удаление пользователя из `Authentication` при оставшейся строке в `public.users` может ломать повторную регистрацию (`Database error saving new user`).
-- Клиентский sync профиля в `public.users` должен upsert’ить только `id/email` и не должен перетирать `created_at`.
+- Клиентский sync профиля в `public.users` должен upsert'ить только `id/email` и не должен перетирать `created_at`.
 - Контактные данные объявления архитектурно живут в `public.users`, а не в `properties`: имя и телефон продавца централизованы через `src/utils/contactProfile.ts`.
 - Web и mobile create-flow обязаны сначала валидировать/сохранять contact profile, затем публиковать объявление; публикация без телефона недопустима.
-- Deep links:
-  - `domgomobile://property/<UUID>`
-  - `domgomobile://agency/<UUID>`
-  - `domgomobile://auth/callback?...`
+- Deep links: `domgomobile://property/<UUID>`, `domgomobile://agency/<UUID>`, `domgomobile://auth/callback?...`
 
 ## 6. Агентства
-- Официальные поля `agency_profiles` по типам: `id`, `user_id`, `city_id`, `name`, `phone`, `email`, `site`, `location`, `logo_url`, `description`, `created_at`.
+- Официальные поля `agency_profiles`: `id`, `user_id`, `city_id`, `name`, `phone`, `email`, `site`, `location`, `logo_url`, `description`, `created_at`.
 - Полей `website`, `instagram`, `facebook` в typed-схеме нет; не запрашивать и не считать их официальной схемой.
+- `site` в контактной форме агентства — только для Telegram; label «Telegram», placeholder `@username ili t.me/...`. Колонка `site` в БД не переименована из-за связей.
+- Логотипы агентств: bucket `agency-logos`, path `${userId}/${Date.now()}.${ext}`, лимит 5MB. Storage policies: публичный SELECT, INSERT/UPDATE/DELETE только для владельца (папка = `auth.uid()`). RLS на таблицу `agency_profiles`: публичный SELECT, INSERT/UPDATE для владельца (`user_id = auth.uid()`).
+- Логотип upload: `uploadAgencyLogo` в `src/utils/agencyProfile.ts`; при ошибке upload — `logo_url` не сохраняется.
 - Для совместимости legacy-значения агентств нормализуются через `src/utils/agencyProfile.ts`.
-- Если `site` исторически содержит Telegram handle/URL, helper переводит его в `telegram`, а не считает сайтом.
+- На карточке объявления: если `user.is_agency === true`, лейбл «Agencija» вместо «Vlasnik»; название агентства — кликабельная ссылка на `/agencija?id=<agency_id>`. Данные агентства подгружаются из `agency_profiles` по `property.agency_id`.
 
 ## 7. Важная правда о БД
 - Репозиторий сейчас не содержит надёжного source of truth по live-схеме:
@@ -86,21 +85,19 @@
 
 ## 8. Web-специфика
 - Web-листинги после static export обязаны тихо обновлять объявления из Supabase после монтирования; нельзя полагаться только на `initialProperties`.
-- Список агентств тоже должен делать live fetch при монтировании, а не только использовать static initial data — early return при `initialAgencies.length > 0` убран.
-- Для `/prodaja`, `/izdavanje`, `/novogradnja` initial fetch и client pagination должны использовать общий helper `web/lib/property-listings.ts`, а не копии query по страницам.
-- В `web/components/property/PropertyListingsClient.tsx` initial refresh и infinite scroll должны быть разделены: `IntersectionObserver` нельзя включать до завершения первого refresh, иначе короткие desktop-списки могут задвоить первую страницу.
+- Для `/prodaja`, `/izdavanje`, `/novogradnja` initial fetch и client pagination используют общий helper `web/lib/property-listings.ts`, а не копии query по страницам.
+- В `PropertyListingsClient.tsx` initial refresh и infinite scroll разделены: `IntersectionObserver` нельзя включать до завершения первого refresh.
 - Любое слияние web-листингов делать только с дедупликацией по `property.id`.
-- Web-фильтры листингов должны иметь один источник правды: canonical state живёт в `PropertyListingsClient`, а `PropertyFilters` синхронизируется через `value`, без отдельного постоянного state для city/district.
-- Смена города на web всегда сбрасывает район; сброс на `Все города`/`Все районы` обязан реально убирать фильтр из query, а не оставлять старый state.
-- Семантика комнат на web: `5+` означает `rooms >= 5`; для `property_type = land` rooms filter автоматически очищается и в query не уходит.
-- Web Supabase client/server теперь fail-fast: без `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY` web должен падать явно, а не работать на mock/placeholder.
-- Карусель последних объявлений на главной не должна ломать обычный клик по карточке.
+- Web-фильтры: canonical state живёт в `PropertyListingsClient`, `PropertyFilters` синхронизируется через `value`.
+- Смена города на web всегда сбрасывает район; сброс на «Все города»/«Все районы» обязан реально убирать фильтр из query.
+- Семантика комнат на web: `5+` означает `rooms >= 5`; для `property_type = land` rooms filter автоматически очищается.
+- Web Supabase client fail-fast: без env-переменных web падает явно.
 - Web i18n в рантайме использует shared `src/translations/{ru,sr}.json`; зеркала в `web/public/locales/*` держать синхронно.
-- Продуктовый UI на `domgo.rs` по умолчанию должен быть на сербской латинице; русские hardcoded/fallback-строки в публичных web-flow считаются багом.
-- Web create/edit property используют карту выбора точки: `PropertyCoordinateSelector` должен стартовать от координат города и сохранять `properties.coordinates`.
-- Web list map popup и карточка объявления должны вести на детальную страницу через `/oglas/?id=...`; popup карты кликабелен целиком.
-- На web detail page карта объекта встраивается прямо в карточку объявления; переход к ней — компактная icon-only кнопка рядом с адресом.
-- На web detail page контактный CTA должен быть `Показать номер` / `Prikaži broj`: после раскрытия номер виден текстом и остаётся кликабельным через `tel:`; сценарий должен быть удобен и для desktop, и для mobile browser.
+- Продуктовый UI на `domgo.rs` по умолчанию на сербской латинице; русские hardcoded/fallback-строки в публичных web-flow — баг. Все fallback-значения в `t()` вызовах должны быть на сербском.
+- I18n hydration: `I18nProvider` обёрнут в `<div style={{ display: 'contents' }} suppressHydrationWarning>` для устранения React #418 при SSR/static export + клиентском i18n.
+- Web Supabase client кэшируется (singleton в `web/lib/supabase/client.ts`); безопасно вызывать `createClient()` в любом компоненте.
+- Web create/edit property: валидация города через `fillAllFields` (общая проверка) + inline-подсказка «Izaberite grad» рядом с селектором города. Формы имеют `noValidate` — браузерные подсказки отключены.
+- На web detail page контактный CTA: `Prikaži broj` → раскрытие номера текстом + `tel:` ссылка.
 
 ## 9. Актуальный релизный контекст
 - Текущая версия: `1.0.12`
@@ -116,48 +113,37 @@
 - Release AAB: `./build-release-bundle.sh`
 - Результат: `~/Desktop/DomGoMobile-<версия>-release.aab`
 - Подпись: `android/app/release.keystore`
-- Секреты только через env:
-  - `RELEASE_KEYSTORE_PASSWORD`
-  - `RELEASE_KEY_ALIAS`
-  - `RELEASE_KEY_PASSWORD`
+- Секреты только через env: `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`
 
 ## 11. Ключевые файлы
 - `src/services/propertyService.ts` — CRUD объявлений, storage, статусные операции, кэши.
 - `src/contexts/PropertyContext.tsx` — списки, пагинация, города/районы, загрузка по id.
-- `src/screens/AddPropertyScreen.tsx` и `src/screens/EditPropertyScreen.tsx` — mobile create/edit property, district/null logic, image upload order.
-- `src/utils/contactProfile.ts` — единый контракт contact profile (`users.name/phone/email`), валидация и upsert без перезаписи `created_at`.
-- `src/utils/mapCoordinates.ts` — parse/get/format/serialize координат городов и объявлений.
+- `src/screens/AddPropertyScreen.tsx` и `src/screens/EditPropertyScreen.tsx` — mobile create/edit property.
+- `src/utils/contactProfile.ts` — единый контракт contact profile, валидация и upsert.
+- `src/utils/mapCoordinates.ts` — parse/get/format/serialize координат.
 - `src/utils/propertyRules.ts` — общие правила для `rooms/land`.
-- `src/utils/propertyListingFilters.ts` — shared helper для sanitize/reset/filter transitions и семантики rooms (`5+`, `land`) в web-листингах.
+- `src/utils/propertyListingFilters.ts` — shared helper для фильтров.
 - `src/utils/propertyStorage.ts` — единый контракт storage path.
-- `src/utils/agencyProfile.ts` — нормализация агентств и форматирование ссылок.
+- `src/utils/agencyProfile.ts` — нормализация агентств, форматирование ссылок, uploadAgencyLogo, fetchAgencyProfileByUserId, upsertAgencyProfile.
 - `src/contexts/AuthContext.tsx` и `web/providers/AuthProvider.tsx` — auth/signup flow.
-- `web/lib/authSession.ts` и `src/utils/authSessionUrl.ts` — разбор signup/recovery callback’ов и handoff в app.
-- `src/utils/authErrorMessage.ts` — безопасное отображение auth-ошибок без утечки внутренних текстов Supabase.
-- `src/screens/ForgotPasswordScreen.tsx`, `src/screens/ResetPasswordScreen.tsx`, `web/components/forms/ForgotPasswordForm.tsx`, `web/components/forms/ResetPasswordForm.tsx`, `web/components/forms/AuthCallbackClient.tsx` — email reset/callback flow.
-- `web/lib/property-listings.ts` — единый web-helper для initial fetch, пагинации и дедупликации листингов.
-- `web/components/property/AddPropertyForm.tsx` и `web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx` — web create/edit property, district/null logic, sr-localized validation.
-- `web/components/property/PropertyListingsClient.tsx` — client refresh, infinite scroll и canonical filter state на web.
-- `web/components/property/PropertyFilters.tsx` — controlled sidebar filters; не должен расходиться с быстрыми фильтрами.
-- `web/components/property/PropertyCoordinateSelector.tsx`, `web/components/property/PropertyMap.tsx`, `web/components/property/PropertyLocationMap.tsx`, `web/components/property/PropertyDetails.tsx` — web-карты create/list/detail и product rules around coordinates, popup routing и phone reveal.
-- `web/components/profile/ContactProfileForm.tsx`, `src/screens/ContactInfoScreen.tsx` — отдельное редактирование контактных данных в кабинете на web и mobile.
-- `src/services/AppVersionManager.ts` — инвалидация кэшей по версии/сборке.
+- `web/lib/authSession.ts` и `src/utils/authSessionUrl.ts` — разбор callback'ов.
+- `src/utils/authErrorMessage.ts` — безопасное отображение auth-ошибок.
+- `web/lib/property-listings.ts` — единый web-helper для initial fetch, пагинации, дедупликации.
+- `web/components/property/AddPropertyForm.tsx` и `web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx` — web create/edit, `noValidate`, district/null logic, inline city validation.
+- `web/components/property/PropertyDetails.tsx` — detail page с agency logic (is_agency → Agencija label + ссылка).
+- `web/components/property/PropertyPageClient.tsx` — загрузка property с `user:users(name, phone, is_agency)`, передача `agencyId` prop.
+- `web/components/property/PropertyListingsClient.tsx` — client refresh, infinite scroll, canonical filter state.
+- `web/components/property/PropertyFilters.tsx` — controlled sidebar filters.
+- `web/components/profile/ContactProfileForm.tsx` — редактирование контактных данных + секция Агентства (без телефона, Telegram-only).
+- `web/providers/I18nProvider.tsx` — i18n с `suppressHydrationWarning`, `display: contents` обёрткой.
 - `MEMORY.md` — краткая оперативная память, `all.md` — полный onboarding.
 
 ## 12. Админ-панель (/admin)
 - Next.js 15 App Router, отдельное приложение в `/admin` (не влияет на mobile/web).
 - `basePath: '/admin'` — на продакшене доступно по `https://<render-url>/admin`.
-- Shared database types из `../src/lib/database.types.ts`.
 - Авторизация: Supabase auth (anon client) + проверка email (`ADMIN_EMAIL`).
-- Rate limiting: 5 неудачных попыток → блок 15 мин по IP (in-memory Map).
-- Сессия: httpOnly cookie `admin_session`, `sameSite: strict`, `secure` в prod, TTL 8ч, path `/`.
+- Rate limiting: 5 неудачных попыток → блок 15 мин по IP.
+- Сессия: httpOnly cookie `admin_session`, `sameSite: strict`, `secure` в prod, TTL 8ч.
 - CRUD для таблиц: `users`, `agency_profiles`, `properties` (GET/PUT/DELETE).
-- API: `/api/users`, `/api/agencies`, `/api/properties` (+ `/[id]` для PUT/DELETE).
-- Middleware: принудительный редирект на `/admin/login` без сессии, security headers на все ответы.
-- Security headers: `X-Robots-Tag: noindex`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`.
-- `robots.txt` — полный запрет индексации (User-agent: * Disallow: /).
-- Ветка `admin-only` — минимальная (~30 файлов): только `admin/`, `src/lib/database.types.ts`, `render.yaml`, `package.json`, `tsconfig.json`, документация.
 - Деплой: render.com, ветка `admin-only`, отдельный Web Service, `rootDir: admin`.
-- Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_EMAIL`, `NEXT_PUBLIC_SITE_URL`.
-- Команды: `npm run dev` (dev), `npm run build` (prod), `npm start` (prod server).
-- Админ-юзер: `admin@domgo.rs`, пароль: `665708qQ!` (создан в Supabase Auth, email confirmed).
+- Админ-юзер: `admin@domgo.rs`, пароль: `665708qQ!`
