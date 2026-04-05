@@ -66,6 +66,7 @@
 - Контактные данные объявления архитектурно живут в `public.users`, а не в `properties`: имя и телефон продавца централизованы через `src/utils/contactProfile.ts`.
 - Web и mobile create-flow обязаны сначала валидировать/сохранять contact profile, затем публиковать объявление; публикация без телефона недопустима.
 - Deep links: `domgomobile://property/<UUID>`, `domgomobile://agency/<UUID>`, `domgomobile://auth/callback?...`
+- `https://domgo.rs/property.html?id=<UUID>` — канонический web-обработчик шаринга объявления: на mobile сначала пытается открыть приложение (`domgomobile://...` / Android intent), при неуспехе тихо переводит на `https://domgo.rs/oglas?id=<UUID>`; экран установки/скачивания в этом флоу не показываем.
 
 ## 6. Агентства
 - Официальные поля `agency_profiles`: `id`, `user_id`, `city_id`, `name`, `phone`, `email`, `site`, `location`, `logo_url`, `description`, `created_at`.
@@ -127,12 +128,14 @@
 - `src/utils/agencyProfile.ts` — нормализация агентств, форматирование ссылок, uploadAgencyLogo, fetchAgencyProfileByUserId, upsertAgencyProfile.
 - `src/contexts/AuthContext.tsx` и `web/providers/AuthProvider.tsx` — auth/signup flow.
 - `web/lib/authSession.ts` и `src/utils/authSessionUrl.ts` — разбор callback'ов.
+- `src/utils/deepLinkParser.ts` — разбор property/agency/auth deep links и web-handler URL.
 - `src/utils/authErrorMessage.ts` — безопасное отображение auth-ошибок.
 - `web/lib/property-listings.ts` — единый web-helper для initial fetch, пагинации, дедупликации.
 - `web/components/property/AddPropertyForm.tsx` — web create: `noValidate`, `FieldErrors` state, inline-валидация всех полей, `scrollIntoView`, `clearFieldError`, `handleCityChange` очищает `city`/`district` ошибки.
 - `web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx` — web edit: та же схема inline-валидации.
 - `web/components/property/PropertyDetails.tsx` — detail page с agency logic (is_agency → Agencija label + ссылка).
 - `web/components/property/PropertyPageClient.tsx` — загрузка property с `user:users(name, phone, is_agency)`, передача `agencyId` prop.
+- `web/public/property.html` — публичный web-обработчик deep link/шеринга объявления: попытка открыть приложение, затем тихий переход на web без экрана установки.
 - `web/components/property/PropertyListingsClient.tsx` — client refresh, infinite scroll, canonical filter state.
 - `web/components/property/PropertyFilters.tsx` — controlled sidebar filters.
 - `web/components/profile/ContactProfileForm.tsx` — редактирование контактных данных + секция Агентства (без телефона, Telegram-only).

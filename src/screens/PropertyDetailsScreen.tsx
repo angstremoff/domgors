@@ -186,8 +186,8 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
     if (!property) return;
 
     try {
-      // Каноническая ссылка на наш обработчик deep links на домене domgo.rs
-      // Он проверит наличие приложения и предложит установить его, если не установлено
+      // Каноническая ссылка на наш обработчик deep links на домене domgo.rs.
+      // Он попробует открыть приложение, а при неуспехе тихо переведёт на web-страницу объявления.
       const deeplinkHandlerUrl = `https://domgo.rs/property.html?id=${property.id}`;
 
       // Формируем текст для шаринга в зависимости от выбранного языка

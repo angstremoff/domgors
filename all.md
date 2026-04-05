@@ -65,6 +65,7 @@ Web сейчас живёт в режиме static export.
 Важные файлы:
 - [PropertyListingsClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyListingsClient.tsx)
 - [PropertyFilters.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyFilters.tsx)
+- [property.html](/Users/angstremoff/Documents/GitHub/domgomobile/web/public/property.html)
 - [property-listings.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/property-listings.ts)
 - [propertyListingFilters.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/propertyListingFilters.ts)
 - [AuthProvider.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/providers/AuthProvider.tsx)
@@ -382,7 +383,10 @@ Email templates живут не в репозитории, а в Supabase Dashbo
 - `domgomobile://auth/callback?...`
 
 Web fallback:
-- share/deep-link handler для объявлений ведёт на `property.html`/`oglas?id=...`
+- канонический web-обработчик шаринга/deep link для объявлений: `https://domgo.rs/property.html?id=<UUID>`
+- на mobile `property.html` сначала пытается открыть приложение через `domgomobile://...` или Android intent с package `domgo.rs`
+- если приложение не открылось, обработчик должен тихо переводить пользователя на `https://domgo.rs/oglas?id=<UUID>`
+- экран установки/скачивания и загрузка APK/GitHub Release из этого флоу больше не используются; скачивание приложения остаётся явным действием пользователя через обычные store-ссылки сайта
 - web map popup и любые переходы с карты на карточку объявления должны вести на `/oglas/?id=<UUID>`, а не на старые pseudo-routes `/prodaja/:id` или `/izdavanje/:id`
 
 В mobile есть отложенная навигация при холодном старте:
@@ -407,6 +411,7 @@ Web Supabase client/server теперь работают в fail-fast-режим
 - Общий источник правды для строк: `src/translations/ru.json` и `src/translations/sr.json`.
 - `web/public/locales/*` — только зеркала; их нужно держать синхронно с shared-переводами.
 - Русские hardcoded/fallback-строки в публичных web-flow (`auth`, `create/edit property`, metadata route pages) считаются багом, а не допустимым fallback.
+- `web/public/property.html` — тоже часть публичного web-flow; его `lang` и hardcoded-тексты должны оставаться на сербской латинице.
 
 ### 11.4 Листинги и гидрация
 - [PropertyListingsClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyListingsClient.tsx) отвечает не только за UI фильтров, но и за безопасную синхронизацию списка после static export.
@@ -452,6 +457,7 @@ Web Supabase client/server теперь работают в fail-fast-режим
 - Старые упоминания Google Play больше не актуальны
 - В web footer используется бейдж `web/public/badges/rustore-badge.svg`
 - В mobile/web настройках используется ключ `settings.update.openRuStore`
+- Установка приложения на web должна оставаться явным переходом пользователя по store-ссылке, а не автоматическим deep-link fallback.
 
 ## 13. Версии и релизное состояние
 Актуальное состояние:
@@ -518,6 +524,7 @@ APK в проекте нужен в основном для локального
 - `land` — отдельный кейс во всём: create/edit, фильтры, карточки, детали.
 - `agency_profiles` typed-схема ограничена `email/site/location`; не придумывать новые колонки в запросах.
 - Storage path фото должен быть единым для web и mobile.
+- `property.html` — канонический web-обработчик deep link/шеринга объявления: попытка открыть приложение, затем тихий переход на `/oglas?id=...`; не возвращать экран установки/скачивания.
 - Максимум 20 фото на объявление (`MAX_IMAGES = 20`); в mobile —hardcoded `>= 20`.
 - Порядок фото = порядок в `images: string[]`; первый = обложка.
 - Web edit-форма: unified `ImageItem[]` (existing | new) для reorder всех фото.
