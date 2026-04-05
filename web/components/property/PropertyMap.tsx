@@ -184,7 +184,7 @@ export function PropertyMap({ properties, center, zoom = 7 }: PropertyMapProps) 
               el.className = 'marker ' + feature.properties.propertyType;
               el.textContent = feature.properties.price;
 
-              const propertyUrl = '/oglas?id=' + encodeURIComponent(feature.properties.id);
+              const propertyUrl = '/oglas/?id=' + encodeURIComponent(feature.properties.id);
               const sendOpenProperty = (url) => {
                 window.parent.postMessage({
                   source: 'domgo-property-map',

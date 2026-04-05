@@ -246,7 +246,7 @@ export function PropertyDetails({ property, agencyId }: PropertyDetailsProps) {
                 </p>
                 {isAgency && agencyData ? (
                   <Link
-                    href={`/agencija?id=${agencyData.id}`}
+                    href={`/agencija/?id=${agencyData.id}`}
                     className="text-lg font-medium text-primary hover:underline"
                   >
                     {agencyData.name}

@@ -6,13 +6,13 @@
 - Схему Supabase меняем только через миграции, затем обновляем типы.
 - Root `npm run typecheck` проверяет mobile и не проверяет `web`; web всегда проверять отдельно.
 - TypeScript strict обязателен; `any` в проекте ещё есть, но это техдолг, а не норма.
-- Web-деплой: render.com, ветка `main`, обычный Node Web Service для Next.js runtime. После push нужно убедиться, что render пересобрал сервис (Manual Deploy → Clear build cache при необходимости).
+- Web-деплой: render.com, ветка `main`, размещение как Static Site. После push нужно убедиться, что render пересобрал сайт (Manual Deploy → Clear build cache при необходимости).
 
 ## 2. Что находится в репозитории
 - Это один репозиторий с двумя разными фронтендами и общей Supabase:
   - mobile: React Native 0.76.9 + Expo 52, код в `/src`, вход `index.ts -> App.tsx -> AppNavigator`;
   - web: Next.js 15 App Router в `/web`, отдельный сайт `domgo.rs`.
-- Web больше не `static export`: это Next.js runtime с server metadata для SEO-критичных страниц. `/oglas` и `/agencija` читают `?id=` на сервере, отдают canonical/OG/Twitter/JSON-LD и реальный 404 при отсутствии сущности; приватные web-страницы по-прежнему защищаются на клиенте, активного Next middleware сейчас нет.
+- Web работает как `static export`. Детальные страницы `/oglas` и `/agencija` client-only; SEO для них ограничен клиентскими meta-обновлениями после hydration. Приватные web-страницы защищаются на клиенте, активного Next middleware сейчас нет.
 
 ## 3. Что проверять после изменений
 - Mobile: `npm run check`
@@ -66,7 +66,7 @@
 - Контактные данные объявления архитектурно живут в `public.users`, а не в `properties`: имя и телефон продавца централизованы через `src/utils/contactProfile.ts`.
 - Web и mobile create-flow обязаны сначала валидировать/сохранять contact profile, затем публиковать объявление; публикация без телефона недопустима.
 - Deep links: `domgomobile://property/<UUID>`, `domgomobile://agency/<UUID>`, `domgomobile://auth/callback?...`
-- `https://domgo.rs/property.html?id=<UUID>` — канонический web-обработчик шаринга объявления: на mobile сначала пытается открыть приложение (`domgomobile://...` / Android intent), при неуспехе тихо переводит на `https://domgo.rs/oglas?id=<UUID>`; экран установки/скачивания в этом флоу не показываем.
+- `https://domgo.rs/property.html?id=<UUID>` — канонический web-обработчик шаринга объявления: на mobile сначала пытается открыть приложение (`domgomobile://...` / Android intent), при неуспехе тихо переводит на `https://domgo.rs/oglas/?id=<UUID>`; экран установки/скачивания в этом флоу не показываем.
 
 ## 6. Агентства
 - Официальные поля `agency_profiles`: `id`, `user_id`, `city_id`, `name`, `phone`, `email`, `site`, `location`, `logo_url`, `description`, `created_at`.
@@ -75,7 +75,7 @@
 - Логотипы агентств: bucket `agency-logos`, path `${userId}/${Date.now()}.${ext}`, лимит 5MB. Storage policies: публичный SELECT, INSERT/UPDATE/DELETE только для владельца (папка = `auth.uid()`). RLS на таблицу `agency_profiles`: публичный SELECT, INSERT/UPDATE для владельца (`user_id = auth.uid()`).
 - Логотип upload: `uploadAgencyLogo` в `src/utils/agencyProfile.ts`; при ошибке upload — `logo_url` не сохраняется.
 - Для совместимости legacy-значения агентств нормализуются через `src/utils/agencyProfile.ts`.
-- На карточке объявления: если `user.is_agency === true`, лейбл «Agencija» вместо «Vlasnik»; название агентства — кликабельная ссылка на `/agencija?id=<agency_id>`. Данные агентства подгружаются из `agency_profiles` по `property.agency_id`.
+- На карточке объявления: если `user.is_agency === true`, лейбл «Agencija» вместо «Vlasnik»; название агентства — кликабельная ссылка на `/agencija/?id=<agency_id>`. Данные агентства подгружаются из `agency_profiles` по `property.agency_id`.
 
 ## 7. Важная правда о БД
 - Репозиторий сейчас не содержит надёжного source of truth по live-схеме:
@@ -85,20 +85,20 @@
 - Перед любым серьёзным рефакторингом БД/RLS нужно сначала выгрузить актуальную схему из live Supabase и заново сгенерировать типы.
 
 ## 8. Web-специфика
-- Web-листинги после server snapshot/ISR обязаны тихо обновлять объявления из Supabase после монтирования; нельзя полагаться только на `initialProperties`.
+- Web-листинги после static export обязаны тихо обновлять объявления из Supabase после монтирования; нельзя полагаться только на `initialProperties`.
 - Для `/prodaja`, `/izdavanje`, `/novogradnja` initial fetch и client pagination используют общий helper `web/lib/property-listings.ts`, а не копии query по страницам.
 - В `PropertyListingsClient.tsx` initial refresh и infinite scroll разделены: `IntersectionObserver` нельзя включать до завершения первого refresh.
 - Любое слияние web-листингов делать только с дедупликацией по `property.id`.
 - Web-фильтры: canonical state живёт в `PropertyListingsClient`, `PropertyFilters` синхронизируется через `value`.
 - Смена города на web всегда сбрасывает район; сброс на «Все города»/«Все районы» обязан реально убирать фильтр из query.
 - Семантика комнат на web: `5+` означает `rooms >= 5`; для `property_type = land` rooms filter автоматически очищается.
-- `/oglas` и `/agencija` SEO-критичны: route page на сервере читает `searchParams.id`, делает fetch из Supabase, выставляет metadata/canonical и должен вызывать `notFound()` для невалидного или удалённого объекта.
-- `/profil*` должны оставаться `noindex,nofollow` через route layout; `robots.txt` в одиночку недостаточен.
-- `sitemap.xml` должен использовать те же canonical URL, что и страницы: `/prodaja`, `/izdavanje`, `/novogradnja`, `/agencije`, `/oglas?id=...`, `/agencija?id=...`.
+- Detail URLs на web должны использовать формат с trailing slash query: `/oglas/?id=...`, `/agencija/?id=...`, `/oglas/izmeni/?id=...`.
+- `/profil*` на static site остаются client-gated и дополнительно помечены `noindex,nofollow`; это снижает SEO-риск, но не заменяет настоящую server auth protection.
+- `sitemap.xml` должен использовать те же canonical URL, что и страницы: `/prodaja/`, `/izdavanje/`, `/novogradnja/`, `/agencije/`, `/oglas/?id=...`, `/agencija/?id=...`.
 - Web Supabase client fail-fast: без env-переменных web падает явно.
 - Web i18n в рантайме использует shared `src/translations/{ru,sr}.json`; зеркала в `web/public/locales/*` держать синхронно.
 - Продуктовый UI на `domgo.rs` по умолчанию на сербской латинице; русские hardcoded/fallback-строки в публичных web-flow — баг. Все fallback-значения в `t()` вызовах должны быть на сербском.
-- I18n hydration: `I18nProvider` обёрнут в `<div style={{ display: 'contents' }} suppressHydrationWarning>` для устранения React #418 при SSR + клиентском i18n.
+- I18n hydration: `I18nProvider` обёрнут в `<div style={{ display: 'contents' }} suppressHydrationWarning>` для устранения React #418 при SSR/static export + клиентском i18n.
 - Web Supabase client кэшируется (singleton в `web/lib/supabase/client.ts`); безопасно вызывать `createClient()` в любом компоненте.
 - Web create/edit property: inline-валидация каждого обязательного поля (красная рамка `border-error` + текст ошибки на сербском). При submit — `scrollIntoView` к первому незаполненному полю. Ошибки сбрасываются при вводе. Формы имеют `noValidate`. Поля: контакты (имя, телефон), заголовок, цена, площадь, комнаты (если не `land`), город, район, адрес, описание, фото. Ключи переводов: `property.addProperty.validation.{titleRequired,priceRequired,areaRequired,roomsRequired,addressRequired,descriptionRequired,cityRequired,districtRequired}` в `sr` и `ru`.
 - На web detail page контактный CTA: `Prikaži broj` → раскрытие номера текстом + `tel:` ссылка.
@@ -134,17 +134,15 @@
 - `src/utils/deepLinkParser.ts` — разбор property/agency/auth deep links и web-handler URL.
 - `src/utils/authErrorMessage.ts` — безопасное отображение auth-ошибок.
 - `web/lib/property-listings.ts` — единый web-helper для initial fetch, пагинации, дедупликации.
-- `web/lib/seo-page-data.ts` — server fetch и metadata builder для `/oglas` и `/agencija`.
 - `web/components/property/AddPropertyForm.tsx` — web create: `noValidate`, `FieldErrors` state, inline-валидация всех полей, `scrollIntoView`, `clearFieldError`, `handleCityChange` очищает `city`/`district` ошибки.
 - `web/app/(routes)/oglas/izmeni/EditPropertyPageClient.tsx` — web edit: та же схема inline-валидации.
 - `web/components/property/PropertyDetails.tsx` — detail page с agency logic (is_agency → Agencija label + ссылка).
-- `web/app/(routes)/oglas/page.tsx` и `web/app/(routes)/agencija/page.tsx` — server-side SEO route pages для detail URL с `?id=`.
-- `web/components/property/PropertyPageClient.tsx` и `web/components/agency/AgencyPageClient.tsx` — client render detail page + синхронизация meta при смене языка после hydration.
+- `web/app/(routes)/oglas/page.tsx` и `web/app/(routes)/agencija/page.tsx` — client-only route pages-обёртки для detail URL с `?id=`.
+- `web/components/property/PropertyPageClient.tsx` и `web/components/agency/AgencyPageClient.tsx` — client fetch detail page + клиентская синхронизация meta/canonical/JSON-LD после hydration.
 - `web/public/property.html` — публичный web-обработчик deep link/шеринга объявления: попытка открыть приложение, затем тихий переход на web без экрана установки.
 - `web/components/property/PropertyListingsClient.tsx` — client refresh, infinite scroll, canonical filter state.
 - `web/components/property/PropertyFilters.tsx` — controlled sidebar filters.
 - `web/components/profile/ContactProfileForm.tsx` — редактирование контактных данных + секция Агентства (без телефона, Telegram-only).
-- `web/app/(routes)/profil/layout.tsx` — route-level `noindex,nofollow` для private profile pages.
 - `web/providers/I18nProvider.tsx` — i18n с `suppressHydrationWarning`, `display: contents` обёрткой.
 - `MEMORY.md` — краткая оперативная память, `all.md` — полный onboarding.
 

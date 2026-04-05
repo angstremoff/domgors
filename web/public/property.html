@@ -69,7 +69,7 @@
     const androidIntent = `intent://property/${propertyId}#Intent;scheme=domgomobile;package=domgo.rs;end`;
     
     // Проверяем, что указываем на правильную веб-страницу
-    const webUrl = `https://domgo.rs/oglas?id=${propertyId}`;
+    const webUrl = `https://domgo.rs/oglas/?id=${propertyId}`;
 
     const isAndroid = /android/i.test(navigator.userAgent);
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);

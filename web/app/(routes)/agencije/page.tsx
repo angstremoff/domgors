@@ -4,7 +4,7 @@ import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@shared/lib/database.types';
 
-export const revalidate = 3600;
+export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
   title: 'Agencije za nekretnine',

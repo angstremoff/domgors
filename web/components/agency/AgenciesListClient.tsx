@@ -149,7 +149,7 @@ export function AgenciesListClient({
               const telegram = siteIsTelegram ? formatAgencyTelegramUrl(agency.site) : null;
 
               return (
-                <Link key={agency.id} href={`/agencija?id=${agency.id}`} className="block h-full">
+                <Link key={agency.id} href={`/agencija/?id=${agency.id}`} className="block h-full">
                   <Card className="h-full hover:shadow-lg transition-shadow">
                     <CardHeader>
                       <div className="flex items-center gap-3">

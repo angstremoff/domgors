@@ -176,7 +176,7 @@ export default function MojiOglasiPage() {
             return (
               <Card key={property.id} className="overflow-hidden">
                 {/* Изображение */}
-                <Link href={`/oglas?id=${property.id}`} className="block relative h-48 overflow-hidden">
+                <Link href={`/oglas/?id=${property.id}`} className="block relative h-48 overflow-hidden">
                   <Image
                     src={property.images?.[0] || '/placeholder-property.jpg'}
                     alt={property.title}
@@ -218,7 +218,7 @@ export default function MojiOglasiPage() {
                   {/* Кнопки действий */}
                   <div className="flex flex-wrap gap-2">
                     {/* Редактировать */}
-                    <Link href={`/oglas/izmeni?id=${property.id}`} className="flex-1">
+                    <Link href={`/oglas/izmeni/?id=${property.id}`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full" disabled={isLoading}>
                         <Edit2 className="h-4 w-4 mr-1" />
                         {t('common.edit')}

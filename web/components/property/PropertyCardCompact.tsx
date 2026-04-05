@@ -39,7 +39,7 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
     property.rooms !== null &&
     property.rooms !== undefined;
 
-  const detailsUrl = `/oglas?id=${property.id}`;
+  const detailsUrl = `/oglas/?id=${property.id}`;
 
   const getPropertyTypeLabel = () => {
     const typeMap: Record<string, string> = {

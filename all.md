@@ -54,26 +54,22 @@ DomGoMobile — платформа объявлений о недвижимос�
 - [AppVersionManager.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/services/AppVersionManager.ts)
 
 ### 4.2 Web
-Web теперь работает как обычный Next.js runtime на Render Web Service, а не как `static export`.
+Web сейчас живёт в режиме static export.
 
 Что это означает practically:
-- indexable страницы получают server HTML, а не только клиентскую гидрацию;
-- `/oglas` и `/agencija` остаются query-param routes, но их metadata/canonical/OG/Twitter/JSON-LD строятся на сервере по `?id=`;
-- при невалидном или удалённом `id` detail pages обязаны отдавать реальный 404 через `notFound()`, а не client-side soft-404;
-- приватные разделы вроде `/profil` по-прежнему защищаются на клиенте, но дополнительно помечаются `noindex,nofollow`;
-- client refresh списков после mount остаётся обязательным поверх server snapshot.
+- детальные страницы `/oglas` и `/agencija` сделаны client-only для стабильности;
+- SEO-метаданные для них ограничены клиентскими обновлениями после загрузки данных;
+- приватные разделы вроде `/profil` защищаются на клиенте, а не через активный middleware;
+- неиспользуемый server middleware убран как мёртвый код.
 
 Важные файлы:
 - [PropertyListingsClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyListingsClient.tsx)
 - [PropertyFilters.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyFilters.tsx)
 - [property.html](/Users/angstremoff/Documents/GitHub/domgomobile/web/public/property.html)
 - [property-listings.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/property-listings.ts)
-- [seo-page-data.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/seo-page-data.ts)
 - [propertyListingFilters.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/propertyListingFilters.ts)
 - [AuthProvider.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/providers/AuthProvider.tsx)
 - [AgencyPageClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/agency/AgencyPageClient.tsx)
-- [oglas/page.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/app/(routes)/oglas/page.tsx)
-- [agencija/page.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/app/(routes)/agencija/page.tsx)
 - [client.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/supabase/client.ts)
 - [server.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/supabase/server.ts)
 
@@ -126,7 +122,7 @@ Web теперь работает как обычный Next.js runtime на Ren
 - [propertyRules.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/propertyRules.ts)
 
 ### 6.3 Списки и обновление данных
-- Web-листинги после server snapshot/ISR обязаны делать тихое клиентское обновление из Supabase после монтирования.
+- Web-листинги после static export обязаны делать тихое клиентское обновление из Supabase после монтирования.
 - `/prodaja`, `/izdavanje` и `/novogradnja` должны брать initial page и последующие страницы через единый helper:
   - [property-listings.ts](/Users/angstremoff/Documents/GitHub/domgomobile/web/lib/property-listings.ts)
 - Нормализация и переходы состояний фильтров для web вынесены в shared helper:
@@ -389,9 +385,9 @@ Email templates живут не в репозитории, а в Supabase Dashbo
 Web fallback:
 - канонический web-обработчик шаринга/deep link для объявлений: `https://domgo.rs/property.html?id=<UUID>`
 - на mobile `property.html` сначала пытается открыть приложение через `domgomobile://...` или Android intent с package `domgo.rs`
-- если приложение не открылось, обработчик должен тихо переводить пользователя на `https://domgo.rs/oglas?id=<UUID>`
+- если приложение не открылось, обработчик должен тихо переводить пользователя на `https://domgo.rs/oglas/?id=<UUID>`
 - экран установки/скачивания и загрузка APK/GitHub Release из этого флоу больше не используются; скачивание приложения остаётся явным действием пользователя через обычные store-ссылки сайта
-- web map popup и любые переходы с карты на карточку объявления должны вести на `/oglas?id=<UUID>`, а не на старые pseudo-routes `/prodaja/:id` или `/izdavanje/:id`
+- web map popup и любые переходы с карты на карточку объявления должны вести на `/oglas/?id=<UUID>`, а не на старые pseudo-routes `/prodaja/:id` или `/izdavanje/:id`
 
 В mobile есть отложенная навигация при холодном старте:
 - если экран ещё не готов, переход откладывается;
@@ -399,13 +395,11 @@ Web fallback:
 
 ## 11. Web-специфика
 
-### 11.1 Runtime и SEO
-Web теперь работает в обычном Next.js runtime:
-- `/oglas` и `/agencija` строят server metadata по `searchParams.id`;
-- detail pages возвращают реальный 404 при отсутствии сущности, а не только client-side not found state;
-- `/prodaja`, `/izdavanje`, `/novogradnja`, `/agencije` отдаются server snapshot'ом с `revalidate = 3600`;
-- `/profil*` дополнительно помечены `noindex,nofollow` через route layout;
-- качество SEO теперь зависит от живых `NEXT_PUBLIC_SUPABASE_*` на web runtime, а не только от build-time export.
+### 11.1 Static export
+Из-за static export:
+- детали объявлений и агентств работают client-only;
+- SEO для этих страниц частично ставится на клиенте;
+- полноценный server SEO для карточек потребует отказа от текущей схемы `output: 'export'`.
 
 ### 11.2 Supabase env
 Web Supabase client/server теперь работают в fail-fast-режиме:
@@ -420,7 +414,7 @@ Web Supabase client/server теперь работают в fail-fast-режим
 - `web/public/property.html` — тоже часть публичного web-flow; его `lang` и hardcoded-тексты должны оставаться на сербской латинице.
 
 ### 11.4 Листинги и гидрация
-- [PropertyListingsClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyListingsClient.tsx) отвечает не только за UI фильтров, но и за безопасную синхронизацию списка после server render.
+- [PropertyListingsClient.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyListingsClient.tsx) отвечает не только за UI фильтров, но и за безопасную синхронизацию списка после static export.
 - Актуальный архитектурный контракт:
   - первая клиентская синхронизация и пагинация разделены;
   - `IntersectionObserver` стартует только после первого refresh;
@@ -500,9 +494,8 @@ APK в проекте нужен в основном для локального
 - поисковые верификации
 
 Но важно помнить:
-- `/oglas` и `/agencija` теперь получают server metadata/canonical/OG/Twitter/JSON-LD по `?id=`;
-- `sitemap.xml` должен использовать те же canonical URL, что и страницы, без лишних trailing slash и расхождения по query format;
-- часть клиентских meta-обновлений всё ещё нужна после hydration для смены языка, но базовый SEO должен быть корректен уже в server HTML.
+- из-за static export detail SEO для `/oglas` и `/agencija` неполноценный на сервере;
+- часть метаданных выставляется клиентом после загрузки страницы.
 
 ## 16. Текущие проверки и техдолг
 
@@ -519,8 +512,7 @@ APK в проекте нужен в основном для локального
 ### 16.2 Что остаётся проблемой
 - В mobile остаётся исторический lint-хвост, в основном старые `any` и техдолг в старых экранах/утилитах.
 - Полноценный аудит БД/RLS по-прежнему нельзя считать завершённым, пока не выгружена живая схема Supabase.
-- Web-приватность всё ещё client-gated: `noindex` на `/profil*` снижает SEO-риск, но не заменяет настоящую server auth protection.
-- SEO `/oglas`, `/agencija` и `sitemap.xml` зависит от живых `NEXT_PUBLIC_SUPABASE_*` в web runtime; поломанные env ломают metadata и индексацию.
+- Web-приватность и detail SEO всё ещё ограничены текущей архитектурой static export.
 - Полноценного автоматического e2e-покрытия для критических пользовательских сценариев пока нет:
   - `signup/login/reset password`
   - `create/edit property`
@@ -532,8 +524,8 @@ APK в проекте нужен в основном для локального
 - `land` — отдельный кейс во всём: create/edit, фильтры, карточки, детали.
 - `agency_profiles` typed-схема ограничена `email/site/location`; не придумывать новые колонки в запросах.
 - Storage path фото должен быть единым для web и mobile.
-- `property.html` — канонический web-обработчик deep link/шеринга объявления: попытка открыть приложение, затем тихий переход на `/oglas?id=...`; не возвращать экран установки/скачивания.
-- `/oglas` и `/agencija` SEO-критичны: сервер читает `?id=`, делает fetch из Supabase, выставляет metadata/canonical и обязан отдавать real 404 при отсутствии сущности.
+- `property.html` — канонический web-обработчик deep link/шеринга объявления: попытка открыть приложение, затем тихий переход на `/oglas/?id=...`; не возвращать экран установки/скачивания.
+- `/oglas` и `/agencija` SEO-критичны, но в static export их metadata улучшаются только после client fetch; это архитектурное ограничение текущего хостинга.
 - Максимум 20 фото на объявление (`MAX_IMAGES = 20`); в mobile —hardcoded `>= 20`.
 - Порядок фото = порядок в `images: string[]`; первый = обложка.
 - Web edit-форма: unified `ImageItem[]` (existing | new) для reorder всех фото.
@@ -553,7 +545,7 @@ APK в проекте нужен в основном для локального
 - Но для новых крупных городов не оставлять пустой UX: минимум `cities.coordinates`, а лучше базовый район `Центар`.
 - Контакты продавца не дублировать в `properties`; использовать профиль пользователя (`public.users`) и helper `contactProfile`.
 - `domgo.rs` должен отдавать сербскую латиницу по умолчанию; русские fallback-строки в public UI — это регресс.
-- Любая новая карта на web должна использовать общую координатную модель и вести в detail page через `/oglas?id=...`.
+- Любая новая карта на web должна использовать общую координатную модель и вести в detail page через `/oglas/?id=...`.
 - Web detail contact card должна сначала раскрывать номер, а не пытаться “звонить вслепую”.
 - Web create/edit inline-валидация: `FieldErrors` объект + scroll к первому ошибочному полю; ошибки на сербском; `noValidate` на `<form>`. Не использовать отдельные `*Error` boolean-стейты — только единый объект.
 - Web signup зависит и от кода, и от внешней SMTP-настройки Supabase.

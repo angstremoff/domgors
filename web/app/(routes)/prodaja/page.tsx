@@ -3,7 +3,7 @@ import { PropertyListingsClient } from '@/components/property/PropertyListingsCl
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { fetchInitialPropertyListings } from '@/lib/property-listings';
 
-export const revalidate = 3600;
+export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
   title: 'Prodaja nekretnina',
