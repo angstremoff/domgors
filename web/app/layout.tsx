@@ -26,19 +26,20 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'DomGo.rs - Nekretnine u Srbiji | Недвижимость в Сербии',
+    default: 'DomGo.rs - Nekretnine u Srbiji',
     template: '%s | DomGo.rs',
   },
-  description: 'Pretraga i prodaja nekretnina u Srbiji: stanovi, kuće, poslovni prostori. Аренда и продажа домов, квартир и коммерческой недвижимости в Сербии.',
+  description: 'Pretražite prodaju, izdavanje, novogradnju i agencije za nekretnine u Srbiji na DomGo.rs.',
   keywords: [
-    // Сербские ключевые слова
-    'nekretnine', 'Srbija', 'stanovi', 'kuće', 'zakup', 'prodaja',
-    'nekretnine beograd', 'stan na prodaju', 'kuća na prodaju',
-    'izdavanje stanova', 'poslovni prostor', 'novogradnja',
-    // Русские ключевые слова
-    'недвижимость', 'Сербия', 'квартиры', 'дома', 'аренда', 'продажа',
-    'недвижимость белград', 'квартира на продажу', 'дом в сербии',
-    'аренда квартир', 'коммерческая недвижимость', 'новостройки',
+    'nekretnine',
+    'Srbija',
+    'prodaja nekretnina',
+    'izdavanje nekretnina',
+    'novogradnja',
+    'agencije za nekretnine',
+    'stanovi',
+    'kuće',
+    'poslovni prostori',
   ],
   authors: [{ name: 'DomGo.rs' }],
   creator: 'DomGo.rs',
@@ -56,11 +57,10 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'sr_RS',
-    alternateLocale: ['ru_RU'],
     url: SITE_URL,
     siteName: 'DomGo.rs',
-    title: 'DomGo.rs - Nekretnine u Srbiji | Недвижимость в Сербии',
-    description: 'Pretraga i prodaja nekretnina u Srbiji. Аренда и продажа недвижимости в Сербии.',
+    title: 'DomGo.rs - Nekretnine u Srbiji',
+    description: 'Pretražite prodaju, izdavanje, novogradnju i agencije za nekretnine u Srbiji na DomGo.rs.',
     images: [
       {
         url: '/logo.png',
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'DomGo.rs - Nekretnine u Srbiji',
-    description: 'Pretraga i prodaja nekretnina u Srbiji. Аренда и продажа недвижимости в Сербии.',
+    description: 'Pretražite prodaju, izdavanje, novogradnju i agencije za nekretnine u Srbiji na DomGo.rs.',
     images: ['/logo.png'],
   },
   robots: {
@@ -85,12 +85,6 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
       'max-image-preview': 'large',
       'max-snippet': -1,
-    },
-  },
-  alternates: {
-    languages: {
-      'sr-RS': SITE_URL,
-      'ru-RU': `${SITE_URL}?lang=ru`,
     },
   },
   verification: {
@@ -107,7 +101,7 @@ const organizationJsonLd = {
   name: 'DomGo.rs',
   url: SITE_URL,
   logo: `${SITE_URL}/logo.png`,
-  description: 'Платформа для поиска недвижимости в Сербии. Prodaja i izdavanje nekretnina u Srbiji.',
+  description: 'Platforma za prodaju, izdavanje i pretragu nekretnina u Srbiji.',
   address: {
     '@type': 'PostalAddress',
     addressCountry: 'RS',

@@ -3,15 +3,15 @@ import { PropertyListingsClient } from '@/components/property/PropertyListingsCl
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { fetchInitialPropertyListings } from '@/lib/property-listings';
 
-export const dynamic = 'force-static';
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Izdavanje nekretnina | Аренда недвижимости',
-  description: 'Stanovi i kuće za dugoročni zakup u Srbiji. Квартиры и дома в долгосрочную аренду в Сербии.',
-  keywords: ['izdavanje stanova', 'zakup nekretnina', 'kirija stan', 'аренда квартир', 'снять квартиру в сербии'],
+  title: 'Izdavanje nekretnina',
+  description: 'Stanovi i kuće za dugoročni zakup u Srbiji na DomGo.rs.',
+  keywords: ['izdavanje stanova', 'zakup nekretnina', 'kirija stan', 'izdavanje kuća'],
   openGraph: {
     title: 'Izdavanje nekretnina - DomGo.rs',
-    description: 'Stanovi i kuće za dugoročni zakup u Srbiji',
+    description: 'Stanovi i kuće za dugoročni zakup u Srbiji na DomGo.rs.',
     url: 'https://domgo.rs/izdavanje',
   },
   alternates: {

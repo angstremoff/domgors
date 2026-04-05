@@ -3,15 +3,15 @@ import { PropertyListingsClient } from '@/components/property/PropertyListingsCl
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { fetchInitialPropertyListings } from '@/lib/property-listings';
 
-export const dynamic = 'force-static';
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Prodaja nekretnina | Продажа недвижимости',
-  description: 'Stanovi, kuće i poslovni prostori na prodaju u Srbiji. Квартиры, дома и коммерческая недвижимость на продажу в Сербии.',
-  keywords: ['prodaja nekretnina', 'stanovi na prodaju', 'kuće na prodaju', 'продажа недвижимости', 'квартиры на продажу'],
+  title: 'Prodaja nekretnina',
+  description: 'Stanovi, kuće i poslovni prostori na prodaju u Srbiji na DomGo.rs.',
+  keywords: ['prodaja nekretnina', 'stanovi na prodaju', 'kuće na prodaju', 'poslovni prostori'],
   openGraph: {
     title: 'Prodaja nekretnina - DomGo.rs',
-    description: 'Stanovi, kuće i poslovni prostori na prodaju u Srbiji',
+    description: 'Stanovi, kuće i poslovni prostori na prodaju u Srbiji na DomGo.rs.',
     url: 'https://domgo.rs/prodaja',
   },
   alternates: {

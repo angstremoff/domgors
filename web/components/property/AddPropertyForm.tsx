@@ -550,7 +550,7 @@ export function AddPropertyForm() {
 
       const createdId = (data as { id?: string } | null)?.id;
       if (createdId) {
-        router.push(`/oglas/?id=${createdId}`);
+        router.push(`/oglas?id=${createdId}`);
       }
     } catch (submitError) {
       const message =

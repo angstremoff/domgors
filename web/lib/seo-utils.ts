@@ -67,11 +67,15 @@ export function generatePropertyDescription(
 
   const parts: string[] = [];
 
-  if (property.area) {
+  if (property.area !== null && property.area !== undefined) {
     parts.push(`${property.area} m²`);
   }
 
-  if (property.rooms) {
+  if (
+    property.property_type !== 'land' &&
+    property.rooms !== null &&
+    property.rooms !== undefined
+  ) {
     parts.push(locale === 'ru' ? `${property.rooms} комн.` : `${property.rooms} soba`);
   }
 
@@ -81,8 +85,8 @@ export function generatePropertyDescription(
 
   const baseDesc = parts.join(', ');
   const cta = locale === 'ru'
-    ? 'Смотрите подробности и фото в приложении DomGo.'
-    : 'Pogledajte detalje i fotografije u DomGo aplikaciji.';
+    ? 'Смотрите подробности и фото на DomGo.rs.'
+    : 'Pogledajte detalje i fotografije na DomGo.rs.';
 
   if (!baseDesc) {
     return cta;
@@ -101,4 +105,40 @@ export function generateAgencyTitle(
   const city = agency.city?.name ? `(${agency.city.name})` : '';
 
   return `${name} ${city} | ${SITE_NAME}`;
+}
+
+export function generateAgencyDescription(
+  agency: AgencyForSeo | null | undefined,
+  locale: 'sr' | 'ru' = 'sr',
+): string {
+  if (!agency) {
+    return locale === 'ru'
+      ? 'Предложения агентств недвижимости на DomGo.rs.'
+      : 'Ponuda agencija za nekretnine na DomGo.rs.';
+  }
+
+  if (agency.description) {
+    return truncate(agency.description, 160);
+  }
+
+  return locale === 'ru'
+    ? `Смотрите предложения агентства ${agency.name} на DomGo.rs.`
+    : `Pogledajte ponudu nekretnina agencije ${agency.name} na DomGo.rs.`;
+}
+
+export function getPropertyStructuredDataType(propertyType: string | null | undefined): string {
+  switch (propertyType) {
+    case 'apartment':
+      return 'Apartment';
+    case 'house':
+      return 'House';
+    default:
+      return 'Place';
+  }
+}
+
+export function getPropertyOfferAvailability(status: string | null | undefined): string {
+  return status === 'active'
+    ? 'https://schema.org/InStock'
+    : 'https://schema.org/SoldOut';
 }

@@ -3,15 +3,15 @@ import { PropertyListingsClient } from '@/components/property/PropertyListingsCl
 import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { fetchInitialPropertyListings } from '@/lib/property-listings';
 
-export const dynamic = 'force-static';
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Novogradnja | Новостройки',
-  description: 'Stanovi u novim stambenim kompleksima Srbije. Квартиры в новостройках Сербии от застройщиков.',
-  keywords: ['novogradnja', 'novi stanovi', 'stambeni kompleksi', 'новостройки сербия', 'квартиры от застройщика'],
+  title: 'Novogradnja',
+  description: 'Stanovi u novim stambenim kompleksima Srbije na DomGo.rs.',
+  keywords: ['novogradnja', 'novi stanovi', 'stambeni kompleksi', 'stanovi od investitora'],
   openGraph: {
     title: 'Novogradnja - DomGo.rs',
-    description: 'Stanovi u novim stambenim kompleksima Srbije',
+    description: 'Stanovi u novim stambenim kompleksima Srbije na DomGo.rs.',
     url: 'https://domgo.rs/novogradnja',
   },
   alternates: {

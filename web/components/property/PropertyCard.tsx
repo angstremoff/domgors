@@ -39,8 +39,7 @@ export function PropertyCard({ property, onFavoriteToggle, isFavorite }: Propert
     property.rooms !== null &&
     property.rooms !== undefined;
 
-  // URL для деталей объявления (query params для static export)
-  const detailsUrl = `/oglas/?id=${property.id}`;
+  const detailsUrl = `/oglas?id=${property.id}`;
 
   // Определяем тип недвижимости для отображения
   const getPropertyTypeLabel = () => {

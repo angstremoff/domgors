@@ -4,15 +4,15 @@ import { Breadcrumbs } from '@/components/seo/Breadcrumbs';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@shared/lib/database.types';
 
-export const dynamic = 'force-static';
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Agencije za nekretnine | Агентства недвижимости',
-  description: 'Proverene agencije za nekretnine u Srbiji. Проверенные агентства недвижимости в Сербии.',
-  keywords: ['agencije za nekretnine', 'real estate agencies serbia', 'агентства недвижимости сербия'],
+  title: 'Agencije za nekretnine',
+  description: 'Proverene agencije za nekretnine u Srbiji na DomGo.rs.',
+  keywords: ['agencije za nekretnine', 'agencija za stanove', 'agencija za kuće'],
   openGraph: {
     title: 'Agencije za nekretnine - DomGo.rs',
-    description: 'Proverene agencije za nekretnine u Srbiji',
+    description: 'Proverene agencije za nekretnine u Srbiji na DomGo.rs.',
     url: 'https://domgo.rs/agencije',
   },
   alternates: {
