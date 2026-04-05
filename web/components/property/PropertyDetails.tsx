@@ -77,8 +77,8 @@ export function PropertyDetails({ property, agencyId }: PropertyDetailsProps) {
   };
 
   const handleShare = async () => {
-    // Используем property.html обработчик deep links - как в мобильном приложении
-    // Он проверяет платформу, наличие приложения и предлагает установить или открыть на сайте
+    // Используем property.html обработчик deep links:
+    // если приложение установлено, ссылка откроет его, иначе будет тихий переход на web-страницу.
     const deeplinkHandlerUrl = `https://domgo.rs/property.html?id=${property.id}`;
 
     // Получаем переведённое название города
