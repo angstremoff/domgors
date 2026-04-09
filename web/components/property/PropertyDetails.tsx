@@ -10,6 +10,10 @@ import { PropertyGallery } from './PropertyGallery';
 import { PropertyLocationMap } from './PropertyLocationMap';
 import type { Database } from '@shared/lib/database.types';
 import { parseMapCoordinates } from '@shared/utils/mapCoordinates';
+import {
+  DEFAULT_WEB_SHARE_CAPABILITY_STATE,
+  getWebShareCapabilityState,
+} from '@shared/utils/webShare';
 
 type Property = Database['public']['Tables']['properties']['Row'] & {
   city?: { name: string } | null;
@@ -22,11 +26,64 @@ interface PropertyDetailsProps {
   agencyId?: string | null;
 }
 
+const copyTextToClipboard = async (text: string): Promise<boolean> => {
+  if (
+    typeof window !== 'undefined' &&
+    window.isSecureContext &&
+    typeof navigator !== 'undefined' &&
+    typeof navigator.clipboard?.writeText === 'function'
+  ) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fallback to legacy copy below when Clipboard API is unavailable in embedded browsers.
+    }
+  }
+
+  if (typeof document === 'undefined') {
+    return false;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '0';
+  textarea.style.opacity = '0';
+  textarea.style.pointerEvents = 'none';
+
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  try {
+    return document.execCommand('copy');
+  } catch {
+    return false;
+  } finally {
+    document.body.removeChild(textarea);
+  }
+};
+
+const isShareAbortError = (error: unknown): boolean => {
+  return Boolean(
+    error &&
+      typeof error === 'object' &&
+      'name' in error &&
+      error.name === 'AbortError'
+  );
+};
+
 export function PropertyDetails({ property, agencyId }: PropertyDetailsProps) {
   const { t } = useTranslation();
   const propertyCoordinates = parseMapCoordinates(property.coordinates);
   const [phoneRevealed, setPhoneRevealed] = useState(false);
   const [agencyData, setAgencyData] = useState<{ id: string; name: string; logo_url: string | null } | null>(null);
+  const [shareCapabilityState, setShareCapabilityState] = useState(DEFAULT_WEB_SHARE_CAPABILITY_STATE);
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
   const isAgency = (property.user as { is_agency?: boolean } | null)?.is_agency === true;
 
@@ -42,6 +99,35 @@ export function PropertyDetails({ property, agencyId }: PropertyDetailsProps) {
         if (data) setAgencyData(data);
       });
   }, [agencyId]);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || typeof window === 'undefined') {
+      return;
+    }
+
+    setShareCapabilityState(
+      getWebShareCapabilityState({
+        userAgent: navigator.userAgent,
+        hasNavigatorShare: typeof navigator.share === 'function',
+        hasClipboardWriteText: typeof navigator.clipboard?.writeText === 'function',
+        isSecureContext: window.isSecureContext,
+      })
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!shareFeedback || typeof window === 'undefined') {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShareFeedback(null);
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [shareFeedback]);
 
   const price = new Intl.NumberFormat('sr-RS', {
     style: 'currency',
@@ -92,23 +178,47 @@ export function PropertyDetails({ property, agencyId }: PropertyDetailsProps) {
       maximumFractionDigits: 0,
     }).format(property.price);
 
-    const shareText = `${property.title}\n${priceText}\n${translatedCityName}\n\n${t('property.moreDetailsInApp', 'Подробнее в приложении DomGo')}: ${deeplinkHandlerUrl}`;
+    const shareText = `${property.title}\n${priceText}\n${translatedCityName}\n\n${t('property.moreDetailsInApp')}: ${deeplinkHandlerUrl}`;
+    const runtimeShareCapabilityState =
+      typeof navigator !== 'undefined' && typeof window !== 'undefined'
+        ? getWebShareCapabilityState({
+            userAgent: navigator.userAgent,
+            hasNavigatorShare: typeof navigator.share === 'function',
+            hasClipboardWriteText: typeof navigator.clipboard?.writeText === 'function',
+            isSecureContext: window.isSecureContext,
+          })
+        : DEFAULT_WEB_SHARE_CAPABILITY_STATE;
+
+    setShareCapabilityState(runtimeShareCapabilityState);
+    setShareFeedback(null);
 
     try {
-      if (navigator.share) {
+      if (runtimeShareCapabilityState.canUseNativeShare && typeof navigator.share === 'function') {
         await navigator.share({
           title: property.title,
           text: shareText,
           url: deeplinkHandlerUrl,
         });
-      } else {
-        // Fallback: копируем в буфер обмена
-        await navigator.clipboard.writeText(shareText);
-        alert(t('common.linkCopied', 'Ссылка скопирована в буфер обмена'));
+        return;
       }
     } catch (error) {
-      console.error('Ошибка при шаринге:', error);
+      if (isShareAbortError(error)) {
+        return;
+      }
     }
+
+    const copied = await copyTextToClipboard(deeplinkHandlerUrl);
+    if (copied) {
+      setShareFeedback(t('common.linkCopied'));
+      return;
+    }
+
+    if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
+      window.prompt(t('common.copyLinkPrompt'), deeplinkHandlerUrl);
+      return;
+    }
+
+    console.error('Share fallback failed for property', property.id);
   };
 
   const handleScrollToMap = () => {
@@ -281,10 +391,26 @@ export function PropertyDetails({ property, agencyId }: PropertyDetailsProps) {
               </div>
             ) : null}
 
-            <Button onClick={handleShare} variant="outline" className="w-full" size="lg">
-              <Share2 className="h-5 w-5 mr-2" />
-              {t('common.share')}
-            </Button>
+            <div className="space-y-2">
+              <Button onClick={handleShare} variant="outline" className="w-full" size="lg">
+                <Share2 className="h-5 w-5 mr-2" />
+                {shareCapabilityState.preferredAction === 'native-share'
+                  ? t('common.share')
+                  : t('common.copyLink')}
+              </Button>
+
+              {shareFeedback ? (
+                <p aria-live="polite" className="text-sm text-success">
+                  {shareFeedback}
+                </p>
+              ) : null}
+
+              {shareCapabilityState.shouldShowLimitedShareHint ? (
+                <p className="text-xs text-textSecondary">
+                  {t('common.telegramBrowserShareHint')}
+                </p>
+              ) : null}
+            </div>
 
             <div className="pt-4 border-t border-border">
               <p className="text-xs text-textSecondary">
