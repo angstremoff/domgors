@@ -108,9 +108,9 @@
 - На web detail page контактный CTA: `Prikaži broj` → раскрытие номера текстом + `tel:` ссылка.
 
 ## 9. Актуальный релизный контекст
-- Текущая версия: `1.0.12`
-- Android `versionCode`: `17`
-- iOS `buildNumber`: `17`
+- Текущая версия: `1.0.13`
+- Android `versionCode`: `18`
+- iOS `buildNumber`: `18`
 - `runtimeVersion`: `1.0.4` — не менять без отдельной причины.
 - Android-store сейчас только RuStore:
   - ссылка: `https://www.rustore.ru/catalog/app/domgo.rs`
