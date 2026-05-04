@@ -716,21 +716,27 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
             <View style={styles.contactRow}>
               {/* Имя контакта - слева */}
               {property.user?.name && (() => {
+                const isAgency = (property.user as any)?.is_agency === true;
                 const agencyId = property.agency?.id || property.agency_id;
+                const roleLabel = isAgency ? t('property.agency') : t('property.owner');
+                const nameContent = (
+                  <View style={styles.contactNameRow}>
+                    <View style={[styles.roleTag, isAgency ? styles.roleTagAgency : styles.roleTagOwner]}>
+                      <Text style={styles.roleTagText}>{roleLabel}</Text>
+                    </View>
+                    <Text style={[styles.contactName, { color: theme.text }]}>
+                      {property.user?.name}
+                    </Text>
+                  </View>
+                );
                 if (agencyId) {
                   return (
                     <TouchableOpacity onPress={() => navigation.navigate('Agency', { agencyId })}>
-                      <Text style={[styles.contactName, { color: theme.text }]}>
-                        {property.user?.name}
-                      </Text>
+                      {nameContent}
                     </TouchableOpacity>
                   );
                 }
-                return (
-                  <Text style={[styles.contactName, { color: theme.text }]}>
-                    {property.user?.name}
-                  </Text>
-                );
+                return nameContent;
               })()}
 
               {/* Кнопка показать номер или сам номер - справа */}
@@ -1036,9 +1042,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  contactNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+  },
+  roleTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 2,
+  },
+  roleTagAgency: {
+    backgroundColor: '#3B82F6',
+  },
+  roleTagOwner: {
+    backgroundColor: '#8B9467',
+  },
+  roleTagText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+  },
   contactName: {
     fontSize: 16,
     fontWeight: '500',
+    flexShrink: 1,
   },
   phoneButton: {
     paddingVertical: 10,

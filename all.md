@@ -4,6 +4,7 @@
 DomGoMobile — платформа объявлений о недвижимости в Сербии. В одном репозитории живут:
 - мобильное приложение на React Native / Expo;
 - отдельный веб-сайт на Next.js;
+- отдельная админ-панель на Next.js в `/admin`;
 - общая Supabase-инфраструктура для auth, базы данных и storage.
 
 Проект двуязычный (`ru`, `sr`), поддерживает светлую и тёмную тему и использует общие бизнес-правила для объявлений, авторизации и профиля пользователя.
@@ -14,9 +15,11 @@ DomGoMobile — платформа объявлений о недвижимос�
 - Для web зеркала переводов в `web/public/locales/*` всегда синхронизировать с shared `src/translations/*`.
 - Изменения схемы Supabase делать только через миграции, затем обновлять generated types.
 - Не считать `any` нормой: в кодовой базе ещё остался техдолг, но новый код должен быть строго типизирован.
-- Mobile и web проверяются разными командами:
+- Mobile, web и admin проверяются разными командами:
   - mobile: `npm run check`
   - web: `cd web && npm run build`
+  - admin: `cd admin && npm install && npm run build`
+- Root `npm run typecheck` не является полным repo-wide signal: `web` исключён из root `tsconfig`, а `/admin` живёт отдельным Next app и требует отдельной проверки.
 
 ## 3. Структура репозитория
 
@@ -31,7 +34,12 @@ DomGoMobile — платформа объявлений о недвижимос�
 - Код: `/web`
 - Это отдельный фронтенд, а не React Native Web-оболочка.
 
-### 3.3 Общие части
+### 3.3 Admin
+- Стек: Next.js 15 App Router, React, TypeScript
+- Код: `/admin`
+- Это отдельное приложение со своими `package.json`, `node_modules`, env и `basePath: '/admin'`.
+
+### 3.4 Общие части
 - `src/lib/database.types.ts` — generated Supabase types
 - `src/translations/ru.json`, `src/translations/sr.json` — основной источник переводов
 - `web/public/locales/*` — зеркала переводов для web-совместимости, их нужно держать синхронно
@@ -388,6 +396,10 @@ Web fallback:
 - если приложение не открылось, обработчик должен тихо переводить пользователя на `https://domgo.rs/oglas/?id=<UUID>`
 - экран установки/скачивания и загрузка APK/GitHub Release из этого флоу больше не используются; скачивание приложения остаётся явным действием пользователя через обычные store-ссылки сайта
 - web map popup и любые переходы с карты на карточку объявления должны вести на `/oglas/?id=<UUID>`, а не на старые pseudo-routes `/prodaja/:id` или `/izdavanje/:id`
+- share CTA на web detail page живёт в [PropertyDetails.tsx](/Users/angstremoff/Documents/GitHub/domgomobile/web/components/property/PropertyDetails.tsx) и использует shared helper [webShare.ts](/Users/angstremoff/Documents/GitHub/domgomobile/src/utils/webShare.ts)
+- в обычных браузерах используется `navigator.share`, но во встроенных браузерах (`Telegram` / in-app browser) на него нельзя полагаться
+- если native share недоступен, UI должен честно переключаться в `Kopiraj link` и идти по fallback-цепочке: `navigator.clipboard.writeText` → `document.execCommand('copy')` → `window.prompt`
+- для Telegram WebView detail page показывает пользователю явную подсказку, что системный share может быть ограничен
 
 В mobile есть отложенная навигация при холодном старте:
 - если экран ещё не готов, переход откладывается;
@@ -450,6 +462,15 @@ Web Supabase client/server теперь работают в fail-fast-режим
   - номер остаётся кликабельным через `tel:` для мобильных браузеров.
 - Это считается продуктовым инвариантом web detail contact card.
 
+### 11.9 Share в ограниченных браузерах
+- Публичный web share не должен молча ломаться, если браузер не поддерживает Web Share API.
+- Для `Telegram` / in-app browser нельзя делать предположение, что `navigator.share` или `navigator.clipboard.writeText` доступны.
+- Текущий контракт:
+  - capability detection вынесен в shared helper `src/utils/webShare.ts`;
+  - detail page меняет label CTA с `Podeli` на `Kopiraj link`, если native share недоступен;
+  - при невозможности copy через Clipboard API включается legacy fallback через `execCommand('copy')`, а затем ручной `prompt`.
+- Это защищает от тихого fail в Telegram WebView и других embedded browsers.
+
 ## 12. Настройки, контакты и store-ссылки
 - Текущий Android-store: RuStore
 - Ссылка: [RuStore](https://www.rustore.ru/catalog/app/domgo.rs)
@@ -477,7 +498,8 @@ Web Supabase client/server теперь работают в fail-fast-режим
 ## 14. Сборка Android release
 - Основной script: `./build-release-bundle.sh`
 - Результат: `~/Desktop/DomGoMobile-<version>-release.aab`
-- Подпись через `android/app/release.keystore`
+- Build.gradle умеет брать keystore из `ANDROID_KEYSTORE_FILE`, иначе ожидает локальный путь `android/app/release.keystore`
+- Сам keystore и release-секреты не должны храниться в репозитории или документации
 - Секреты только через env:
   - `RELEASE_KEYSTORE_PASSWORD`
   - `RELEASE_KEY_ALIAS`
@@ -507,24 +529,30 @@ APK в проекте нужен в основном для локального
   - property listing filter helpers
   - contact profile helpers
   - map coordinate helpers
+  - web share capability / Telegram WebView fallback helper
   - покрытие переводов для seeded cities/districts
 
 ### 16.2 Что остаётся проблемой
 - В mobile остаётся исторический lint-хвост, в основном старые `any` и техдолг в старых экранах/утилитах.
 - Полноценный аудит БД/RLS по-прежнему нельзя считать завершённым, пока не выгружена живая схема Supabase.
 - Web-приватность и detail SEO всё ещё ограничены текущей архитектурой static export.
+- Root `npm run check` сейчас не является полным индикатором здоровья всего монорепозитория:
+  - `web` по-прежнему проверяется отдельно;
+  - `/admin` живёт отдельным app и требует своего install/build/type cycle;
+  - в `admin` есть отдельный build/type tech debt, который нельзя путать с mobile/web.
 - Полноценного автоматического e2e-покрытия для критических пользовательских сценариев пока нет:
   - `signup/login/reset password`
   - `create/edit property`
   - текущие зелёные проверки подтверждают lint/type/unit smoke, но не весь пользовательский путь.
 
 ## 17. Самые важные практические инварианты для новых агентов
-- Это два разных фронтенда в одном репозитории, а не “одно приложение + web-оболочка”.
-- Mobile и web всегда проверять раздельно.
+- Это не “одно приложение + web-оболочка”, а три отдельных приложения: mobile, web и admin.
+- Mobile, web и admin всегда проверять раздельно.
 - `land` — отдельный кейс во всём: create/edit, фильтры, карточки, детали.
 - `agency_profiles` typed-схема ограничена `email/site/location`; не придумывать новые колонки в запросах.
 - Storage path фото должен быть единым для web и mobile.
 - `property.html` — канонический web-обработчик deep link/шеринга объявления: попытка открыть приложение, затем тихий переход на `/oglas/?id=...`; не возвращать экран установки/скачивания.
+- Web share CTA в detail page должен переживать Telegram/in-app browser: сначала пытаться native share, затем честно переключаться на copy-link fallback, а не падать молча.
 - `/oglas` и `/agencija` SEO-критичны, но в static export их metadata улучшаются только после client fetch; это архитектурное ограничение текущего хостинга.
 - Максимум 20 фото на объявление (`MAX_IMAGES = 20`); в mobile —hardcoded `>= 20`.
 - Порядок фото = порядок в `images: string[]`; первый = обложка.
@@ -604,7 +632,8 @@ admin/
 - После успешного входа проверяется `data.user.email === ADMIN_EMAIL`.
 - Сессия хранится в httpOnly cookie `admin_session`.
 - Cookie параметры: `sameSite: strict`, `secure` в production, `maxAge: 8h`, `path: /`.
-- Админ-юзер: `admin@domgo.rs`, пароль: `665708qQ!` (создан в Supabase Auth, email confirmed).
+- Админ-email задаётся через `ADMIN_EMAIL`.
+- Пароль и любые секреты не хранить в репозитории или документации.
 
 ### 18.5 Rate limiting
 - In-memory Map по IP (`x-forwarded-for` / `x-real-ip`).
@@ -616,6 +645,7 @@ admin/
 - `/admin/login` и `/admin/api/login` — публичные.
 - `/admin/robots.txt` — отдаёт `Disallow: /` для всех ботов.
 - Все остальные пути: без cookie → редирект на `/admin/login`.
+- Middleware проверяет только наличие cookie; полная валидация токена делается уже в server page / API.
 - Security headers на все ответы:
   - `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet`
   - `X-Frame-Options: DENY`
@@ -652,6 +682,7 @@ npm start          # production server
 - Нет пагинации на больших таблицах (загружает все записи).
 - Rate limiting in-memory (не persists между рестартами).
 - На production service_role key должен быть защищён в env переменных render.com.
+- `/admin` требует отдельного `npm install`; root-проверки репозитория не заменяют локальный install/build/typecheck самого admin app.
 
 ## 19. Навигация по документации
 - [MEMORY.md](/Users/angstremoff/Documents/GitHub/domgomobile/MEMORY.md) — краткая оперативная память

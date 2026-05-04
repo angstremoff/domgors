@@ -168,8 +168,13 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
   const [properties, setProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [selectedCity, setSelectedCityRaw] = useState<City | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<District | null>(null);
+
+  const setSelectedCity = useCallback((city: City | null) => {
+    setSelectedCityRaw(city);
+    setSelectedDistrict(null);
+  }, []);
   const [cities, setCities] = useState<City[]>([]);
   const [citiesLoading, setCitiesLoading] = useState(false);
   const [districts, setDistricts] = useState<District[]>([]);

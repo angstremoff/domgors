@@ -135,6 +135,17 @@ const PropertyCard = memo(({ property, onPress, darkMode = false }: PropertyCard
           <Ionicons name="location-outline" size={14} color={theme.secondary} /> {fullAddress}
         </Text>
 
+        {((property.user as any)?.is_agency === true && property.agency?.name) && (
+          <View style={styles.agencyRow}>
+            <View style={styles.agencyTag}>
+              <Text style={styles.agencyTagText}>{t('property.agency')}</Text>
+            </View>
+            <Text style={[styles.agencyName, { color: theme.secondary }]} numberOfLines={1}>
+              {property.agency.name}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.details}>
           {property.rooms !== undefined && property.property_type !== 'land' && (
             <View style={styles.detailItem}>
@@ -319,6 +330,28 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 14,
     marginLeft: 4,
+  },
+  agencyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  agencyTag: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  agencyTagText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  agencyName: {
+    fontSize: 12,
+    flexShrink: 1,
   },
 });
 

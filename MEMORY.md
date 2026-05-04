@@ -4,20 +4,23 @@
 - Всё общение, комментарии и документация ведём на русском.
 - Новые UI-строки всегда добавляем в `ru` и `sr`.
 - Схему Supabase меняем только через миграции, затем обновляем типы.
-- Root `npm run typecheck` проверяет mobile и не проверяет `web`; web всегда проверять отдельно.
+- Root `npm run typecheck` валидирует mobile и сейчас цепляет `/admin`, но не проверяет `web`; `web` и `admin` всегда проверять отдельно.
 - TypeScript strict обязателен; `any` в проекте ещё есть, но это техдолг, а не норма.
 - Web-деплой: render.com, ветка `main`, размещение как Static Site. После push нужно убедиться, что render пересобрал сайт (Manual Deploy → Clear build cache при необходимости).
 
 ## 2. Что находится в репозитории
-- Это один репозиторий с двумя разными фронтендами и общей Supabase:
+- Это один репозиторий с тремя приложениями и общей Supabase:
   - mobile: React Native 0.76.9 + Expo 52, код в `/src`, вход `index.ts -> App.tsx -> AppNavigator`;
   - web: Next.js 15 App Router в `/web`, отдельный сайт `domgo.rs`.
+  - admin: Next.js 15 App Router в `/admin`, отдельный package/app с `basePath: '/admin'`.
 - Web работает как `static export`. Детальные страницы `/oglas` и `/agencija` client-only; SEO для них ограничен клиентскими meta-обновлениями после hydration. Приватные web-страницы защищаются на клиенте, активного Next middleware сейчас нет.
 
 ## 3. Что проверять после изменений
 - Mobile: `npm run check`
 - Shared/unit tests: `npm test`
 - Web: `cd web && npm run build` (требует env `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY`; без них падает на prerender — это нормально для локальной проверки)
+- Admin: `cd admin && npm install && npm run build`
+- Root `npm run check` не является полным repo-wide green signal: `web` исключён из root-проверки, `admin` валидируется отдельно и сейчас имеет свой build/type tech debt.
 - Автотесты пока не покрывают e2e-критические сценарии `signup/login/reset password` и `create/edit property`; зелёный `check/build` = smoke-проверка кода, а не полное пользовательское e2e.
 
 ## 4. Ключевые инварианты данных
@@ -100,6 +103,7 @@
 - Продуктовый UI на `domgo.rs` по умолчанию на сербской латинице; русские hardcoded/fallback-строки в публичных web-flow — баг. Все fallback-значения в `t()` вызовах должны быть на сербском.
 - I18n hydration: `I18nProvider` обёрнут в `<div style={{ display: 'contents' }} suppressHydrationWarning>` для устранения React #418 при SSR/static export + клиентском i18n.
 - Web Supabase client кэшируется (singleton в `web/lib/supabase/client.ts`); безопасно вызывать `createClient()` в любом компоненте.
+- Web share/detail page не должен полагаться только на `navigator.share`: для Telegram/in-app browsers capability detection вынесен в `src/utils/webShare.ts`; при отсутствии native share CTA переключается на `Kopiraj link` с fallback `clipboard -> execCommand('copy') -> prompt`.
 - Web create/edit property: inline-валидация каждого обязательного поля (красная рамка `border-error` + текст ошибки на сербском). При submit — `scrollIntoView` к первому незаполненному полю. Ошибки сбрасываются при вводе. Формы имеют `noValidate`. Поля: контакты (имя, телефон), заголовок, цена, площадь, комнаты (если не `land`), город, район, адрес, описание, фото. Ключи переводов: `property.addProperty.validation.{titleRequired,priceRequired,areaRequired,roomsRequired,addressRequired,descriptionRequired,cityRequired,districtRequired}` в `sr` и `ru`.
 - На web detail page контактный CTA: `Prikaži broj` → раскрытие номера текстом + `tel:` ссылка.
 
@@ -116,8 +120,8 @@
 ## 10. Сборка релизов
 - Release AAB: `./build-release-bundle.sh`
 - Результат: `~/Desktop/DomGoMobile-<версия>-release.aab`
-- Подпись: `android/app/release.keystore`
-- Секреты только через env: `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`
+- Подпись: `ANDROID_KEYSTORE_FILE` или fallback-path `android/app/release.keystore`; keystore не хранить в репозитории.
+- Секреты только через env: `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`; не хранить их в документации/коде.
 
 ## 11. Ключевые файлы
 - `src/services/propertyService.ts` — CRUD объявлений, storage, статусные операции, кэши.
@@ -132,6 +136,7 @@
 - `src/contexts/AuthContext.tsx` и `web/providers/AuthProvider.tsx` — auth/signup flow.
 - `web/lib/authSession.ts` и `src/utils/authSessionUrl.ts` — разбор callback'ов.
 - `src/utils/deepLinkParser.ts` — разбор property/agency/auth deep links и web-handler URL.
+- `src/utils/webShare.ts` — capability detection для web share / Telegram WebView fallback.
 - `src/utils/authErrorMessage.ts` — безопасное отображение auth-ошибок.
 - `web/lib/property-listings.ts` — единый web-helper для initial fetch, пагинации, дедупликации.
 - `web/components/property/AddPropertyForm.tsx` — web create: `noValidate`, `FieldErrors` state, inline-валидация всех полей, `scrollIntoView`, `clearFieldError`, `handleCityChange` очищает `city`/`district` ошибки.
@@ -150,8 +155,9 @@
 - Next.js 15 App Router, отдельное приложение в `/admin` (не влияет на mobile/web).
 - `basePath: '/admin'` — на продакшене доступно по `https://<render-url>/admin`.
 - Авторизация: Supabase auth (anon client) + проверка email (`ADMIN_EMAIL`).
-- Rate limiting: 5 неудачных попыток → блок 15 мин по IP.
+- Middleware проверяет только наличие cookie `admin_session`; реальная валидация токена идёт в server page / API через `supabaseAnon.auth.getUser(token)` + сверку `ADMIN_EMAIL`.
+- Rate limiting: 5 неудачных попыток → блок 15 мин по IP, но limiter in-memory и сбрасывается после рестарта/деплоя.
 - Сессия: httpOnly cookie `admin_session`, `sameSite: strict`, `secure` в prod, TTL 8ч.
 - CRUD для таблиц: `users`, `agency_profiles`, `properties` (GET/PUT/DELETE).
 - Деплой: render.com, ветка `admin-only`, отдельный Web Service, `rootDir: admin`.
-- Админ-юзер: `admin@domgo.rs`, пароль: `665708qQ!`
+- Локально `/admin` требует отдельного `npm install`; пароль/секреты не хранить в репозитории и документации.
