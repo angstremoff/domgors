@@ -29,7 +29,7 @@ export default function PodesavanjaPage() {
         router.refresh();
     };
 
-    const appVersion = '1.0.13';
+    const appVersion = '1.0.14';
 
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
