@@ -131,6 +131,16 @@ export default function PodesavanjaPage() {
                             <ExternalLink className="h-5 w-5 text-primary" />
                         </a>
 
+                        <a
+                            href="https://play.google.com/store/apps/details?id=domgo.rs"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between py-3 border-b border-border w-full text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors -mx-4 px-4"
+                        >
+                            <span className="text-text">{t('settings.update.openGooglePlay')}</span>
+                            <ExternalLink className="h-5 w-5 text-primary" />
+                        </a>
+
                         <button
                             className="flex items-center justify-between py-3 border-b border-border w-full text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors -mx-4 px-4"
                             onClick={() => showModal(t('settings.contactInfo.title'), t('settings.contactInfo.message'))}

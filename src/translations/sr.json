@@ -422,6 +422,7 @@
     },
     "update": {
       "openRuStore": "Otvori DomGo u RuStore prodavnici",
+      "openGooglePlay": "Otvori DomGo u Google Play prodavnici",
       "openAppStore": "Otvori DomGo u App Store-u",
       "description": "Posle objavljivanja aplikacija će se ažurirati preko prodavnice aplikacija.",
       "comingSoonTitle": "Uskoro",

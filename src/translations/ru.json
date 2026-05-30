@@ -520,6 +520,7 @@
     },
     "update": {
       "openRuStore": "Открыть DomGo в RuStore",
+      "openGooglePlay": "Открыть DomGo в Google Play",
       "openAppStore": "Открыть DomGo в App Store",
       "description": "После публикации приложение будет обновляться через магазин приложений.",
       "comingSoonTitle": "Скоро",

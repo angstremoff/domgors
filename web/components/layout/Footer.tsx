@@ -102,6 +102,20 @@ export function Footer() {
                   height={52}
                 />
               </a>
+              <a
+                href="https://play.google.com/store/apps/details?id=domgo.rs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-xl transition-transform hover:scale-[1.02]"
+                aria-label="Google Play"
+              >
+                <Image
+                  src="/badges/google-play-badge.svg"
+                  alt="Google Play"
+                  width={172}
+                  height={52}
+                />
+              </a>
               <span className="text-sm text-textSecondary">
                 Srbija 🇷🇸
               </span>

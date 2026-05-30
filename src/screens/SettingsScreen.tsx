@@ -70,6 +70,18 @@ const SettingsScreen = ({ navigation }: any) => {
     });
   };
 
+  const handleGooglePlayUpdate = () => {
+    const storeUrl = 'https://play.google.com/store/apps/details?id=domgo.rs';
+
+    Linking.openURL(storeUrl).catch((error) => {
+      Logger.error('Не удалось открыть Google Play:', error);
+      showModal(
+        t('settings.update.errorTitle', 'Ошибка'),
+        t('settings.update.errorMessage', 'Не удалось открыть магазин приложений. Попробуйте обновить вручную.')
+      );
+    });
+  };
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.background }]}
@@ -139,6 +151,13 @@ const SettingsScreen = ({ navigation }: any) => {
               {Platform.OS === 'android'
                 ? t('settings.update.openRuStore', 'Открыть DomGo в RuStore')
                 : t('settings.update.openAppStore', 'Открыть DomGo в App Store')}
+            </Text>
+            <Ionicons name="open-outline" size={20} color={theme.primary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingItem} onPress={handleGooglePlayUpdate}>
+            <Text style={[styles.settingLabel, { color: theme.text }]}>
+              {t('settings.update.openGooglePlay', 'Открыть DomGo в Google Play')}
             </Text>
             <Ionicons name="open-outline" size={20} color={theme.primary} />
           </TouchableOpacity>
