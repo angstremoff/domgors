@@ -21,7 +21,7 @@ import {
   type ContactProfile,
 } from '@shared/utils/contactProfile';
 import { getCityMapCoordinates, serializeMapCoordinates, type MapCoordinates } from '@shared/utils/mapCoordinates';
-import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '@shared/utils/propertyRules';
+import { dealTypeSupportsNewBuilding, normalizeNewBuilding, normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '@shared/utils/propertyRules';
 
 type City = Database['public']['Tables']['cities']['Row'];
 type District = Database['public']['Tables']['districts']['Row'];
@@ -520,7 +520,7 @@ export function AddPropertyForm() {
         location: location.trim(),
         type: dealType,
         property_type: propertyType,
-        is_new_building: isNewBuilding,
+        is_new_building: normalizeNewBuilding(dealType, isNewBuilding),
         features: selectedFeatures.length ? selectedFeatures : null,
         images: imageUrls,
         coordinates: serializeMapCoordinates(propertyCoordinates),
@@ -717,7 +717,13 @@ export function AddPropertyForm() {
                         key={type}
                         type="button"
                         variant={dealType === type ? 'primary' : 'outline'}
-                        onClick={() => setDealType(type)}
+                        onClick={() => {
+                          setDealType(type);
+                          // Новостройки доступны только для продажи: при аренде сбрасываем флаг
+                          if (!dealTypeSupportsNewBuilding(type)) {
+                            setIsNewBuilding(false);
+                          }
+                        }}
                       >
                         {type === 'sale' ? t('property.sale') : t('property.rent')}
                       </Button>
@@ -797,18 +803,27 @@ export function AddPropertyForm() {
                 ) : (
                   <div />
                 )}
-                <div className="flex items-center gap-3 pt-6">
-                  <input
-                    id="new-building"
-                    type="checkbox"
-                    checked={isNewBuilding}
-                    onChange={(e) => setIsNewBuilding(e.target.checked)}
-                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                  />
-                  <label htmlFor="new-building" className="text-sm font-medium text-text cursor-pointer">
-                    {t('common.newBuildings')}
-                  </label>
-                </div>
+                {dealTypeSupportsNewBuilding(dealType) ? (
+                  <div className="space-y-1 pt-6">
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="new-building"
+                        type="checkbox"
+                        checked={isNewBuilding}
+                        onChange={(e) => setIsNewBuilding(e.target.checked)}
+                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                      />
+                      <label htmlFor="new-building" className="text-sm font-medium text-text cursor-pointer">
+                        {t('common.newBuildings')}
+                      </label>
+                    </div>
+                    <p className="text-xs text-textSecondary">
+                      {t('common.newBuildingSaleOnlyHint')}
+                    </p>
+                  </div>
+                ) : (
+                  <div />
+                )}
               </div>
             </CardContent>
           </Card>

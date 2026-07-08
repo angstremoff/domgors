@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Link from 'next/link';
 import type { Database } from '@shared/lib/database.types';
 import { getCityMapCoordinates, parseMapCoordinates, serializeMapCoordinates, type MapCoordinates } from '@shared/utils/mapCoordinates';
-import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '@shared/utils/propertyRules';
+import { dealTypeSupportsNewBuilding, normalizeNewBuilding, normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '@shared/utils/propertyRules';
 
 type City = Database['public']['Tables']['cities']['Row'];
 type District = Database['public']['Tables']['districts']['Row'];
@@ -239,7 +239,7 @@ function EditPropertyContent() {
             setCoordinates(propertyCoordinates);
             coordinatesInitializedRef.current = propertyCoordinates !== null;
             setLocation(property.location || '');
-            setIsNewBuilding(property.is_new_building || false);
+            setIsNewBuilding(normalizeNewBuilding(property.type, property.is_new_building));
             setSelectedFeatures((property.features as string[]) || []);
             setImages(
                 ((property.images as string[]) || []).map((url) => ({
@@ -442,7 +442,7 @@ function EditPropertyContent() {
                 location: location.trim(),
                 type: dealType,
                 property_type: propertyType,
-                is_new_building: isNewBuilding,
+                is_new_building: normalizeNewBuilding(dealType, isNewBuilding),
                 features: selectedFeatures.length ? selectedFeatures : null,
                 images: allImages,
             };
@@ -564,10 +564,17 @@ function EditPropertyContent() {
                                 ) : (
                                     <div />
                                 )}
-                                <div className="flex items-center gap-3 pt-6">
-                                    <input id="new-building" type="checkbox" checked={isNewBuilding} onChange={(e) => setIsNewBuilding(e.target.checked)} className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
-                                    <label htmlFor="new-building" className="text-sm font-medium text-text cursor-pointer">{t('common.newBuildings')}</label>
-                                </div>
+                                {dealTypeSupportsNewBuilding(dealType) ? (
+                                    <div className="space-y-1 pt-6">
+                                        <div className="flex items-center gap-3">
+                                            <input id="new-building" type="checkbox" checked={isNewBuilding} onChange={(e) => setIsNewBuilding(e.target.checked)} className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                                            <label htmlFor="new-building" className="text-sm font-medium text-text cursor-pointer">{t('common.newBuildings')}</label>
+                                        </div>
+                                        <p className="text-xs text-textSecondary">{t('common.newBuildingSaleOnlyHint')}</p>
+                                    </div>
+                                ) : (
+                                    <div />
+                                )}
                             </div>
                         </CardContent>
                     </Card>

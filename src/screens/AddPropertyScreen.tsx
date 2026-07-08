@@ -27,7 +27,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Colors from '../constants/colors';
 import MapCoordinateSelector from '../components/MapCoordinateSelector';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
-import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '../utils/propertyRules';
+import { dealTypeSupportsNewBuilding, normalizeNewBuilding, normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '../utils/propertyRules';
 import { fetchContactProfile, hasCompleteContactProfile, saveContactProfile, type ContactProfileClient } from '../utils/contactProfile';
 
 // Используем интерфейс City из PropertyContext
@@ -73,6 +73,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
   }
   const [propertyType, setPropertyType] = useState<'sale' | 'rent'>('sale');
   const [propertyCategory, setPropertyCategory] = useState('apartment');
+  const [isNewBuilding, setIsNewBuilding] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | null>(null);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
@@ -402,6 +403,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
         price: numericPrice,
         type: propertyType,
         property_type: propertyCategory,
+        is_new_building: normalizeNewBuilding(propertyType, isNewBuilding),
         area: numericArea,
         rooms: numericRooms ?? 0,
         location: location.trim(),
@@ -447,6 +449,7 @@ const AddPropertyScreen = ({ navigation }: any) => {
     setLocation('');
     setPropertyType('sale');
     setPropertyCategory('apartment');
+    setIsNewBuilding(false);
     setCityId('0');
     setDistrictId('');
     setSelectedDistrictName(t('common.selectDistrict'));
@@ -553,6 +556,10 @@ const AddPropertyScreen = ({ navigation }: any) => {
     setPropertyType(type);
     setSelectedPropertyTypeName(name);
     setPropertyTypeModalVisible(false);
+    // Новостройки доступны только для продажи: при аренде сбрасываем флаг
+    if (!dealTypeSupportsNewBuilding(type)) {
+      setIsNewBuilding(false);
+    }
   };
   
   // Функция для выбора типа недвижимости
@@ -660,7 +667,20 @@ const AddPropertyScreen = ({ navigation }: any) => {
             </Text>
             <Ionicons name="chevron-down" size={24} color={theme.text} />
           </TouchableOpacity>
-          
+
+          {/* Новостройки доступны только для продажи */}
+          {dealTypeSupportsNewBuilding(propertyType) && (
+            <View style={styles.featureItem}>
+              <Switch
+                value={isNewBuilding}
+                onValueChange={(value) => setIsNewBuilding(value)}
+                trackColor={{ false: theme.border, true: theme.primary }}
+                thumbColor={isNewBuilding ? theme.primary : theme.secondary}
+              />
+              <Text style={[styles.featureText, { color: theme.text }]}>{t('common.newBuildings')}</Text>
+            </View>
+          )}
+
           {/* Модальное окно для выбора типа сделки */}
           <Modal
             animationType="slide"

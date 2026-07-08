@@ -22,7 +22,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useProperties, District } from '../contexts/PropertyContext';
 import { showErrorAlert, showSuccessAlert } from '../utils/alertUtils';
 import type { Database } from '../lib/database.types';
-import { normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '../utils/propertyRules';
+import { dealTypeSupportsNewBuilding, normalizeNewBuilding, normalizePropertyRooms, parseFiniteNumberInput, propertyTypeSupportsRooms } from '../utils/propertyRules';
 
 type Property = Database['public']['Tables']['properties']['Row'];
 type PropertyInsert = Database['public']['Tables']['properties']['Insert'];
@@ -65,6 +65,7 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
   const [districtsLoading, setDistrictsLoading] = useState(false);
   const [propertyType, setPropertyType] = useState<'sale' | 'rent'>('sale');
   const [propertyCategory, setPropertyCategory] = useState<PropertyInsert['property_type']>('apartment');
+  const [isNewBuilding, setIsNewBuilding] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const supportsRooms = propertyTypeSupportsRooms(propertyCategory);
@@ -148,6 +149,7 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
       
       setPropertyType(data.type || 'sale');
       setPropertyCategory(data.property_type || 'apartment');
+      setIsNewBuilding(normalizeNewBuilding(data.type, data.is_new_building));
       setImages(data.images || []);
       setSelectedFeatures(data.features || []);
 
@@ -339,6 +341,7 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
         district_id: districtId || null,
         type: propertyType,
         property_type: propertyCategory,
+        is_new_building: normalizeNewBuilding(propertyType, isNewBuilding),
         features: selectedFeatures,
         images,
       };
@@ -386,7 +389,14 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
           <View style={[styles.pickerContainer, darkMode && styles.darkPickerContainer]}>
             <Picker
               selectedValue={propertyType}
-              onValueChange={(itemValue) => setPropertyType(itemValue as 'sale' | 'rent')}
+              onValueChange={(itemValue) => {
+                const nextType = itemValue as 'sale' | 'rent';
+                setPropertyType(nextType);
+                // Новостройки доступны только для продажи: при аренде сбрасываем флаг
+                if (!dealTypeSupportsNewBuilding(nextType)) {
+                  setIsNewBuilding(false);
+                }
+              }}
               style={[styles.picker, darkMode && styles.darkPicker]}
               dropdownIconColor={darkMode ? "#FFFFFF" : "#1E3A8A"}
             >
@@ -394,6 +404,19 @@ const EditPropertyScreen = ({ route, navigation }: any) => {
               <Picker.Item label={t('property.rent')} value="rent" />
             </Picker>
           </View>
+
+          {/* Новостройки доступны только для продажи */}
+          {dealTypeSupportsNewBuilding(propertyType) && (
+            <View style={styles.featureItem}>
+              <Switch
+                value={isNewBuilding}
+                onValueChange={(value) => setIsNewBuilding(value)}
+                trackColor={{ false: "#D1D5DB", true: darkMode ? "#3B82F6" : "#1E3A8A" }}
+                thumbColor={isNewBuilding ? "#FFFFFF" : "#F3F4F6"}
+              />
+              <Text style={[styles.featureText, darkMode && styles.darkText]}>{t('common.newBuildings')}</Text>
+            </View>
+          )}
           
           <Text style={[styles.label, darkMode && styles.darkText]}>{t('property.propertyType')}</Text>
           <View style={[styles.pickerContainer, darkMode && styles.darkPickerContainer]}>

@@ -2,6 +2,20 @@ export const propertyTypeSupportsRooms = (propertyType: string | null | undefine
   return propertyType !== 'land';
 };
 
+// Новостройки доступны только для объявлений о продаже, не для аренды
+export const dealTypeSupportsNewBuilding = (dealType: string | null | undefined): boolean => {
+  return dealType === 'sale';
+};
+
+// Нормализация флага новостройки: для аренды всегда false,
+// чтобы не допустить запись type='rent' AND is_new_building=true
+export const normalizeNewBuilding = (
+  dealType: string | null | undefined,
+  value: boolean | null | undefined
+): boolean => {
+  return dealTypeSupportsNewBuilding(dealType) ? Boolean(value) : false;
+};
+
 export const parseFiniteNumberInput = (value: string | number | null | undefined) => {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : null;

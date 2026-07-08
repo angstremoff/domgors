@@ -31,6 +31,11 @@
   - rooms filter не применяем;
   - `rooms` не должен требоваться в create/edit;
   - числовые поля нельзя рендерить через truthy-проверки, если возможен `0`.
+- `is_new_building` возможен только при `type = 'sale'`, не для аренды:
+  - UI: переключатель «Новостройка» показывается только для продажи; при выборе аренды сбрасывается в `false`.
+  - нормализация: запись в БД всегда проходит через `normalizeNewBuilding(dealType, value)` из `src/utils/propertyRules.ts` (для аренды принудительно `false`).
+  - защита defense-in-depth: слой бизнес-логики (`propertyRules.ts`) + слой UI (скрытие/сброс) + слой submit (нормализатор в payload).
+  - при загрузке арендного объявления с `is_new_building=true` (грязные данные) формы через `normalizeNewBuilding` сбрасывают флаг в `false` при отображении.
 - `properties.district_id` nullable; create/edit на web и mobile должны требовать район только если у выбранного города реально есть районы, иначе сохранять `district_id = null`.
 - Для `cities` координаты обязательны как продуктовый инвариант: create/edit forms и карты используют `cities.coordinates` как стартовую точку, если у объявления ещё нет собственных координат.
 - Если у города нет полноценного набора районов, безопасный fallback — район `Центар` с координатами центра города; не оставлять новые крупные города совсем без районов.
@@ -129,7 +134,7 @@
 - `src/screens/AddPropertyScreen.tsx` и `src/screens/EditPropertyScreen.tsx` — mobile create/edit property.
 - `src/utils/contactProfile.ts` — единый контракт contact profile, валидация и upsert.
 - `src/utils/mapCoordinates.ts` — parse/get/format/serialize координат.
-- `src/utils/propertyRules.ts` — общие правила для `rooms/land`.
+- `src/utils/propertyRules.ts` — общие правила для `rooms/land` и инварианта новостроек (`dealTypeSupportsNewBuilding`, `normalizeNewBuilding`).
 - `src/utils/propertyListingFilters.ts` — shared helper для фильтров.
 - `src/utils/propertyStorage.ts` — единый контракт storage path.
 - `src/utils/agencyProfile.ts` — нормализация агентств, форматирование ссылок, uploadAgencyLogo, fetchAgencyProfileByUserId, upsertAgencyProfile.

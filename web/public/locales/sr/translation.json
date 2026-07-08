@@ -44,6 +44,7 @@
     "sale": "Prodaja",
     "rent": "Iznajmljivanje",
     "newBuildings": "Novogradnja",
+    "newBuildingSaleOnlyHint": "Novogradnja je dostupna samo za prodaju",
     "agencies": "Agencije",
     "reset": "Resetuj",
     "view": "Prikaz",

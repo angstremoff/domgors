@@ -50,6 +50,7 @@
     "sale": "Продажа",
     "rent": "Аренда",
     "newBuildings": "Новостройки",
+    "newBuildingSaleOnlyHint": "Новостройки доступны только для продажи",
     "agencies": "Агентства",
     "filters": "Фильтры",
     "view": "Вид",
