@@ -1,141 +1,37 @@
-# ❓ Часто задаваемые вопросы (FAQ)
+# ❓ FAQ
 
-## 🚀 Общие вопросы
+## Общее
+**Что такое DomGoMobile?** Приложение недвижимости для Сербии (`domgo.rs`): React Native + Expo + Supabase.
 
-### Q: Что такое DomGoMobile?
-**A:** Кросс-платформенное мобильное приложение для поиска и размещения объявлений о недвижимости на React Native + Expo + Supabase.
+**Платформы?** Android (Google Play + RuStore), iOS, Web (`domgo.rs`).
 
-### Q: На каких платформах работает?
-**A:** Android 7.0+, iOS 13.0+, Web (ограниченно)
+**Языки?** 🇷🇺 Русский, 🇷🇸 Сербский.
 
-### Q: Какие языки поддерживаются?
-**A:** Русский (основной), Сербский (дополнительный)
+## Разработка
+**Какая версия Node?** Node ≥18 (реком. v23.7.0), npm ≥10.
 
-## 🛠️ Разработка
-
-### Q: Какую версию Node.js использовать?
-**A:** Node.js 18.0+ (рекомендуется v23.7.0), npm 10.9.2
-
-### Q: Как исправить ошибки сборки Android?
-**A:** 
+**Ошибки сборки Android?**
 ```bash
-cd android && ./gradlew clean && cd ..
-./fix-gradle-build.sh
+cd android && ./gradlew clean && cd .. && ./fix-gradle-build.sh
 ```
 
-### Q: Metro bundler не запускается?
-**A:**
-```bash
-npx react-native start --reset-cache
-npm cache clean --force && npm install
-```
+**Metro завис/старый кэш?** `npx expo start --clear`
 
-### Q: Как обновить типы БД?
-**A:**
-```bash
-supabase gen types typescript --project-id bondvgkachyjxqxsrcvj > src/lib/database.types.ts
-```
+**Полная переустановка?** `rm -rf node_modules && npm install`
 
-## 📱 Функциональность
+**Как добавить язык?** Создать `translations/<lang>.json`, подключить в `LanguageContext`, добавить переводы в web-mirror `web/public/locales/<lang>/translation.json`.
 
-### Q: Как создать объявление?
-**A:** Профиль → Добавить объявление → Заполнить поля → Загрузить фото → Опубликовать
+**Где ключи?** `.env` (Supabase, Google Maps, Sentry). Не коммитить. Шаблон: `.env.example`.
 
-### Q: Можно ли редактировать объявления?
-**A:** Да, только свои собственные: Профиль → Мои объявления → Выбрать → Редактировать
+## БД
+**Как изменить схему?** Только через Supabase-миграции, затем `supabase gen types typescript` и обновить `src/lib/database.types.ts`.
 
-### Q: Как работает избранное?
-**A:** Нажмите ❤️ на объявлении → Сохраняется во вкладке "Избранное"
+**Почему `type='rent' AND is_new_building=true`?** Такого быть не должно: новостройки только для продажи. Нормализация — `normalizeNewBuilding()` в `propertyRules.ts`.
 
-## 🏢 Агентства
+## Релизы
+**Как опубликовать?** Собрать `.aab` (`./build-release-bundle.sh`) → загрузить в Google Play Console и/или RuStore. OTA выключен — нужен новый build.
 
-### Q: Как стать агентством?
-**A:** Профиль → "Стать агентством" → Заполнить данные компании → Загрузить логотип
+**Поднимать versionCode?** Да, для каждого артефакта. ⚠️ Сейчас рассинхрон `app.config.js` (17) и `package.json` (1.0.15.1) — выровнять перед релизом.
 
-### Q: Что дает статус агентства?
-**A:** Специальная отметка, расширенная статистика, логотип компании, контактная информация
-
-## 🔐 Безопасность
-
-### Q: Как защищены данные?
-**A:** HTTPS шифрование, Row Level Security, Supabase Auth, минимальное локальное кэширование
-
-### Q: Кто видит объявления?
-**A:** Активные объявления - все пользователи, неактивные - только владельцы
-
-## 🚀 Сборка и деплой
-
-### Q: Как собрать APK?
-**A:**
-```bash
-# Быстрая сборка
-./build-simple-apk.sh
-
-# Полная сборка
-./build-local-apk.sh
-
-# EAS сборка
-npx eas build --platform android
-```
-
-### Q: Как обновить версию?
-**A:**
-```bash
-./update-version.sh 0.9.9
-```
-
-## 🐛 Проблемы
-
-### Q: Эмулятор Android не запускается?
-**A:**
-```bash
-emulator -list-avds
-emulator -avd Pixel_5_API_31 -memory 2048
-```
-
-### Q: Приложение крашится на устройстве?
-**A:** Проверьте логи:
-```bash
-adb logcat | grep "ReactNativeJS"
-```
-
-### Q: Supabase connection failed?
-**A:** Проверьте .env файл и интернет соединение:
-```bash
-curl -I https://bondvgkachyjxqxsrcvj.supabase.co
-```
-
-## 📊 Производительность
-
-### Q: Медленная прокрутка списков?
-**A:** Используйте FlatList вместо ScrollView с параметрами оптимизации
-
-### Q: Memory leaks?
-**A:** Очищайте таймеры и подписки в useEffect cleanup функциях
-
-## 🔄 CI/CD
-
-### Q: EAS Build падает?
-**A:**
-```bash
-npx eas login
-npx eas build:clear-cache
-```
-
-### Q: OTA updates не работают?
-**A:** Expo OTA отключены. Устанавливайте новые версии через Google Play/App Store после публикации релиза.
-
-## 📞 Поддержка
-
-### Q: Где получить помощь?
-**A:** 
-- GitHub Issues для багов
-- Wiki документация
-- Code Review через PR
-
-### Q: Как сообщить о баге?
-**A:** Создайте Issue в GitHub с:
-- Описанием проблемы
-- Шагами воспроизведения
-- Логами ошибок
-- Информацией о системе
+## Контакты
+Почта: `admin@domgo.rs`.

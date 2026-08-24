@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Upload, X, Check, MapPin, ArrowLeft, ChevronUp, ChevronDown, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { compressImageFile } from '@/lib/imageCompression';
 import { useAuth } from '@/providers/AuthProvider';
 import { PropertyCoordinateSelector } from '@/components/property/PropertyCoordinateSelector';
 import { Button } from '@/components/ui/Button';
@@ -66,6 +67,8 @@ function EditPropertyContent() {
     const [districts, setDistricts] = useState<District[]>([]);
     const [districtsLoading, setDistrictsLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    // Прогресс сжатия/загрузки фото, чтобы пользователь не воспринимал процесс как зависание
+    const [photoProgress, setPhotoProgress] = useState<{ current: number; total: number } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -342,21 +345,39 @@ function EditPropertyContent() {
 
     const uploadNewImages = async (): Promise<Map<string, string>> => {
         const urlMap = new Map<string, string>();
-        for (const item of images) {
-            if (item.type !== 'new') continue;
-            const ext = (item.file.name.split('.').pop() || 'jpg').toLowerCase();
-            const safeExt = ALLOWED_EXTENSIONS.includes(ext) ? ext : 'jpg';
-            const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
-            const filePath = `property-images/${user?.id || 'public'}/${uniqueName}`;
+        // Считаем только новые фото для прогресса (существующие не перезаливаем)
+        const newItems = images.filter((item) => item.type === 'new');
+        if (newItems.length > 0) {
+            setPhotoProgress({ current: 0, total: newItems.length });
+        }
 
-            const { error: uploadError } = await supabase.storage
-                .from('properties')
-                .upload(filePath, item.file, { contentType: item.file.type || `image/${safeExt}`, upsert: true });
+        try {
+            let processedCount = 0;
+            for (const item of images) {
+                if (item.type !== 'new') continue;
+                processedCount += 1;
+                // Обновляем прогресс до сжатия каждого фото
+                setPhotoProgress({ current: processedCount, total: newItems.length });
 
-            if (uploadError) throw new Error(uploadError.message);
+                // Сжимаем фото через Canvas API перед загрузкой.
+                // При ошибке compressImageFile безопасно возвращает оригинал.
+                const compressed = await compressImageFile(item.file);
+                const safeExt = compressed.extension;
+                const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
+                const filePath = `property-images/${user?.id || 'public'}/${uniqueName}`;
 
-            const { data } = supabase.storage.from('properties').getPublicUrl(filePath);
-            urlMap.set(item.id, data.publicUrl);
+                const { error: uploadError } = await supabase.storage
+                    .from('properties')
+                    .upload(filePath, compressed.blob, { contentType: compressed.contentType, upsert: true });
+
+                if (uploadError) throw new Error(uploadError.message);
+
+                const { data } = supabase.storage.from('properties').getPublicUrl(filePath);
+                urlMap.set(item.id, data.publicUrl);
+            }
+        } finally {
+            // Гарантированно сбрасываем прогресс — даже при ошибке загрузки
+            setPhotoProgress(null);
         }
         return urlMap;
     };
@@ -651,6 +672,14 @@ function EditPropertyContent() {
                     <Card ref={photosRef}>
                         <CardHeader><CardTitle>{t('property.addProperty.photoUpload')}</CardTitle></CardHeader>
                         <CardContent className="space-y-4">
+                            {photoProgress && (
+                                <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-text">
+                                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                    <span>
+                                        {t('property.photosProcessing')} {photoProgress.current}/{photoProgress.total}
+                                    </span>
+                                </div>
+                            )}
                             {fieldErrors.photos && (
                                 <div className="rounded-lg border border-error/20 bg-error/10 px-4 py-2 text-sm text-error">
                                     {t('property.addProperty.validation.addAtLeastOnePhoto')}
@@ -711,7 +740,7 @@ function EditPropertyContent() {
                         </Link>
                         <Button type="submit" disabled={submitting || districtsLoading}>
                             {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {t('common.save')}
+                            {photoProgress ? t('common.processing') : t('common.save')}
                         </Button>
                     </div>
                 </form>

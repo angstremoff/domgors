@@ -1,6 +1,6 @@
 # Privacy Policy for DomGo Mobile
 
-**Last updated: November 24, 2024**
+**Last updated: July 8, 2026**
 
 This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.
 
@@ -39,4 +39,4 @@ You have the right to delete or request that We assist in deleting the Personal 
 
 ## Contact Us
 If you have any questions about this Privacy Policy, You can contact us:
-*   By email: support@domgo.rs
+*   By email: admin@domgo.rs

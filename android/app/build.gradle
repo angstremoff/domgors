@@ -114,7 +114,9 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            signingConfig signingConfigs.release
+            // ВРЕМЕННО: подпись debug-keystore для локального теста release-сборки без продакшен-ключей.
+            // НЕ коммитить: на релиз вернуть signingConfigs.release.
+            signingConfig signingConfigs.debug
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"

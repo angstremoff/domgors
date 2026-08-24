@@ -10,6 +10,7 @@ import { logError } from '../utils/sentry';
 import { Logger } from '../utils/logger';
 import { propertyCache, apiCache } from '../utils/cacheManager';
 import { normalizePropertyRooms } from '../utils/propertyRules';
+import { applyPropertyQueryFilters, buildFiltersCacheKey, type PropertyQueryFilters } from '../utils/propertyQueryFilters';
 import {
   buildPropertyImagePath,
   extractPropertyImagePath,
@@ -520,8 +521,9 @@ export const propertyService = {
     }
   },
 
-  async getPropertiesByType(type: 'sale' | 'rent' | 'newBuildings', page = 1, pageSize = 10) {
-    const cacheKey = `list-${type}-p${page}`;
+  async getPropertiesByType(type: 'sale' | 'rent' | 'newBuildings', page = 1, pageSize = 10, filters?: PropertyQueryFilters) {
+    // Включаем фильтры в ключ кэша, чтобы разные наборы не коллизировали
+    const cacheKey = `list-${type}-f${buildFiltersCacheKey(filters)}-p${page}`;
     
     // Проверяем кэш через LRU Cache Manager
     const cached = propertyCache.get(cacheKey);
@@ -568,7 +570,12 @@ export const propertyService = {
         Logger.debug(`Применяем стандартную фильтрацию для типа: ${type}`);
         query = query.eq('type', type);
       }
-      
+
+      // Серверная фильтрация по категории/городу/району (чтобы при пагинации
+      // следующая страница приходила уже отфильтрованной, без «хвоста»).
+      // Безопасна: при отсутствии filters не применяет ни одного условия.
+      query = applyPropertyQueryFilters(query, filters);
+
       const { data, error, count } = await query
         .order('created_at', { ascending: false })
         .range(from, to);

@@ -12,6 +12,7 @@ import { useProperties } from '../contexts/PropertyContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Colors from '../constants/colors';
 import { applyPropertyFilters } from '../utils/filterHelpers';
+import type { PropertyQueryFilters } from '../utils/propertyQueryFilters';
 import { Logger } from '../utils/logger';
 
 type DealTab = 'sale' | 'rent' | 'newBuildings';
@@ -73,6 +74,15 @@ const HomeScreen = ({ navigation }: any) => {
   const isAgencyView = propertyType === 'agencies';
   const propertyCategory = isDealView ? getCategoryForType(propertyType) : 'all';
   const propertyTypeForData: 'all' | DealTab = isDealView ? propertyType : 'all';
+  // Серверные фильтры для пагинации: категория/город/район.
+  // Применяются в loadMore, чтобы следующая страница приходила уже отфильтрованной,
+  // и в хвост списка не попадали чужеродные элементы (квартиры при фильтре «дома» и т.п.).
+  // Локальная фильтрация в filterHelpers.ts сохранена как безвредный дубль.
+  const activeQueryFilters = useMemo<PropertyQueryFilters>(() => ({
+    propertyType: propertyCategory !== 'all' ? propertyCategory : undefined,
+    cityId: selectedCity ? Number(selectedCity.id) : undefined,
+    districtId: selectedDistrict?.id || undefined,
+  }), [propertyCategory, selectedCity, selectedDistrict]);
   const showQuickFilters = propertyType === 'sale' || propertyType === 'rent';
   const showFilterActions = propertyType === 'sale' || propertyType === 'rent' || propertyType === 'newBuildings';
   // Локальная база данных для вкладок sale/rent, чтобы не зависеть от глобального properties
@@ -347,8 +357,15 @@ const HomeScreen = ({ navigation }: any) => {
 
     try {
       // Загружаем объявления выбранного типа (первая страница) с расширенным лимитом,
-      // чтобы пользователь видел больше результатов сразу
-      const { data } = await getPropertiesByType(type, 1, 30);
+      // чтобы пользователь видел больше результатов сразу.
+      // Передаём серверные фильтры (категория из текущего вызова + город/район),
+      // чтобы первая страница тоже пришла отфильтрованной и консистентной с пагинацией.
+      const firstPageFilters: PropertyQueryFilters = {
+        propertyType: category !== 'all' ? category : undefined,
+        cityId: selectedCity ? Number(selectedCity.id) : undefined,
+        districtId: selectedDistrict?.id || undefined,
+      };
+      const { data } = await getPropertiesByType(type, 1, 30, firstPageFilters);
 
       // Проверяем, не устарел ли наш запрос (другой мог стартовать пока этот выполнялся)
       if (lastFilterRequest.current.type !== type ||
@@ -758,7 +775,7 @@ const HomeScreen = ({ navigation }: any) => {
 
       setLoadingMore(true);
       try {
-        await loadMoreProperties(propertyTypeForData);
+        await loadMoreProperties(propertyTypeForData, activeQueryFilters);
         Logger.debug('Загрузка завершена: ', {
           'Новая позиция прокрутки': scrollOffsetRef.current,
           'Разница': scrollOffsetRef.current - currentOffset

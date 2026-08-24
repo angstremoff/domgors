@@ -1,174 +1,57 @@
-# DomGo.rs - Веб-сайт
+# DomGo.rs — веб-сайт
 
-Веб-версия приложения DomGoMobile на Next.js 15 с App Router.
+Веб-версия приложения на **Next.js 15** (App Router, **static export** → `domgo.rs`). Деплой: render.com, ветка `main`, Static Site.
 
-## Особенности
+## Стек
+Next.js 15 · Tailwind CSS · TypeScript · Supabase · i18next (RU/SR)
 
-- ✅ **Next.js 15** - SSR, SSG, App Router
-- ✅ **Tailwind CSS** - Современный минимализм
-- ✅ **TypeScript** - Полная типизация
-- ✅ **Supabase** - Auth + Database
-- ✅ **i18next** - Локализация (RU/SR)
-- ✅ **next-themes** - Темная/Светлая тема
-- ✅ **SEO оптимизация** - Meta теги, Sitemap, Robots.txt
-
-## Структура проекта
-
+## Структура
 ```
 web/
-├── app/                # Next.js App Router
-│   ├── layout.tsx      # Корневой layout
-│   ├── page.tsx        # Главная страница
-│   └── (routes)/       # Маршруты приложения
-├── components/         # React компоненты
-│   └── layout/         # Header, Footer
-├── lib/
-│   └── supabase/       # Supabase клиенты (browser/server)
-├── providers/          # React Context провайдеры
-├── styles/             # CSS стили
-└── public/             # Статические файлы
+├── app/              App Router: layout, page, (routes)/
+├── components/       React-компоненты (property, agency, layout, forms, ui…)
+├── lib/              supabase/client+server, property-listings, authSession, seo-utils
+├── providers/        AuthProvider, I18nProvider, ThemeProvider
+├── public/           locales/, property.html (deep-link handler), sitemap
+└── styles/
 ```
 
-## Переиспользование кода
+## Shared-код из `/src` (через алиас `@shared/*` → `../src/`)
+- Типы БД: `@shared/lib/database.types`
+- Переводы: `@shared/translations/{ru,sr}.json` (зеркало в `web/public/locales/`)
+- Утилиты: `@shared/utils/*` (mapCoordinates, contactProfile, propertyRules, propertyListingFilters, authSessionUrl, agencyProfile, webShare, authErrorMessage)
+- Константы: `@shared/constants/colors`
 
-Проект импортирует общие модули из основного приложения:
+⚠️ При правке общих модулей в `/src` — учитывать влияние на web (и наоборот).
 
-- **Типы БД**: `@shared/lib/database.types`
-- **Переводы**: `@shared/translations/{ru,sr}.json`
-- **Утилиты**: `@shared/utils/*`
-- **Константы**: `@shared/constants/colors`
-
-## Быстрый старт
-
-### 1. Настройка переменных окружения
-
-Скопируйте `.env.local` и заполните значения:
-
+## Запуск
 ```bash
-# Supabase (из основного проекта)
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-
-# Site
-NEXT_PUBLIC_SITE_URL=https://domgo.rs
-```
-
-### 2. Установка зависимостей
-
-```bash
+cd web
+cp .env.example .env.local   # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SITE_URL
 npm install
+npm run dev                  # http://localhost:3000
 ```
-
-### 3. Запуск dev сервера
-
-```bash
-npm run dev
-```
-
-Откройте [http://localhost:3000](http://localhost:3000)
+Без env-переменных `npm run build` падает на prerender — это нормально для локальной проверки.
 
 ## Команды
-
 ```bash
-npm run dev      # Запуск dev сервера
-npm run build    # Production сборка
-npm run start    # Запуск production сервера
-npm run lint     # ESLint проверка
+npm run dev     # разработка
+npm run build   # production (static export)
+npm run lint    # ESLint
 ```
 
-## Развертывание
+## Маршруты
+`/` (главная), `/prodaja`, `/izdavanje`, `/novogradnja`, `/agencije`, `/oglas/?id=`, `/agencija/?id=`, `/prijava`, `/registracija`, `/zaboravljena-lozinka`, `/auth/callback`, `/auth/reset-password`, `/profil*` (client-gated, `noindex,nofollow`).
 
-### Vercel (рекомендуется)
+Детальные страницы `/oglas` и `/agencija` — client-only; SEO ограничен клиентскими meta-обновлениями после hydration.
 
-1. Установите Vercel CLI: `npm i -g vercel`
-2. Выполните: `vercel`
-3. Следуйте инструкциям
+## Ключевые инварианты web
+- Листинги (`/prodaja`, `/izdavanje`, `/novogradnja`) используют общий helper `web/lib/property-listings.ts` (initial fetch + infinite scroll, дедупликация по `property.id`)
+- Фильтры: canonical state в `PropertyListingsClient`, `PropertyFilters` синхронизируется через `value`
+- Смена города сбрасывает район; сброс на «Все» реально убирает фильтр из query
+- `property_type='land'` → rooms filter очищается; `5+` означает `rooms >= 5`
+- Auth: `@supabase/supabase-js` с `flowType: 'implicit'`, `detectSessionInUrl: false` (не `@supabase/ssr` — иначе PKCE-ошибка)
+- Web share: capability detection в `webShare.ts`, fallback «Kopiraj link»
+- Продуктовый UI по умолчанию на сербской латинице; fallback в `t()` — сербский
 
-### Render / Netlify
-
-1. Подключите GitHub репозиторий
-2. Укажите папку `web/` как корневую
-3. Команда сборки: `npm run build`
-4. Выходная папка: `.next`
-
-## SEO
-
-Проект включает:
-- ✅ Dynamic meta tags для объявлений
-- ✅ Open Graph теги
-- ✅ Sitemap.xml (динамический)
-- ✅ Robots.txt
-- ✅ JSON-LD structured data (TODO)
-
-## Безопасное удаление
-
-Для удаления веб-версии без повреждения основного проекта:
-
-```bash
-cd /Users/angstremoff/Documents/GitHub/domgomobile
-rm -rf web/
-```
-
-Все изменения изолированы в папке `web/`, основной проект не затронут.
-
-## Реализованные функции
-
-✅ **Завершено:**
-- [x] Страницы листингов (/prodaja, /izdavanje, /novogradnja) с SSR
-- [x] Детали объявления с полными SEO метаданными
-- [x] PropertyCard и PropertyGrid компоненты
-- [x] Авторизация (вход/регистрация через Supabase Auth)
-- [x] Личный кабинет (профиль, избранное, мои объявления)
-- [x] Динамический sitemap.xml
-- [x] Robots.txt
-- [x] Темная/светлая тема
-- [x] Локализация (RU/SR)
-- [x] Middleware для защиты приватных маршрутов
-
-⏳ **Для дальнейшей разработки:**
-- [ ] Фильтры и расширенный поиск
-- [ ] Добавление/редактирование объявлений
-- [ ] Карта объектов (Leaflet)
-- [ ] Агентства
-- [ ] JSON-LD structured data
-- [ ] Пагинация с Infinite Scroll
-- [ ] Оптимизация изображений
-
-## Технические детали
-
-### Переиспользуемые модули
-
-Проект импортирует из основного приложения (`../src/`):
-- `database.types.ts` - типы PostgreSQL
-- `translations/*.json` - переводы (ru, sr)
-- `utils/cacheManager.ts` - LRU кэш
-- `utils/apiHelpers.ts` - retry, withTimeout
-- `utils/filterHelpers.ts` - логика фильтрации
-- `constants/colors.ts` - цветовая схема
-
-### Адаптированные модули
-
-В папке `web/lib/`:
-- `supabase/client.ts` - браузерный клиент (@supabase/ssr)
-- `supabase/server.ts` - серверный клиент для SSR
-- `supabase/middleware.ts` - защита маршрутов
-
-## Текущее состояние
-
-**Dev сервер запущен:** http://localhost:3000
-
-**Доступные страницы:**
-- `/` - Главная
-- `/prodaja` - Продажа недвижимости
-- `/izdavanje` - Аренда
-- `/novogradnja` - Новостройки
-- `/prodaja/[id]`, `/izdavanje/[id]` - Детали объявления
-- `/prijava` - Вход
-- `/registracija` - Регистрация
-- `/profil` - Личный кабинет
-- `/profil/omiljeno` - Избранное
-- `/profil/moji-oglasi` - Мои объявления
-
-## Лицензия
-
-Часть проекта DomGoMobile
+Подробнее — в корневом [`MEMORY.md`](../MEMORY.md) §5 (auth), §8 (web-специфика).

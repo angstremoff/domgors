@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Upload, X, Check, MapPin, ChevronUp, ChevronDown, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { compressImageFile } from '@/lib/imageCompression';
 import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -75,6 +76,8 @@ export function AddPropertyForm() {
   const [districts, setDistricts] = useState<District[]>([]);
   const [districtsLoading, setDistrictsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Прогресс сжатия/загрузки фото, чтобы пользователь не воспринимал процесс как зависание
+  const [photoProgress, setPhotoProgress] = useState<{ current: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -366,25 +369,41 @@ export function AddPropertyForm() {
   const uploadImages = async () => {
     const uploaded: string[] = [];
 
-    for (const item of files) {
-      const ext = (item.file.name.split('.').pop() || 'jpg').toLowerCase();
-      const safeExt = ALLOWED_EXTENSIONS.includes(ext) ? ext : 'jpg';
-      const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
-      const filePath = `property-images/${user?.id || 'public'}/${uniqueName}`;
+    if (files.length > 0) {
+      setPhotoProgress({ current: 0, total: files.length });
+    }
 
-      const { error: uploadError } = await supabase.storage
-        .from('properties')
-        .upload(filePath, item.file, {
-          contentType: item.file.type || `image/${safeExt}`,
-          upsert: true,
-        });
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const item = files[i];
+        // Обновляем прогресс до сжатия каждого фото — пользователь видит движение
+        setPhotoProgress({ current: i + 1, total: files.length });
 
-      if (uploadError) {
-        throw new Error(uploadError.message);
+        // Сжимаем фото через Canvas API перед загрузкой в Storage.
+        // При ошибке compressImageFile безопасно возвращает оригинал.
+        const compressed = await compressImageFile(item.file);
+        const safeExt = compressed.extension;
+        const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
+        const filePath = `property-images/${user?.id || 'public'}/${uniqueName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('properties')
+          .upload(filePath, compressed.blob, {
+            contentType: compressed.contentType,
+            upsert: true,
+          });
+
+        if (uploadError) {
+          throw new Error(uploadError.message);
+        }
+
+        const { data } = supabase.storage.from('properties').getPublicUrl(filePath);
+        uploaded.push(data.publicUrl);
       }
-
-      const { data } = supabase.storage.from('properties').getPublicUrl(filePath);
-      uploaded.push(data.publicUrl);
+    } finally {
+      // Гарантированно сбрасываем прогресс — даже при ошибке загрузки,
+      // иначе индикатор зависнет на экране
+      setPhotoProgress(null);
     }
 
     return uploaded;
@@ -957,6 +976,14 @@ export function AddPropertyForm() {
               <CardTitle>{t('property.addProperty.photoUpload')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {photoProgress && (
+                <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-text">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span>
+                    {t('property.photosProcessing')} {photoProgress.current}/{photoProgress.total}
+                  </span>
+                </div>
+              )}
               {fieldErrors.photos && (
                 <div className="rounded-lg border border-error/20 bg-error/10 px-4 py-2 text-sm text-error">
                   {t('property.addProperty.validation.addAtLeastOnePhoto')}
@@ -1047,7 +1074,7 @@ export function AddPropertyForm() {
           <div className="flex justify-end">
             <Button type="submit" disabled={submitting || districtsLoading}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t('property.addProperty.publish')}
+              {photoProgress ? t('common.processing') : t('property.addProperty.publish')}
             </Button>
           </div>
         </form>

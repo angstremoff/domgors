@@ -36,6 +36,12 @@
   - нормализация: запись в БД всегда проходит через `normalizeNewBuilding(dealType, value)` из `src/utils/propertyRules.ts` (для аренды принудительно `false`).
   - защита defense-in-depth: слой бизнес-логики (`propertyRules.ts`) + слой UI (скрытие/сброс) + слой submit (нормализатор в payload).
   - при загрузке арендного объявления с `is_new_building=true` (грязные данные) формы через `normalizeNewBuilding` сбрасывают флаг в `false` при отображении.
+- Серверная фильтрация листингов в mobile (чтобы при пагинации не было «хвоста» из чужеродных элементов):
+  - категория/город/район применяются на уровне Supabase-запроса через `src/utils/propertyQueryFilters.ts` (`applyPropertyQueryFilters`, `buildFiltersCacheKey`);
+  - `getPropertiesByType` и `loadMoreProperties` принимают опциональный `filters?: PropertyQueryFilters` и пробрасывают его в сервис;
+  - кэш `propertyCache` и `typeCache` включают `buildFiltersCacheKey(filters)` в ключ — разные наборы фильтров не коллизируют; `typeCache` дополнительно хранит `filtersKey` и не отдаёт чужие данные при несовпадении;
+  - локальная фильтрация в `filterHelpers.ts` сохранена как безвредный дубль (двойная проверка); price/rooms/area/features остаются локальными;
+  - это решает баг «при фильтре по домам в хвосте шли квартиры»: теперь loadMore приносит только отфильтрованные элементы, и `hasMore` считается по отфильтрованному набору.
 - `properties.district_id` nullable; create/edit на web и mobile должны требовать район только если у выбранного города реально есть районы, иначе сохранять `district_id = null`.
 - Для `cities` координаты обязательны как продуктовый инвариант: create/edit forms и карты используют `cities.coordinates` как стартовую точку, если у объявления ещё нет собственных координат.
 - Если у города нет полноценного набора районов, безопасный fallback — район `Центар` с координатами центра города; не оставлять новые крупные города совсем без районов.
@@ -111,15 +117,14 @@
 - Web share/detail page не должен полагаться только на `navigator.share`: для Telegram/in-app browsers capability detection вынесен в `src/utils/webShare.ts`; при отсутствии native share CTA переключается на `Kopiraj link` с fallback `clipboard -> execCommand('copy') -> prompt`.
 - Web create/edit property: inline-валидация каждого обязательного поля (красная рамка `border-error` + текст ошибки на сербском). При submit — `scrollIntoView` к первому незаполненному полю. Ошибки сбрасываются при вводе. Формы имеют `noValidate`. Поля: контакты (имя, телефон), заголовок, цена, площадь, комнаты (если не `land`), город, район, адрес, описание, фото. Ключи переводов: `property.addProperty.validation.{titleRequired,priceRequired,areaRequired,roomsRequired,addressRequired,descriptionRequired,cityRequired,districtRequired}` в `sr` и `ru`.
 - На web detail page контактный CTA: `Prikaži broj` → раскрытие номера текстом + `tel:` ссылка.
+- Фото в web сжимаются через Canvas API при отправке (`web/lib/imageCompression.ts`, функция `compressImageFile`): 1280px (пропорционально), JPEG 0.7, выход всегда `.jpg`/`image/jpeg`. Вызывается в `uploadImages` (Add) и `uploadNewImages` (Edit, только новые фото `type==='new'`). Graceful fallback: при ошибке/отсутствии `createImageBitmap`/сжатый>оригинала/микро-файл(<50KB) — грузится оригинал. Прогресс показывается через `photoProgress` state (overlay над галереей «Обработка фотографий N/M» + текст кнопки), чтобы пользователь не воспринимал процесс как зависание. Web Worker не используется (избыточен и рискован); async/await-цикл между фото даёт UI дышать.
 
 ## 9. Актуальный релизный контекст
-- Текущая версия: `1.0.13`
-- Android `versionCode`: `18`
-- iOS `buildNumber`: `18`
+- Текущая версия: `1.0.15.1` (`package.json`). ⚠️ Рассинхрон: `app.config.js` показывает `versionCode/buildNumber: 17`, тогда как git уже дошёл до 21 (v1.0.15.1) — при следующем релизе поднять `versionCode`/`buildNumber` в `app.config.js`.
 - `runtimeVersion`: `1.0.4` — не менять без отдельной причины.
-- Android-store сейчас только RuStore:
-  - ссылка: `https://www.rustore.ru/catalog/app/domgo.rs`
-  - старый `openGooglePlay` больше не актуален.
+- Android-сторы: **Google Play И RuStore** (оба активны):
+  - RuStore: `https://www.rustore.ru/catalog/app/domgo.rs`
+- `OTA/Expo Updates выключен` (`updates.enabled: false`) — все правки доходят до пользователей только через новый build/release.
 - Контактная почта в UI: `admin@domgo.rs`
 
 ## 10. Сборка релизов
@@ -136,6 +141,7 @@
 - `src/utils/mapCoordinates.ts` — parse/get/format/serialize координат.
 - `src/utils/propertyRules.ts` — общие правила для `rooms/land` и инварианта новостроек (`dealTypeSupportsNewBuilding`, `normalizeNewBuilding`).
 - `src/utils/propertyListingFilters.ts` — shared helper для фильтров.
+- `src/utils/propertyQueryFilters.ts` — серверные фильтры листингов mobile (category/город/район → `.eq()` в Supabase-запросе); `applyPropertyQueryFilters`, `buildFiltersCacheKey`.
 - `src/utils/propertyStorage.ts` — единый контракт storage path.
 - `src/utils/agencyProfile.ts` — нормализация агентств, форматирование ссылок, uploadAgencyLogo, fetchAgencyProfileByUserId, upsertAgencyProfile.
 - `src/contexts/AuthContext.tsx` и `web/providers/AuthProvider.tsx` — auth/signup flow.

@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 import { supabase } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import { Logger } from '../utils/logger';
+import { buildFiltersCacheKey, type PropertyQueryFilters } from '../utils/propertyQueryFilters';
 
 // Тип для свойства
 export interface Property {
@@ -86,14 +87,14 @@ interface PropertyContextType {
   setSelectedCity: (city: City | null) => void;
   selectedDistrict: District | null;
   setSelectedDistrict: (district: District | null) => void;
-  getPropertiesByType: (type: 'sale' | 'rent' | 'newBuildings', page?: number, pageSize?: number) => Promise<{
+  getPropertiesByType: (type: 'sale' | 'rent' | 'newBuildings', page?: number, pageSize?: number, filters?: PropertyQueryFilters) => Promise<{
     data: Property[];
     totalCount: number;
     hasMore: boolean;
   }>;
   setFilteredProperties: (properties: Property[]) => void;
   refreshProperties: (type?: 'all' | 'sale' | 'rent' | 'newBuildings') => Promise<void>;
-  loadMoreProperties: (type?: 'all' | 'sale' | 'rent' | 'newBuildings') => Promise<void>; // Асинхронная подгрузка без debounce
+  loadMoreProperties: (type?: 'all' | 'sale' | 'rent' | 'newBuildings', filters?: PropertyQueryFilters) => Promise<void>; // Асинхронная подгрузка без debounce
   invalidateCache: () => Promise<void>; // Добавлен новый метод для обновления кэша
   getHasMore: (type?: 'all' | 'sale' | 'rent' | 'newBuildings') => boolean; // Селектор наличия следующей страницы
   totalProperties: number; // total для активного типа
@@ -345,14 +346,15 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
           // Синхронизируем кэш типа
           if (apiType === 'sale' || apiType === 'rent') {
             if (!typeCache.current[apiType]) {
-              typeCache.current[apiType] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 };
+              typeCache.current[apiType] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: 'none' };
             }
             typeCache.current[apiType] = {
               data: result.data,
               totalCount: result.totalCount,
               hasMore: result.hasMore,
               timestamp: Date.now(),
-              pageSize
+              pageSize,
+              filtersKey: 'none'
             };
           }
         } else {
@@ -383,70 +385,79 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
     hasMore: boolean;
     timestamp: number;
     pageSize: number;
+    // Ключ фильтров, которыми получен этот кэш. Несовпадение → мимо кэша.
+    filtersKey: string;
   };
-  
+
   // Кэш для хранения последних результатов запросов по типу
   const typeCache = React.useRef<Record<'sale' | 'rent' | 'newBuildings', TypeCacheResult>>({
-    sale: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 },
-    rent: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 },
-    newBuildings: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 }
+    sale: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: 'none' },
+    rent: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: 'none' },
+    newBuildings: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: 'none' }
   });
   
   // Получение объявлений по типу (продажа/аренда/новостройки) с кэшированием
-  const getPropertiesByType = async (type: 'sale' | 'rent' | 'newBuildings', page = 1, pageSize = 10): Promise<{
+  const getPropertiesByType = async (type: 'sale' | 'rent' | 'newBuildings', page = 1, pageSize = 10, filters?: PropertyQueryFilters): Promise<{
     data: Property[];
     totalCount: number;
     hasMore: boolean;
   }> => {
     // Сохраняем текущий тип сделки для использования в refreshProperties
     activePropertyTypeRef.current = type;
-    
+
+    // Стабильный ключ фильтров для проверки совпадения кэша
+    const currentFiltersKey = buildFiltersCacheKey(filters);
+
     // Для newBuildings используем отдельный кэш, но API вызываем с типом 'newBuildings'
     const cacheKey = type;
-    
+
     // Проверяем существование ключа в typeCache
     if (!typeCache.current[cacheKey]) {
       Logger.debug(`Инициализация кэша для типа ${cacheKey}`);
-      typeCache.current[cacheKey] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 };
+      typeCache.current[cacheKey] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: 'none' };
     }
-    
-    // Обрабатываем случай, когда запрос уже выполняется
+
+    // Обрабатываем случай, когда запрос уже выполняется.
+    // Возвращаем кэш только если совпадает filtersKey — иначе это чужие данные.
     if (requestInProgress.current[type === 'newBuildings' ? 'sale' : type]) {
       Logger.debug(`Запрос ${type} уже выполняется, возвращаем кэшированные данные`);
       const cached = typeCache.current[cacheKey];
       const isFresh = cached?.timestamp >= getCacheTimestamp();
-      return isFresh ? cached : { data: [], totalCount: 0, hasMore: false };
+      const sameFilters = cached?.filtersKey === currentFiltersKey;
+      return (isFresh && sameFilters) ? cached : { data: [], totalCount: 0, hasMore: false };
     }
-    
+
     // Используем кэш, если запрос был недавно и кэш свежее последней инвалидации в сервисе
     const now = Date.now();
     const cachedData = typeCache.current[cacheKey];
     const globalCacheVersion = getCacheTimestamp();
-    
-    if (page === 1 && 
-        cachedData && 
-        cachedData.data && 
-        cachedData.data.length > 0 && 
+
+    if (page === 1 &&
+        cachedData &&
+        cachedData.data &&
+        cachedData.data.length > 0 &&
         cachedData.timestamp >= globalCacheVersion &&
         now - cachedData.timestamp < MIN_FETCH_INTERVAL &&
         // Важно: если просим больший pageSize, чем в кэше, не используем кэш
-        pageSize <= (cachedData.pageSize || cachedData.data.length)) {
+        pageSize <= (cachedData.pageSize || cachedData.data.length) &&
+        // Фильтры должны совпадать с теми, которыми получен кэш
+        cachedData.filtersKey === currentFiltersKey) {
       Logger.debug(`Возвращаем кэшированные данные для типа ${cacheKey}, обновлены ${Math.round((now - cachedData.timestamp)/1000)}с назад`);
       return cachedData;
     }
-    
+
     try {
       requestInProgress.current[type === 'newBuildings' ? 'sale' : type] = true;
       setLoading(true);
-      
-      const result = toPropertyListResult(await propertyService.getPropertiesByType(type, page, pageSize));
+
+      const result = toPropertyListResult(await propertyService.getPropertiesByType(type, page, pageSize, filters));
       if (result && result.data.length > 0) {
         // Для первой страницы обновляем состояние приложения
         if (page === 1) {
           setCurrentPage(prev => ({ ...prev, [type]: 1 }));
           // Проверяем существование ключа в typeCache перед обновлением
           if (!typeCache.current[cacheKey]) {
-            typeCache.current[cacheKey] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 };
+            typeCache.current[cacheKey] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: currentFiltersKey };
           }
           // Обновляем кэш для данного типа
           typeCache.current[cacheKey] = {
@@ -454,7 +465,8 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
             totalCount: result.totalCount,
             hasMore: result.hasMore,
             timestamp: Date.now(),
-            pageSize
+            pageSize,
+            filtersKey: currentFiltersKey
           };
           cacheVersionRef.current = globalCacheVersion;
         } else {
@@ -487,7 +499,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       // Проверяем существование и наличие данных в кэше
       const cachedData = typeCache.current[cacheKey];
       if (!cachedData) {
-        typeCache.current[cacheKey] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 };
+        typeCache.current[cacheKey] = { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: 'none' };
       }
       
       // Возвращаем кэш или пустой результат, если кэша нет
@@ -506,20 +518,22 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 
   // RU: Плавная догрузка (пагинация) без debounce. Защита от параллельных запросов через requestInProgress.
   // EN: Smooth pagination without debounce. Uses requestInProgress to prevent parallel requests.
-  const loadMoreProperties = async (type: 'all' | 'sale' | 'rent' | 'newBuildings' = 'all') => {
+  const loadMoreProperties = async (type: 'all' | 'sale' | 'rent' | 'newBuildings' = 'all', filters?: PropertyQueryFilters) => {
     // Не загружаем, если нет больше данных, или уже выполняется запрос для этого типа
     const typeKey = type === 'newBuildings' ? 'sale' : type;
     if (!hasMore[type] || requestInProgress.current[typeKey as 'all' | 'sale' | 'rent']) return;
-    
+
     try {
       requestInProgress.current[typeKey as 'all' | 'sale' | 'rent'] = true;
       Logger.debug(`Загрузка дополнительных объявлений типа ${type}, страница ${currentPage[type] + 1}`);
-      
+
       let result: PropertyListResult | null;
       if (type === 'all') {
         result = toPropertyListResult(await propertyService.getProperties(currentPage.all + 1, pageSize));
       } else {
-        result = toPropertyListResult(await propertyService.getPropertiesByType(type, currentPage[type] + 1, pageSize));
+        // Передаём filters, чтобы серверная пагинация отсекла category/город/район
+        // и в хвост filteredProperties не попадали чужеродные элементы.
+        result = toPropertyListResult(await propertyService.getPropertiesByType(type, currentPage[type] + 1, pageSize, filters));
       }
       
       if (result && result.data.length > 0) {
@@ -585,9 +599,9 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
       newBuildings: 0
     };
     typeCache.current = {
-      sale: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 },
-      rent: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 },
-      newBuildings: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0 }
+      sale: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: 'none' },
+      rent: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: 'none' },
+      newBuildings: { data: [], totalCount: 0, hasMore: false, timestamp: 0, pageSize: 0, filtersKey: 'none' }
     };
     
     // Сбрасываем текущее состояние
