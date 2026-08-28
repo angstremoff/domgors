@@ -5,6 +5,7 @@ import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { supabase } from '../lib/supabaseClient';
 import PropertyCard from '../components/PropertyCard';
 import PropertyCardCompact from '../components/PropertyCardCompact';
+import SkeletonCard from '../components/SkeletonCard';
 import type { Property, District } from '../contexts/PropertyContext';
 import FilterModal from '../components/FilterModal';
 import { useFavorites } from '../contexts/FavoritesContext';
@@ -1633,15 +1634,24 @@ const HomeScreen = ({ navigation }: any) => {
           />
         )
       ) : loading || propertiesLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={[styles.loadingText, { color: theme.secondary, marginTop: 12 }]}>
-            {t('common.loading')}
-          </Text>
+        // Скелетоны вместо спиннера: лента «дышит» пока грузится
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={`skeleton-${i}`} darkMode={darkMode} />
+          ))}
         </View>
       ) : filteredProperties.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: theme.text }]}>{t('property.noPropertiesFound')}</Text>
+          <Ionicons name="search-outline" size={56} color={theme.secondary} />
+          <Text style={[styles.emptyText, { color: theme.text, marginTop: 12 }]}>
+            {t('property.noPropertiesFound')}
+          </Text>
+          <TouchableOpacity
+            style={[styles.emptyResetButton, { backgroundColor: theme.primary }]}
+            onPress={() => handleClearFilters()}
+          >
+            <Text style={styles.emptyResetButtonText}>{t('filters.resetFilters')}</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -2013,6 +2023,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6B7280',
     textAlign: 'center',
+  },
+  // Сетка скелетонов при загрузке ленты (вместо спиннера)
+  skeletonList: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    padding: 8,
+    gap: 12,
+  },
+  // Кнопка сброса фильтров в пустом состоянии
+  emptyResetButton: {
+    marginTop: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  emptyResetButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
   footerLoading: {
     paddingVertical: 20,

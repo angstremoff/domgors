@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { MapPin, Bed, Maximize } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Database } from '@shared/lib/database.types';
+import { isFreshListing } from '@shared/utils/propertyRules';
 import { cn } from '@/lib/utils/cn';
 
 type PropertyRow = Database['public']['Tables']['properties']['Row'];
@@ -40,6 +41,8 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
     property.rooms !== undefined;
 
   const detailsUrl = `/oglas/?id=${property.id}`;
+  // Бейдж «Новое» для свежих объявлений (до 7 дней)
+  const isFresh = isFreshListing(property.created_at);
 
   const getPropertyTypeLabel = () => {
     const typeMap: Record<string, string> = {
@@ -55,7 +58,7 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
   return (
     <div
       className={cn(
-        'group relative flex-shrink-0 snap-start w-72 sm:w-80 h-full rounded-xl border border-border overflow-hidden bg-white dark:bg-surface hover:shadow-xl transition-all duration-300 flex flex-col',
+        'group relative flex-shrink-0 snap-start w-72 sm:w-80 h-full rounded-xl border border-border overflow-hidden bg-white dark:bg-surface hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 transition-all duration-300 flex flex-col animate-card-enter',
         className
       )}
     >
@@ -83,6 +86,11 @@ export function PropertyCardCompact({ property, className }: PropertyCardCompact
           {property.is_new_building && (
             <div className="bg-green-500 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-lg">
               {t('common.newBuildings')}
+            </div>
+          )}
+          {isFresh && (
+            <div className="bg-emerald-600 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-lg">
+              {t('property.newBadge')}
             </div>
           )}
         </div>

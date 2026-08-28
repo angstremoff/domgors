@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Heart, MapPin, Bed, Maximize, Bath } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Database } from '@shared/lib/database.types';
+import { isFreshListing } from '@shared/utils/propertyRules';
 import { cn } from '@/lib/utils/cn';
 
 type Property = Database['public']['Tables']['properties']['Row'];
@@ -53,8 +54,11 @@ export function PropertyCard({ property, onFavoriteToggle, isFavorite }: Propert
     return typeMap[property.property_type || 'apartment'] || t('property.other');
   };
 
+  // Бейдж «Новое» для свежих объявлений (до 7 дней)
+  const isFresh = isFreshListing(property.created_at);
+
   return (
-    <div className="group relative rounded-xl border border-border overflow-hidden bg-white dark:bg-surface hover:shadow-2xl transition-all duration-300">
+    <div className="group relative rounded-xl border border-border overflow-hidden bg-white dark:bg-surface hover:shadow-2xl hover:-translate-y-1 hover:border-primary/30 transition-all duration-300 animate-card-enter">
       {/* Изображение */}
       <Link href={detailsUrl} className="block relative h-56 overflow-hidden">
         <Image
@@ -79,12 +83,19 @@ export function PropertyCard({ property, onFavoriteToggle, isFavorite }: Propert
           )}
         </div>
 
-        {/* Новостройка */}
-        {property.is_new_building && (
-          <div className="absolute top-3 right-3 bg-green-500 text-white px-4 py-1.5 rounded-full text-xs font-semibold shadow-lg">
-            {t('common.newBuildings')}
-          </div>
-        )}
+        {/* Новостройка + бейдж свежести (стек справа) */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+          {property.is_new_building && (
+            <div className="bg-green-500 text-white px-4 py-1.5 rounded-full text-xs font-semibold shadow-lg">
+              {t('common.newBuildings')}
+            </div>
+          )}
+          {isFresh && (
+            <div className="bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
+              {t('property.newBadge')}
+            </div>
+          )}
+        </div>
 
         {/* Избранное */}
         {onFavoriteToggle && (

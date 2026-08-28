@@ -1,10 +1,11 @@
-import { memo, useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Platform, GestureResponderEvent } from 'react-native';
+import { memo, useCallback, useMemo, useRef } from 'react';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Platform, GestureResponderEvent, Animated, Vibration } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from '../contexts/FavoritesContext';
 import type { Property } from '../contexts/PropertyContext';
 import Colors from '../constants/colors';
+import { isFreshListing } from '../utils/propertyRules';
 
 interface PropertyCardCompactProps {
   property: Property;
@@ -18,12 +19,26 @@ const PropertyCardCompact = memo(({ property, onPress, darkMode = false }: Prope
   const propertyIsFavorite = isFavorite(property.id);
   const theme = darkMode ? Colors.dark : Colors.light;
   
+  // Микроанимация «вздрога» сердечка при добавлении в избранное
+  const heartScale = useRef(new Animated.Value(1)).current;
+  // Бейдж «Новое» для свежих объявлений (до 7 дней)
+  const showFreshBadge = isFreshListing(property.created_at);
+
   // toggleFavorite теперь стабильная ссылка (useCallback в FavoritesContext),
   // поэтому не включаем её в зависимости для предотвращения лишних ререндеров
   const handleFavoritePress = useCallback((e: GestureResponderEvent) => {
     e.stopPropagation();
     toggleFavorite(property.id);
-  }, [property.id]);
+    // Тактильный отклик (встроенный Vibration; на web нет вибрации)
+    if (Platform.OS !== 'web') {
+      Vibration.vibrate(10);
+    }
+    // Пружинка: подпрыгнуть и вернуться
+    Animated.sequence([
+      Animated.spring(heartScale, { toValue: 1.35, speed: 40, bounciness: 8, useNativeDriver: true }),
+      Animated.spring(heartScale, { toValue: 1, speed: 24, bounciness: 10, useNativeDriver: true }),
+    ]).start();
+  }, [property.id, heartScale]);
 
   // Мемоизация форматирования цены для оптимизации
   const formattedPrice = useMemo(() => {
@@ -69,17 +84,24 @@ const PropertyCardCompact = memo(({ property, onPress, darkMode = false }: Prope
             </Text>
           </View>
         )}
-        <TouchableOpacity 
-          style={styles.favoriteButton} 
+        <TouchableOpacity
+          style={styles.favoriteButton}
           onPress={handleFavoritePress}
           activeOpacity={0.8}
         >
-          <Ionicons 
-            name={propertyIsFavorite ? "heart" : "heart-outline"} 
-            size={18} 
-            color={propertyIsFavorite ? "#E91E63" : "#FFFFFF"} 
-          />
+          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+            <Ionicons
+              name={propertyIsFavorite ? "heart" : "heart-outline"}
+              size={18}
+              color={propertyIsFavorite ? "#E91E63" : "#FFFFFF"}
+            />
+          </Animated.View>
         </TouchableOpacity>
+        {showFreshBadge && (
+          <View style={styles.freshBadge}>
+            <Text style={styles.freshBadgeText}>{t('property.newBadge')}</Text>
+          </View>
+        )}
       </View>
 
       <View style={[
@@ -194,6 +216,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // Бейдж «Новое» — под кнопкой избранного (компактный размер)
+  freshBadge: {
+    position: 'absolute',
+    top: 38,
+    right: 5,
+    backgroundColor: '#10B981',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+  },
+  freshBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
   infoContainer: {
     padding: 8,

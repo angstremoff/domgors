@@ -1,11 +1,12 @@
-import { memo, useCallback, useMemo } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, Platform, GestureResponderEvent } from 'react-native';
+import { memo, useCallback, useMemo, useRef } from 'react';
+import { StyleSheet, View, Text, Image, TouchableOpacity, Platform, GestureResponderEvent, Animated, Vibration } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useFavorites } from '../contexts/FavoritesContext';
 import type { Property } from '../contexts/PropertyContext';
 import Colors from '../constants/colors';
 import { Logger } from '../utils/logger';
+import { isFreshListing } from '../utils/propertyRules';
 import placeholderImage from '../../assets/placeholder.png';
 
 interface PropertyCardProps {
@@ -20,12 +21,26 @@ const PropertyCard = memo(({ property, onPress, darkMode = false }: PropertyCard
   const propertyIsFavorite = isFavorite(property.id);
   const theme = darkMode ? Colors.dark : Colors.light;
 
+  // Микроанимация «вздрога» сердечка при добавлении в избранное
+  const heartScale = useRef(new Animated.Value(1)).current;
+  // Бейдж «Новое» для свежих объявлений (до 7 дней)
+  const showFreshBadge = isFreshListing(property.created_at);
+
   // toggleFavorite теперь стабильная ссылка (useCallback в FavoritesContext),
   // поэтому не включаем её в зависимости для предотвращения лишних ререндеров
   const handleFavoritePress = useCallback((e: GestureResponderEvent) => {
     e.stopPropagation();
     toggleFavorite(property.id);
-  }, [property.id]);
+    // Тактильный отклик (встроенный Vibration, без зависимостей; на web нет вибрации)
+    if (Platform.OS !== 'web') {
+      Vibration.vibrate(10);
+    }
+    // Пружинка: подпрыгнуть и вернуться
+    Animated.sequence([
+      Animated.spring(heartScale, { toValue: 1.35, speed: 40, bounciness: 8, useNativeDriver: true }),
+      Animated.spring(heartScale, { toValue: 1, speed: 24, bounciness: 10, useNativeDriver: true }),
+    ]).start();
+  }, [property.id, heartScale]);
 
   // Получаем название города из объекта city, если оно доступно
   const cityName = property.city?.name || '';
@@ -116,12 +131,19 @@ const PropertyCard = memo(({ property, onPress, darkMode = false }: PropertyCard
           onPress={handleFavoritePress}
           activeOpacity={0.8}
         >
-          <Ionicons
-            name={propertyIsFavorite ? "heart" : "heart-outline"}
-            size={22}
-            color={Platform.OS === 'web' ? (propertyIsFavorite ? "#E91E63" : "#4B5563") : (propertyIsFavorite ? "#E91E63" : "#FFFFFF")}
-          />
+          <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+            <Ionicons
+              name={propertyIsFavorite ? "heart" : "heart-outline"}
+              size={22}
+              color={Platform.OS === 'web' ? (propertyIsFavorite ? "#E91E63" : "#4B5563") : (propertyIsFavorite ? "#E91E63" : "#FFFFFF")}
+            />
+          </Animated.View>
         </TouchableOpacity>
+        {showFreshBadge && (
+          <View style={styles.freshBadge}>
+            <Text style={styles.freshBadgeText}>{t('property.newBadge')}</Text>
+          </View>
+        )}
       </View>
 
       <View style={[styles.infoContainer, Platform.OS === 'web' && styles.infoContainerWeb]}>
@@ -278,6 +300,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
+  },
+  // Бейдж «Новое» — под кнопкой избранного, справа
+  freshBadge: {
+    position: 'absolute',
+    top: 50,
+    right: 8,
+    backgroundColor: '#10B981',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  freshBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
   infoContainer: {
     padding: 4,

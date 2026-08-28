@@ -305,6 +305,7 @@
     "saleHouse": "Продажа домов",
     "saleCommercial": "Продажа коммерческой",
     "noPropertiesFound": "Объявления не найдены",
+    "newBadge": "Новое",
     "editProperty": "Редактирование объявления",
     "errors": {
       "maxPropertiesReached": "Вы достигли максимального количества объявлений",

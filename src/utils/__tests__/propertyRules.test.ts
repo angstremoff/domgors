@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   dealTypeSupportsNewBuilding,
+  FRESH_LISTING_MAX_AGE_DAYS,
+  isFreshListing,
   normalizeNewBuilding,
   normalizePropertyRooms,
   parseFiniteNumberInput,
@@ -94,6 +96,43 @@ describe('propertyRules helpers', () => {
       expect(normalizeNewBuilding('unknown', true)).toBe(false);
       expect(normalizeNewBuilding(null, true)).toBe(false);
       expect(normalizeNewBuilding(undefined, true)).toBe(false);
+    });
+  });
+
+  describe('isFreshListing', () => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const NOW = Date.parse('2026-07-08T12:00:00Z');
+
+    it('возвращает true для объявления младше 7 дней', () => {
+      expect(isFreshListing('2026-07-07T12:00:00Z', NOW)).toBe(true); // 1 день
+      expect(isFreshListing('2026-07-05T12:00:00Z', NOW)).toBe(true); // 3 дня
+    });
+
+    it('возвращает true ровно на границе 7 дней', () => {
+      const exactlySevenDays = new Date(NOW - FRESH_LISTING_MAX_AGE_DAYS * DAY_MS).toISOString();
+      expect(isFreshListing(exactlySevenDays, NOW)).toBe(true);
+    });
+
+    it('возвращает false для объявления старше 7 дней', () => {
+      const eightDays = new Date(NOW - 8 * DAY_MS).toISOString();
+      expect(isFreshListing(eightDays, NOW)).toBe(false);
+      const monthAgo = new Date(NOW - 30 * DAY_MS).toISOString();
+      expect(isFreshListing(monthAgo, NOW)).toBe(false);
+    });
+
+    it('возвращает false для null/undefined/пустой строки', () => {
+      expect(isFreshListing(null, NOW)).toBe(false);
+      expect(isFreshListing(undefined, NOW)).toBe(false);
+      expect(isFreshListing('', NOW)).toBe(false);
+    });
+
+    it('возвращает false для невалидной даты', () => {
+      expect(isFreshListing('not-a-date', NOW)).toBe(false);
+      expect(isFreshListing('2026-13-45T99:99:99Z', NOW)).toBe(false);
+    });
+
+    it('возвращает false для даты в будущем', () => {
+      expect(isFreshListing('2026-07-10T12:00:00Z', NOW)).toBe(false);
     });
   });
 });

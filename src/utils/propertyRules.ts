@@ -7,6 +7,33 @@ export const dealTypeSupportsNewBuilding = (dealType: string | null | undefined)
   return dealType === 'sale';
 };
 
+// Возраст «свежести» объявления для бейджа «Новое»
+export const FRESH_LISTING_MAX_AGE_DAYS = 7;
+
+// Свежее ли объявление (created_at младше N дней) — для бейджа «Новое» на карточках.
+// Безопасно: null/undefined/невалидная дата/false-будущее → false.
+export const isFreshListing = (
+  createdAt: string | null | undefined,
+  now: number = Date.now()
+): boolean => {
+  if (!createdAt) {
+    return false;
+  }
+
+  const timestamp = Date.parse(createdAt);
+  if (Number.isNaN(timestamp)) {
+    return false;
+  }
+
+  const ageMs = now - timestamp;
+  if (ageMs < 0) {
+    // Дата в будущем — считаем некорректной, не показываем бейдж
+    return false;
+  }
+
+  return ageMs <= FRESH_LISTING_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+};
+
 // Нормализация флага новостройки: для аренды всегда false,
 // чтобы не допустить запись type='rent' AND is_new_building=true
 export const normalizeNewBuilding = (
