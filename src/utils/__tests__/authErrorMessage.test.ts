@@ -18,6 +18,9 @@ describe('getAuthErrorMessage', () => {
   it('уже зарегистрирован', () => {
     expect(getAuthErrorMessage('User already registered', t, 'register')).toBe('auth.emailAlreadyExists');
     expect(getAuthErrorMessage('Email address not authorized', t, 'register')).toBe('auth.emailAlreadyExists');
+    expect(
+      getAuthErrorMessage('duplicate key value violates unique constraint "users_email_key"', t, 'register')
+    ).toBe('auth.emailAlreadyExists');
   });
 
   it('протухшие ссылки/токены', () => {
@@ -26,6 +29,13 @@ describe('getAuthErrorMessage', () => {
   });
 
   describe('сетевые таймауты и 504 (главный кейс поломки регистрации)', () => {
+    it('отказ SMTP на стороне Supabase → понятное сообщение', () => {
+      expect(getAuthErrorMessage('Error sending confirmation email', t, 'register'))
+        .toBe('auth.serviceTemporarilyUnavailable');
+      expect(getAuthErrorMessage('Error sending password recovery email', t, 'reset-request'))
+        .toBe('auth.serviceTemporarilyUnavailable');
+    });
+
     it('upstream request timeout → понятное сообщение', () => {
       expect(getAuthErrorMessage('upstream request timeout', t, 'register'))
         .toBe('auth.serviceTemporarilyUnavailable');

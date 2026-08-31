@@ -21,6 +21,9 @@ export function getAuthErrorMessage(
     normalizedMessage.includes('user already registered')
     || normalizedMessage.includes('already registered')
     || normalizedMessage.includes('email address not authorized')
+    // Сырой 23505 от GoTrue при повторной регистрации, когда в auth.users
+    // осталась «полусозданная» строка после неудачной отправки письма
+    || normalizedMessage.includes('duplicate key')
   ) {
     return t('auth.emailAlreadyExists');
   }
@@ -35,10 +38,12 @@ export function getAuthErrorMessage(
     return t('auth.invalidAuthLink');
   }
 
-  // Сетевые сбои и таймауты (в т.ч. 504 upstream от шлюза при зависшей отправке писем):
+  // Сетевые сбои и таймауты (в т.ч. 504 upstream от шлюза при зависшей отправке писем),
+  // а также отказ SMTP на стороне Supabase ("Error sending confirmation email" → 500):
   // показываем понятное сообщение вместо сырого текста ошибки
   if (
-    normalizedMessage.includes('upstream request timeout')
+    (normalizedMessage.includes('error sending') && normalizedMessage.includes('email'))
+    || normalizedMessage.includes('upstream request timeout')
     || normalizedMessage.includes('request timeout')
     || normalizedMessage.includes('timed out')
     || normalizedMessage.includes('timeout')
