@@ -69,17 +69,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string) => {
     const emailRedirectTo = buildWebAuthCallbackUrl();
 
-    const { data, error } = await supabase.auth.signUp({
-      email: normalizeEmail(email),
-      password,
-      options: {
-        emailRedirectTo,
-        data: {
-          source: 'web_app',
-          platform: 'web',
-        },
-      },
+    // Клиентский таймаут: при зависании сервера (например, синхронная отправка
+    // письма подтверждения виснет и шлюз отдаёт 504) не мучаем пользователя
+    // минутным спиннером — через 25с отдаём понятную ошибку сети,
+    // которую getAuthErrorMessage показывает как «сервис временно недоступен».
+    const SIGNUP_TIMEOUT_MS = 25_000;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(
+        () => reject(new Error('Request timeout')),
+        SIGNUP_TIMEOUT_MS
+      );
     });
+
+    let data: { user: User | null; session: Session | null };
+    let error: AuthError | null;
+    try {
+      const result = await Promise.race([
+        supabase.auth.signUp({
+          email: normalizeEmail(email),
+          password,
+          options: {
+            emailRedirectTo,
+            data: {
+              source: 'web_app',
+              platform: 'web',
+            },
+          },
+        }),
+        timeoutPromise,
+      ]);
+      data = result.data;
+      error = result.error;
+    } catch (timeoutOrNetworkError) {
+      // Таймаут гонки или сетевой сбой: приводим к AuthError-подобной форме
+      error = {
+        name: 'AuthError',
+        message:
+          timeoutOrNetworkError instanceof Error
+            ? timeoutOrNetworkError.message
+            : 'Network request failed',
+      } as AuthError;
+      data = { user: null, session: null };
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
 
     if (data.session?.user) {
       await ensureUserProfile(data.session.user);

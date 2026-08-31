@@ -520,6 +520,7 @@
     "success": "Uspešno",
     "registerSuccess": "Registracija je uspešno završena",
     "registerError": "Greška prilikom registracije",
+    "serviceTemporarilyUnavailable": "Servis za registraciju je privremeno nedostupan. Pokušajte ponovo za nekoliko minuta.",
     "registerFailed": "Registracija nije uspela",
     "loginFailed": "Prijava nije uspela",
     "loginError": "Greška prilikom prijave",

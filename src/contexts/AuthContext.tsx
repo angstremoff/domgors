@@ -83,17 +83,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email: normalizeEmail(email),
-      password,
-      options: {
-        emailRedirectTo: buildWebAuthCallbackUrl(),
-        data: {
-          source: 'mobile_app',
-          platform: 'mobile',
-        },
-      },
+    // Клиентский таймаут: при зависании сервера (синхронная отправка письма
+    // подтверждения виснет → шлюз отдаёт 504) не держим пользователя
+    // минуту — через 25с возвращаем понятную сетевую ошибку,
+    // которую getAuthErrorMessage показывает как «сервис временно недоступен».
+    const SIGNUP_TIMEOUT_MS = 25_000;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Request timeout')), SIGNUP_TIMEOUT_MS);
     });
+
+    let data: { user: User | null; session: Session | null };
+    let error: AuthError | null;
+    try {
+      const result = await Promise.race([
+        supabase.auth.signUp({
+          email: normalizeEmail(email),
+          password,
+          options: {
+            emailRedirectTo: buildWebAuthCallbackUrl(),
+            data: {
+              source: 'mobile_app',
+              platform: 'mobile',
+            },
+          },
+        }),
+        timeoutPromise,
+      ]);
+      data = result.data;
+      error = result.error;
+    } catch (timeoutOrNetworkError) {
+      error = {
+        name: 'AuthError',
+        message:
+          timeoutOrNetworkError instanceof Error
+            ? timeoutOrNetworkError.message
+            : 'Network request failed',
+      } as AuthError;
+      data = { user: null, session: null };
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
 
     if (data.session?.user) {
       await ensureUserProfile(data.session.user);

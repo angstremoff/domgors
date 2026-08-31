@@ -35,6 +35,22 @@ export function getAuthErrorMessage(
     return t('auth.invalidAuthLink');
   }
 
+  // Сетевые сбои и таймауты (в т.ч. 504 upstream от шлюза при зависшей отправке писем):
+  // показываем понятное сообщение вместо сырого текста ошибки
+  if (
+    normalizedMessage.includes('upstream request timeout')
+    || normalizedMessage.includes('request timeout')
+    || normalizedMessage.includes('timed out')
+    || normalizedMessage.includes('timeout')
+    || normalizedMessage.includes('network request failed')
+    || normalizedMessage.includes('fetch failed')
+    || normalizedMessage.includes('failed to fetch')
+    || normalizedMessage.includes('load failed')
+    || normalizedMessage.includes('networkerror')
+  ) {
+    return t('auth.serviceTemporarilyUnavailable');
+  }
+
   return fallbackMessage(t, context);
 }
 
