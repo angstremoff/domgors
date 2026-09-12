@@ -8,7 +8,8 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { PropertyGallery } from './PropertyGallery';
 import { PropertyLocationMap } from './PropertyLocationMap';
-import type { Database } from '@shared/lib/database.types';
+import { useAuth } from '@/providers/AuthProvider';
+import type { Database, TablesInsert } from '@shared/lib/database.types';
 import { parseMapCoordinates } from '@shared/utils/mapCoordinates';
 import {
   DEFAULT_WEB_SHARE_CAPABILITY_STATE,
@@ -79,11 +80,50 @@ const isShareAbortError = (error: unknown): boolean => {
 
 export function PropertyDetails({ property, agencyId }: PropertyDetailsProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const propertyCoordinates = parseMapCoordinates(property.coordinates);
   const [phoneRevealed, setPhoneRevealed] = useState(false);
   const [agencyData, setAgencyData] = useState<{ id: string; name: string; logo_url: string | null } | null>(null);
   const [shareCapabilityState, setShareCapabilityState] = useState(DEFAULT_WEB_SHARE_CAPABILITY_STATE);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setIsFavorite(false);
+      return;
+    }
+
+    const supabase = createClient();
+    supabase
+      .from('favorites')
+      .select('property_id')
+      .eq('user_id', user.id)
+      .eq('property_id', property.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setIsFavorite(Boolean(data));
+      });
+  }, [user, property.id]);
+
+  const handleFavoriteToggle = async () => {
+    if (!user) {
+      alert(t('common.loginRequired'));
+      return;
+    }
+
+    const supabase = createClient();
+    const nextValue = !isFavorite;
+    // оптимистичное обновление
+    setIsFavorite(nextValue);
+
+    if (!nextValue) {
+      await supabase.from('favorites').delete().eq('property_id', property.id).eq('user_id', user.id);
+    } else {
+      const newFav: TablesInsert<'favorites'> = { property_id: property.id, user_id: user.id };
+      await supabase.from('favorites').insert([newFav] as any);
+    }
+  };
 
   const isAgency = (property.user as { is_agency?: boolean } | null)?.is_agency === true;
 
@@ -246,8 +286,16 @@ export function PropertyDetails({ property, agencyId }: PropertyDetailsProps) {
           <div>
             <div className="flex items-start justify-between mb-2">
               <h1 className="text-3xl font-bold text-text">{property.title}</h1>
-              <Button variant="ghost" size="sm">
-                <Heart className="h-5 w-5" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleFavoriteToggle}
+                aria-label={isFavorite ? t('property.removeFromFavorites') : t('property.addToFavorites')}
+                title={isFavorite ? t('property.removeFromFavorites') : t('property.addToFavorites')}
+              >
+                <Heart
+                  className={`h-5 w-5 transition-colors ${isFavorite ? 'fill-red-500 text-red-500' : 'text-textSecondary'}`}
+                />
               </Button>
             </div>
             <div className="mb-4 flex items-center text-textSecondary">

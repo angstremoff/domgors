@@ -124,6 +124,7 @@ const ImageViewer = ({ images, visible, initialIndex = 0, onClose, darkMode = fa
             data={images}
             horizontal
             pagingEnabled
+            nestedScrollEnabled
             showsHorizontalScrollIndicator={false}
             renderItem={renderItem}
             keyExtractor={(_, index) => `image-full-${index}`}

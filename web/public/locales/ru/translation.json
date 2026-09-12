@@ -291,7 +291,6 @@
     "images": "Изображения",
     "addImages": "Добавить изображения",
     "loading": "Загрузка объявления...",
-    "showPhone": "Показать номер",
     "locationMap": "Расположение на карте",
     "showMap": "Показать карту",
     "hideMap": "Скрыть",
@@ -439,7 +438,10 @@
     "mainPhoto": "Главное фото",
     "makeMainPhoto": "Сделать главной",
     "moveUp": "Вверх",
-    "moveDown": "Вниз"
+    "moveDown": "Вниз",
+    "prevPhoto": "Предыдущее фото",
+    "nextPhoto": "Следующее фото",
+    "closeFullscreen": "Закрыть просмотр"
   },
   "auth": {
     "login": "Войти",
@@ -686,8 +688,7 @@
     "listingsTitle": "Объявления агентства",
     "listingsCount": "Всего {{count}} объявлений",
     "logo": "Логотип",
-    "siteOrTelegram": "Telegram / Сайт",
-    "telegram": "Telegram"
+    "siteOrTelegram": "Telegram / Сайт"
   },
   "web": {
     "heroSubtitle": "Поиск квартир, домов и коммерческой недвижимости в Сербии. Продажа, аренда, новостройки.",

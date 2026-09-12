@@ -330,7 +330,12 @@
       "sold": "Prodato",
       "rented": "Izdato",
       "backToActive": "Aktivno"
-    }
+    },
+    "addToFavorites": "Dodaj u omiljene",
+    "removeFromFavorites": "Ukloni iz omiljenih",
+    "prevPhoto": "Prethodna fotografija",
+    "nextPhoto": "Sledeća fotografija",
+    "closeFullscreen": "Zatvori pregled"
   },
   "squareMeters": "m²",
   "addProperty": {
@@ -639,8 +644,7 @@
     "listingsTitle": "Oglasi agencije",
     "listingsCount": "Ukupno {{count}} oglasa",
     "logo": "Logo",
-    "siteOrTelegram": "Telegram / Sajt",
-    "telegram": "Telegram"
+    "siteOrTelegram": "Telegram / Sajt"
   },
   "web": {
     "heroSubtitle": "Pretraga stanova, kuća i poslovnih prostora u Srbiji. Prodaja, zakup, novogradnja.",

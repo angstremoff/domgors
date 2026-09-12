@@ -145,6 +145,16 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
     }
   };
 
+  // Переход к конкретному фото (стрелки на десктоп-вебе, точки пагинации)
+  const goToImage = useCallback((index: number) => {
+    const total = property?.images?.length ?? 0;
+    if (index < 0 || index >= total) {
+      return;
+    }
+    setActiveImageIndex(index);
+    flatListRef.current?.scrollToIndex({ index, animated: true });
+  }, [property]);
+
   const handleCallPress = useCallback(async () => {
     if (!phoneNumber) {
       return;
@@ -507,7 +517,10 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={[styles.scrollContent, isDesktopWeb && styles.webScrollContent]}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, isDesktopWeb && styles.webScrollContent]}
+        nestedScrollEnabled
+      >
         {/* Карусель изображений */}
         <View style={[styles.imageContainer, isDesktopWeb && styles.webImageContainer, isDesktopWeb && { width: carouselWidth, height: carouselHeight }]}>
           <FlatList
@@ -515,6 +528,7 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
             data={property.images}
             horizontal
             pagingEnabled
+            nestedScrollEnabled
             showsHorizontalScrollIndicator={false}
             keyExtractor={(item, index) => `${property.id}-image-${index}`}
             onScroll={handleScroll}
@@ -558,6 +572,30 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
             })}
           />
 
+          {/* Стрелки навигации для десктоп-веба (мышью свайпать нельзя) */}
+          {isDesktopWeb && (property.images || []).length > 1 && (
+            <>
+              {activeImageIndex > 0 && (
+                <TouchableOpacity
+                  style={styles.carouselNavLeft}
+                  onPress={() => goToImage(activeImageIndex - 1)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
+              {activeImageIndex < (property.images || []).length - 1 && (
+                <TouchableOpacity
+                  style={styles.carouselNavRight}
+                  onPress={() => goToImage(activeImageIndex + 1)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <Ionicons name="chevron-forward" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+
           {/* Тэги типа объявления */}
           <View style={styles.tagContainer}>
             <View style={[
@@ -584,12 +622,11 @@ const PropertyDetailsScreen = ({ route, navigation }: { route: RouteParams; navi
           {(property.images || []).length > 1 && (
             <View style={styles.dotsContainer}>
               {(property.images || []).map((_, index) => (
-                <View
+                <TouchableOpacity
                   key={index}
-                  style={[
-                    styles.dot,
-                    activeImageIndex === index ? styles.activeDot : null
-                  ]}
+                  style={[styles.dot, activeImageIndex === index ? styles.activeDot : null]}
+                  onPress={() => goToImage(index)}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
                 />
               ))}
             </View>
@@ -930,6 +967,30 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  carouselNavLeft: {
+    position: 'absolute',
+    top: '50%',
+    left: 12,
+    marginTop: -20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  carouselNavRight: {
+    position: 'absolute',
+    top: '50%',
+    right: 12,
+    marginTop: -20,
     width: 40,
     height: 40,
     borderRadius: 20,
