@@ -91,8 +91,8 @@ android {
         applicationId 'domgo.rs'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 21
-        versionName "1.0.15.1"
+        versionCode 22
+        versionName "1.0.15.2"
     }
     signingConfigs {
         debug {
@@ -114,9 +114,7 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            // ВРЕМЕННО: подпись debug-keystore для локального теста release-сборки без продакшен-ключей.
-            // НЕ коммитить: на релиз вернуть signingConfigs.release.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Linking, AppState, AppStateStatus } from 'react-native';
 import AppVersionManager from './src/services/AppVersionManager';
 import { AuthProvider } from './src/contexts/AuthContext';
@@ -233,15 +233,20 @@ export default function App() {
               <AuthProvider>
                 <FavoritesProvider>
                   <PropertyProvider>
-                    <AppNavigator
-                      pendingPropertyId={pendingPropertyId}
-                      clearPendingPropertyId={clearPendingPropertyId}
-                      pendingAgencyId={pendingAgencyId}
-                      clearPendingAgencyId={clearPendingAgencyId}
-                      pendingAuthScreen={pendingAuthScreen}
-                      clearPendingAuthScreen={clearPendingAuthScreen}
-                    />
-                    <StatusBar style="auto" />
+                    {/* При targetSdk 36 на Android 16+ edge-to-edge принудительный:
+                        SafeAreaView удерживает контент внутри safe area,
+                        пока экраны не переведены на собственные инсеты */}
+                    <SafeAreaView edges={['top', 'bottom', 'right', 'left']} style={{ flex: 1, backgroundColor: 'transparent' }}>
+                      <AppNavigator
+                        pendingPropertyId={pendingPropertyId}
+                        clearPendingPropertyId={clearPendingPropertyId}
+                        pendingAgencyId={pendingAgencyId}
+                        clearPendingAgencyId={clearPendingAgencyId}
+                        pendingAuthScreen={pendingAuthScreen}
+                        clearPendingAuthScreen={clearPendingAuthScreen}
+                      />
+                      <StatusBar style="auto" />
+                    </SafeAreaView>
                   </PropertyProvider>
                 </FavoritesProvider>
               </AuthProvider>

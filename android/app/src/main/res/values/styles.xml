@@ -5,6 +5,9 @@
     <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
     <item name="colorPrimary">@color/colorPrimary</item>
     <item name="android:statusBarColor">#ffffff</item>
+    <!-- Android 15: не включать принудительный edge-to-edge.
+         На Android 16+ атрибут игнорируется, safe area обрабатывается в App.tsx -->
+    <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
   </style>
   <style name="ResetEditText" parent="@android:style/Widget.EditText">
     <item name="android:padding">0dp</item>
