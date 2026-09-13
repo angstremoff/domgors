@@ -38,7 +38,7 @@ export default ({ config }) => {
         backgroundColor: '#ffffff'
       },
       package: 'domgo.rs',
-      versionCode: 18,
+      versionCode: 22,
       config: {
         googleMaps: {
           apiKey: GOOGLE_MAPS_API_KEY
